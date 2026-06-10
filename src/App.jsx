@@ -271,6 +271,11 @@ function toLocalDateStr(date) {
   return `${y}-${m}-${d}`;
 }
 
+function dateToDayOfWeek(lessonDate) {
+  const [y, m, d] = lessonDate.split("-").map(Number);
+  return new Date(y, m - 1, d).getDay();
+}
+
 function getWeekBounds(date = new Date()) {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
@@ -907,137 +912,12 @@ function PendingWeeklyBarcodes({ profile, toast, onSent }) {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  RECURRING LESSONS PANEL
-// ─────────────────────────────────────────────────────────────
-function RecurringLessonsPanel({ profile, toast }) {
-  const i18n = useLang();
-  const { t, days, dir } = i18n;
-  const blank = { child_name: "", day_of_week: 1, start_time: "09:00", parent_phone: "" };
-  const [form, setForm] = useState(blank);
-  const [list, setList] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const upd = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    let query = supabase.from("recurring_lessons").select("*").order("created_at", { ascending: false });
-    if (!canManage(profile)) query = query.eq("instructor_id", profile.id);
-    const { data } = await query;
-    setList(data || []);
-    setLoading(false);
-  }, [profile.id, profile.role]);
-
-  useEffect(() => { load(); }, [load]);
-
-  const create = async () => {
-    const { child_name, day_of_week, start_time, parent_phone } = form;
-    if (!child_name || start_time === "" || !parent_phone) return toast.show(t("fillAllFields"));
-    if (!isValidStartTime(start_time)) return toast.show(t("invalidTime"));
-    setSaving(true);
-    const { error } = await supabase.from("recurring_lessons").insert([{
-      child_name,
-      day_of_week: Number(day_of_week),
-      start_time,
-      parent_phone,
-      instructor_name: profile.full_name,
-      instructor_id: profile.id,
-    }]);
-    if (error) {
-      toast.show(`${t("recurringError")}: ${error.message}`);
-      setSaving(false);
-      return;
-    }
-    toast.show(t("recurringCreated"));
-    setForm(blank);
-    setSaving(false);
-    load();
-  };
-
-  const toggleActive = async (item) => {
-    const { error } = await supabase.from("recurring_lessons")
-      .update({ active: !item.active })
-      .eq("id", item.id);
-    if (error) return toast.show(`${t("recurringError")}: ${error.message}`);
-    toast.show(item.active ? t("recurringPaused") : t("recurringResumed"));
-    load();
-  };
-
-  return (
-    <div>
-      <div className="section-title">{t("lessonRecurring")}</div>
-      <div className="section-sub">{t("recurringSub")}</div>
-      <div className="card">
-        <div className="field"><label className="label">{t("childName")}</label>
-          <input className="input" placeholder={t("childPlaceholder")} value={form.child_name}
-            onChange={upd("child_name")} dir={dir} /></div>
-        <div className="field"><label className="label">{t("dayOfWeek")}</label>
-          <select className="input" value={form.day_of_week} onChange={upd("day_of_week")}>
-            {days.map((label, i) => (
-              <option key={i} value={i}>{label}</option>
-            ))}
-          </select></div>
-        <div className="field"><label className="label">{t("lessonStartTime")}</label>
-          <TimeScrollPicker value={form.start_time}
-            onChange={v => setForm(f => ({ ...f, start_time: v }))} />
-          <div style={{ fontSize: 11, color: "var(--ink-soft)", marginTop: 6 }}>{t("timeHint")}</div>
-        </div>
-        <div className="field"><label className="label">{t("parentPhone")}</label>
-          <input className="input" type="tel" placeholder="050-0000000" value={form.parent_phone}
-            onChange={upd("parent_phone")} dir="ltr" /></div>
-        <button className="btn btn-primary mt-8" onClick={create} disabled={saving}>
-          {saving ? <><div className="spinner" /> {t("creating")}</> : t("createRecurring")}
-        </button>
-      </div>
-
-      <div className="divider" />
-      <div className="section-title" style={{ fontSize: 17 }}>{t("recurringList")}</div>
-      <div className="section-sub">{t("recurringListSub")}</div>
-      {loading ? (
-        <div style={{ textAlign: "center", padding: 24, color: "var(--ink-soft)" }}>{t("loading")}</div>
-      ) : list.length === 0 ? (
-        <div className="empty" style={{ padding: 32 }}>
-          <div className="empty-icon">🔁</div>
-          <div className="empty-text">{t("noRecurring")}</div>
-        </div>
-      ) : (
-        <div className="card" style={{ padding: "4px 16px" }}>
-          {list.map(item => (
-            <div className="log-item" key={item.id}>
-              <div className="log-dot" style={{ background: item.active ? "var(--pool)" : "var(--ink-soft)" }} />
-              <div style={{ flex: 1 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div className="log-name">{item.child_name}</div>
-                  <span className={`badge ${item.active ? "badge-active" : "badge-pending"}`}>
-                    {item.active ? t("active") : t("paused")}
-                  </span>
-                </div>
-                <div className="log-meta">
-                  {t("everyWeek")}: {days[item.day_of_week]} · {fmt_time(item.start_time)}
-                </div>
-                <div className="log-meta">{t("instructor")}: {item.instructor_name}</div>
-                <div className="log-actions">
-                  <button className="btn btn-outline btn-sm" onClick={() => toggleActive(item)}>
-                    {item.active ? t("pauseRecurring") : t("resumeRecurring")}
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────
 //  INSTRUCTOR TAB
 // ─────────────────────────────────────────────────────────────
 function InstructorTab({ profile, toast }) {
   const i18n = useLang();
   const { t, fmtDateDay, dir } = i18n;
-  const [mode, setMode] = useState("once");
-  const blank = { child_name:"", lesson_date:"", start_time:"09:00", parent_phone:"" };
+  const blank = { child_name:"", lesson_date:"", start_time:"09:00", parent_phone:"", lesson_type:"once" };
   const [form, setForm]       = useState(blank);
   const [created, setCreated] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -1048,18 +928,52 @@ function InstructorTab({ profile, toast }) {
   useEffect(() => { ensureWeeklyLessonsGenerated(); }, []);
 
   const create = async () => {
-    const { child_name, lesson_date, start_time, parent_phone } = form;
+    const { child_name, lesson_date, start_time, parent_phone, lesson_type } = form;
     if (!child_name || !lesson_date || !start_time || !parent_phone) return toast.show(t("fillAllFields"));
     if (!isValidStartTime(start_time)) return toast.show(t("invalidTime"));
     setLoading(true);
-    const { data, error } = await supabase.from("lessons")
-      .insert([{
-        child_name, lesson_date, start_time, end_time: start_time,
-        instructor_name: profile.full_name, instructor_id: profile.id, parent_phone,
-      }])
-      .select().single();
-    if (error) { toast.show(`${t("createError")}: ${error.message}`); setLoading(false); return; }
-    setCreated({ ...data, parent_phone });
+
+    if (lesson_type === "recurring") {
+      const day_of_week = dateToDayOfWeek(lesson_date);
+      const { data: recurring, error: recErr } = await supabase.from("recurring_lessons")
+        .insert([{
+          child_name, day_of_week, start_time, parent_phone,
+          instructor_name: profile.full_name, instructor_id: profile.id,
+        }])
+        .select().single();
+      if (recErr) {
+        toast.show(`${t("recurringError")}: ${recErr.message}`);
+        setLoading(false);
+        return;
+      }
+      const { data, error } = await supabase.from("lessons")
+        .insert([{
+          child_name, lesson_date, start_time, end_time: start_time,
+          instructor_name: profile.full_name, instructor_id: profile.id, parent_phone,
+          recurring_lesson_id: recurring.id,
+        }])
+        .select().single();
+      if (error) {
+        toast.show(`${t("createError")}: ${error.message}`);
+        setLoading(false);
+        return;
+      }
+      setCreated({ ...data, parent_phone, isRecurring: true });
+    } else {
+      const { data, error } = await supabase.from("lessons")
+        .insert([{
+          child_name, lesson_date, start_time, end_time: start_time,
+          instructor_name: profile.full_name, instructor_id: profile.id, parent_phone,
+        }])
+        .select().single();
+      if (error) {
+        toast.show(`${t("createError")}: ${error.message}`);
+        setLoading(false);
+        return;
+      }
+      setCreated({ ...data, parent_phone });
+    }
+
     setForm(blank);
     setLoading(false);
   };
@@ -1069,6 +983,7 @@ function InstructorTab({ profile, toast }) {
     try {
       await shareTicketViaWhatsApp(created, created.parent_phone, toast, i18n);
       await markLessonNotified(created.id);
+      setRefreshKey(k => k + 1);
     } catch {
       toast.show(t("shareError"));
     }
@@ -1078,7 +993,7 @@ function InstructorTab({ profile, toast }) {
   if (created) return (
     <div>
       <div className="section-title">{t("barcodeReady")}</div>
-      <div className="section-sub">{t("barcodeReadySub")}</div>
+      <div className="section-sub">{created.isRecurring ? t("barcodeReadySubRecurring") : t("barcodeReadySub")}</div>
       <TicketCard lesson={created} qrSize={200} />
       <div className="lesson-info">
         <div className="lesson-info-row"><span className="li-key">{t("child")}</span><span className="li-val">{created.child_name}</span></div>
@@ -1107,42 +1022,45 @@ function InstructorTab({ profile, toast }) {
         onSent={() => setRefreshKey(k => k + 1)}
       />
 
-      <div className="mode-switch">
-        <button type="button" className={`mode-btn ${mode === "once" ? "active" : ""}`} onClick={() => setMode("once")}>
-          {t("lessonOnce")}
-        </button>
-        <button type="button" className={`mode-btn ${mode === "recurring" ? "active" : ""}`} onClick={() => setMode("recurring")}>
-          {t("lessonRecurring")}
-        </button>
-      </div>
-
-      {mode === "recurring" ? (
-        <RecurringLessonsPanel profile={profile} toast={toast} />
-      ) : (
-        <>
-          <div className="section-title">{t("newLesson")}</div>
-          <div className="section-sub">{t("newLessonSub")}</div>
-          <div className="card">
-            <div className="field"><label className="label">{t("childName")}</label>
-              <input className="input" placeholder={t("childPlaceholder")} value={form.child_name} onChange={upd("child_name")} dir={dir} /></div>
-            <div className="field"><label className="label">{t("lessonDate")}</label>
-              <input className="input" type="date" value={form.lesson_date} onChange={upd("lesson_date")} />
-              {form.lesson_date && (
-                <div style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 6 }}>{fmtDateDay(form.lesson_date)}</div>
-              )}
-            </div>
-            <div className="field"><label className="label">{t("lessonStartTime")}</label>
-              <TimeScrollPicker value={form.start_time} onChange={v => setForm(f => ({ ...f, start_time: v }))} />
-              <div style={{fontSize:11,color:"var(--ink-soft)",marginTop:6}}>{t("timeHint")}</div>
-            </div>
-            <div className="field"><label className="label">{t("parentPhone")}</label>
-              <input className="input" type="tel" placeholder="050-0000000" value={form.parent_phone} onChange={upd("parent_phone")} dir="ltr" /></div>
-            <button className="btn btn-primary mt-8" onClick={create} disabled={loading}>
-              {loading ? <><div className="spinner"/> {t("creating")}</> : t("createBarcode")}
+      <div className="section-title">{t("newLesson")}</div>
+      <div className="section-sub">{t("newLessonSub")}</div>
+      <div className="card">
+        <div className="field"><label className="label">{t("childName")}</label>
+          <input className="input" placeholder={t("childPlaceholder")} value={form.child_name} onChange={upd("child_name")} dir={dir} /></div>
+        <div className="field"><label className="label">{t("lessonDate")}</label>
+          <input className="input" type="date" value={form.lesson_date} onChange={upd("lesson_date")} />
+          {form.lesson_date && (
+            <div style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 6 }}>{fmtDateDay(form.lesson_date)}</div>
+          )}
+        </div>
+        <div className="field"><label className="label">{t("lessonStartTime")}</label>
+          <TimeScrollPicker value={form.start_time} onChange={v => setForm(f => ({ ...f, start_time: v }))} />
+          <div style={{ fontSize: 11, color: "var(--ink-soft)", marginTop: 6 }}>{t("timeHint")}</div>
+        </div>
+        <div className="field">
+          <label className="label">{t("lessonType")}</label>
+          <div className="mode-switch" style={{ marginBottom: 0 }}>
+            <button type="button" className={`mode-btn ${form.lesson_type === "once" ? "active" : ""}`}
+              onClick={() => setForm(f => ({ ...f, lesson_type: "once" }))}>
+              {t("lessonOnce")}
+            </button>
+            <button type="button" className={`mode-btn ${form.lesson_type === "recurring" ? "active" : ""}`}
+              onClick={() => setForm(f => ({ ...f, lesson_type: "recurring" }))}>
+              {t("lessonRecurring")}
             </button>
           </div>
-        </>
-      )}
+          {form.lesson_type === "recurring" && (
+            <div style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 8, lineHeight: 1.5 }}>
+              {t("recurringFirstLessonHint")}
+            </div>
+          )}
+        </div>
+        <div className="field"><label className="label">{t("parentPhone")}</label>
+          <input className="input" type="tel" placeholder="050-0000000" value={form.parent_phone} onChange={upd("parent_phone")} dir="ltr" /></div>
+        <button className="btn btn-primary mt-8" onClick={create} disabled={loading}>
+          {loading ? <><div className="spinner"/> {t("creating")}</> : t("createBarcode")}
+        </button>
+      </div>
     </div>
   );
 }
