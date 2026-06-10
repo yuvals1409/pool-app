@@ -15,7 +15,15 @@ const VENUE_NAME = "קאנטרי נווה עוז";
 const VENUE_ADDRESS = "רח' דגניה 1, פתח תקווה";
 const LESSON_DURATION_MINUTES = 30;
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storage: localStorage,
+    storageKey: "pool-app-auth",
+  },
+});
 
 const isOwner       = (p) => !!p && p.email?.toLowerCase() === ADMIN_EMAIL;
 const canManage     = (p) => isOwner(p) || p?.role === "admin";
@@ -681,7 +689,7 @@ function LoginPage({ toast }) {
     setLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.href },
+      options: { redirectTo: window.location.origin },
     });
     if (error) { toast.show(t("loginError")); setLoading(false); }
   };
@@ -1284,27 +1292,7 @@ export default function App() {
   const ticketId = urlParams.get("ticket");
   const calendarId = urlParams.get("calendar");
 
-  // Auth listener
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) loadProfile(session.user);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      setSession(session);
-      if (session) loadProfile(session.user);
-      else setProfile(null);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (!profile) return;
-    if (canCreateLesson(profile)) setTab("instructor");
-    else if (canScan(profile)) setTab("guard");
-  }, [profile?.id, profile?.role, profile?.email]);
-
-  const loadProfile = async (user) => {
+  const loadProfile = useCallback(async (user) => {
     const email = user.email.toLowerCase();
     const owner = email === ADMIN_EMAIL;
 
@@ -1348,7 +1336,41 @@ export default function App() {
     }
 
     setProfile(data);
-  };
+  }, []);
+
+  // Restore session from localStorage on every visit (INITIAL_SESSION fires after init)
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "INITIAL_SESSION") {
+        setSession(session ?? null);
+        if (session?.user) loadProfile(session.user);
+        return;
+      }
+      if (event === "SIGNED_OUT") {
+        setSession(null);
+        setProfile(null);
+        return;
+      }
+      if (event === "SIGNED_IN") {
+        setSession(session);
+        if (session?.user) loadProfile(session.user);
+        if (window.location.search.includes("code=")) {
+          window.history.replaceState({}, "", window.location.pathname + window.location.hash);
+        }
+        return;
+      }
+      if (event === "TOKEN_REFRESHED" && session) {
+        setSession(session);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [loadProfile]);
+
+  useEffect(() => {
+    if (!profile) return;
+    if (canCreateLesson(profile)) setTab("instructor");
+    else if (canScan(profile)) setTab("guard");
+  }, [profile?.id, profile?.role, profile?.email]);
 
   const logout = async () => { await supabase.auth.signOut(); };
 
