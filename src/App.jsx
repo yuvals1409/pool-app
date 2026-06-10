@@ -206,10 +206,23 @@ const css = `
 
   /* BADGE */
   .badge { display:inline-flex; align-items:center; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; font-family:'IBM Plex Mono',monospace; }
-  .badge-used    { background:var(--danger-bg);  color:var(--danger);  }
-  .badge-active  { background:var(--success-bg); color:var(--success); }
-  .badge-pending { background:var(--warn-bg);    color:#b7791f; }
-  .badge-admin   { background:#EDE9FE;            color:#5B21B6; }
+  .badge-used      { background:var(--danger-bg);  color:var(--danger);  }
+  .badge-active    { background:var(--success-bg); color:var(--success); }
+  .badge-cancelled { background:var(--danger-bg);  color:var(--danger);  }
+  .badge-pending   { background:var(--warn-bg);    color:#b7791f; }
+  .badge-admin     { background:#EDE9FE;            color:#5B21B6; }
+  .log-actions { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+  .mode-switch { display:flex; gap:4px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:4px; margin-bottom:20px; }
+  .mode-btn { flex:1; padding:10px 8px; border:none; border-radius:8px; background:transparent; font-family:inherit; font-size:13px; font-weight:600; color:var(--ink-soft); cursor:pointer; transition:all .15s; }
+  .mode-btn.active { background:var(--pool); color:#fff; box-shadow:0 2px 8px rgba(0,119,182,.25); }
+  .pending-banner { background:var(--warn-bg); border:1.5px solid var(--warn); border-radius:var(--radius); padding:16px; margin-bottom:20px; }
+  .pending-banner-title { font-size:15px; font-weight:700; color:var(--ink); margin-bottom:4px; }
+  .pending-banner-sub { font-size:13px; color:var(--ink-mid); margin-bottom:12px; line-height:1.5; }
+  .pending-item { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px solid rgba(0,0,0,.06); }
+  .pending-item:last-child { border-bottom:none; }
+  .pending-item-info { flex:1; min-width:0; }
+  .pending-item-name { font-weight:600; font-size:14px; }
+  .pending-item-meta { font-size:12px; color:var(--ink-soft); margin-top:2px; }
 
   /* ADMIN USER ROW */
   .user-row { display:flex; align-items:center; gap:12px; padding:14px 0; border-bottom:1px solid var(--border); }
@@ -246,6 +259,45 @@ const css = `
 //  HELPERS
 // ─────────────────────────────────────────────────────────────
 const fmt_time = (t) => (t ? t.slice(0,5) : "");
+
+function getLessonQrValue(lesson) {
+  return lesson.qr_token || lesson.id;
+}
+
+function toLocalDateStr(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function getWeekBounds(date = new Date()) {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  const sunday = new Date(d);
+  sunday.setDate(d.getDate() - d.getDay());
+  const saturday = new Date(sunday);
+  saturday.setDate(sunday.getDate() + 6);
+  return { start: sunday, end: saturday };
+}
+
+async function markLessonNotified(lessonId) {
+  await supabase.from("lessons")
+    .update({ notified_at: new Date().toISOString() })
+    .eq("id", lessonId);
+}
+
+async function ensureWeeklyLessonsGenerated() {
+  await supabase.rpc("generate_weekly_recurring_lessons");
+}
+
+async function lookupLessonByQr(value) {
+  const { data: byToken } = await supabase.from("lessons").select("*").eq("qr_token", value).maybeSingle();
+  if (byToken) return byToken;
+  const { data: byId } = await supabase.from("lessons").select("*").eq("id", value).maybeSingle();
+  if (byId && byId.qr_token === byId.id) return byId;
+  return null;
+}
 
 function parseLessonDateTime(lessonDate, startTime) {
   const [y, m, d] = lessonDate.split("-").map(Number);
@@ -512,16 +564,29 @@ function TicketCard({ lesson, qrSize = 200, label }) {
     <div className="qr-wrap">
       <BrandLogo height={52} />
       <div className="ticket-title">{t("ticketTitle")}</div>
-      <QRCanvas value={lesson.id} size={qrSize} />
+      <QRCanvas value={getLessonQrValue(lesson)} size={qrSize} />
       <div className="qr-label">{label || t("ticketOneTime")}</div>
     </div>
   );
 }
 
-function ticketCaption(lesson, { t, fmtDateDay }) {
+function cancellationCaption(lesson, { t, fmtDateDay }) {
   return [
     t("waHello"),
-    t("waBarcodeFor", { name: lesson.child_name }),
+    t("waLessonCancelled", { name: lesson.child_name }),
+    "",
+    `${t("date")}: ${fmtDateDay(lesson.lesson_date)}`,
+    `${t("startTime")}: ${fmt_time(lesson.start_time)}`,
+    `${t("instructor")}: ${lesson.instructor_name}`,
+    "",
+    t("waBarcodeInvalid"),
+  ].join("\n");
+}
+
+function ticketCaption(lesson, { t, fmtDateDay }, { updated = false } = {}) {
+  return [
+    t("waHello"),
+    updated ? t("waLessonUpdated", { name: lesson.child_name }) : t("waBarcodeFor", { name: lesson.child_name }),
     "",
     `${t("date")}: ${fmtDateDay(lesson.lesson_date)}`,
     `${t("startTime")}: ${fmt_time(lesson.start_time)}`,
@@ -548,7 +613,7 @@ async function generateTicketImage(lesson, { t, fmtDateDay, dir }) {
 
   const qrSize = 280;
   const qrCanvas = document.createElement("canvas");
-  await QRCode.toCanvas(qrCanvas, lesson.id, {
+  await QRCode.toCanvas(qrCanvas, getLessonQrValue(lesson), {
     width: qrSize, margin: 2, color: { dark: "#012A4A", light: "#FFFFFF" },
   });
 
@@ -600,10 +665,27 @@ async function generateTicketImage(lesson, { t, fmtDateDay, dir }) {
 
 const isMobileDevice = () => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-async function shareTicketViaWhatsApp(lesson, phone, toast, i18n) {
+async function shareMessageViaWhatsApp(phone, message) {
+  const digits = phone.replace(/\D/g, "").replace(/^0/, "972");
+  if (isMobileDevice() && navigator.share) {
+    try {
+      await navigator.share({ text: message });
+      return;
+    } catch (e) {
+      if (e.name === "AbortError") return;
+    }
+  }
+  window.open(`https://wa.me/${digits}?text=${encodeURIComponent(message)}`, "_blank");
+}
+
+async function shareCancellationViaWhatsApp(lesson, phone, i18n) {
+  await shareMessageViaWhatsApp(phone, cancellationCaption(lesson, i18n));
+}
+
+async function shareTicketViaWhatsApp(lesson, phone, toast, i18n, { updated = false } = {}) {
   const blob = await generateTicketImage(lesson, i18n);
   const file = new File([blob], `ticket-${lesson.child_name}.png`, { type: "image/png" });
-  const caption = ticketCaption(lesson, i18n);
+  const caption = ticketCaption(lesson, i18n, { updated });
   const digits = phone.replace(/\D/g, "").replace(/^0/, "972");
 
   // בטלפון — שיתוף ישיר עם תמונה מצורפת (בוחרים WhatsApp ואז את ההורה)
@@ -731,17 +813,239 @@ function PendingPage({ user, onLogout }) {
 }
 
 // ─────────────────────────────────────────────────────────────
+//  PENDING WEEKLY BARCODES
+// ─────────────────────────────────────────────────────────────
+function PendingWeeklyBarcodes({ profile, toast, onSent }) {
+  const i18n = useLang();
+  const { t, fmtDateDay } = i18n;
+  const [pending, setPending] = useState([]);
+  const [sending, setSending] = useState(false);
+  const [sendingId, setSendingId] = useState(null);
+
+  const load = useCallback(async () => {
+    await ensureWeeklyLessonsGenerated();
+    const { start, end } = getWeekBounds();
+    let query = supabase.from("lessons").select("*")
+      .not("recurring_lesson_id", "is", null)
+      .is("notified_at", null)
+      .eq("cancelled", false)
+      .eq("used", false)
+      .gte("lesson_date", toLocalDateStr(start))
+      .lte("lesson_date", toLocalDateStr(end))
+      .order("lesson_date", { ascending: true });
+    if (!canManage(profile)) query = query.eq("instructor_id", profile.id);
+    const { data } = await query;
+    setPending(data || []);
+  }, [profile.id, profile.role]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const sendOne = async (lesson) => {
+    if (!lesson.parent_phone) return toast.show(t("phoneRequiredForNotify"));
+    setSendingId(lesson.id);
+    try {
+      await shareTicketViaWhatsApp(lesson, lesson.parent_phone, toast, i18n);
+      await markLessonNotified(lesson.id);
+      toast.show(t("barcodeSent"));
+      await load();
+      onSent?.();
+    } catch {
+      toast.show(t("shareError"));
+    }
+    setSendingId(null);
+  };
+
+  const sendAll = async () => {
+    if (!pending.length) return;
+    setSending(true);
+    for (const lesson of pending) {
+      if (!lesson.parent_phone) continue;
+      try {
+        await shareTicketViaWhatsApp(lesson, lesson.parent_phone, toast, i18n);
+        await markLessonNotified(lesson.id);
+      } catch {
+        toast.show(t("shareError"));
+        break;
+      }
+    }
+    toast.show(t("allBarcodesSent"));
+    setSending(false);
+    await load();
+    onSent?.();
+  };
+
+  if (!pending.length) return null;
+
+  return (
+    <div className="pending-banner">
+      <div className="pending-banner-title">📬 {t("pendingBarcodes")}</div>
+      <div className="pending-banner-sub">{t("pendingBarcodesSub", { count: pending.length })}</div>
+      <button className="btn btn-whatsapp" onClick={sendAll} disabled={sending || !!sendingId}>
+        {sending ? <><div className="spinner" /> {t("preparingImage")}</> : t("sendAllBarcodes")}
+      </button>
+      <div style={{ marginTop: 14 }}>
+        {pending.map(lesson => (
+          <div className="pending-item" key={lesson.id}>
+            <div className="pending-item-info">
+              <div className="pending-item-name">{lesson.child_name}</div>
+              <div className="pending-item-meta">
+                {fmtDateDay(lesson.lesson_date)} · {fmt_time(lesson.start_time)}
+              </div>
+            </div>
+            <button
+              className="btn btn-outline btn-sm"
+              onClick={() => sendOne(lesson)}
+              disabled={sending || sendingId === lesson.id}
+            >
+              {sendingId === lesson.id ? "..." : t("sendBarcode")}
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+//  RECURRING LESSONS PANEL
+// ─────────────────────────────────────────────────────────────
+function RecurringLessonsPanel({ profile, toast }) {
+  const i18n = useLang();
+  const { t, days, dir } = i18n;
+  const blank = { child_name: "", day_of_week: 1, start_time: "09:00", parent_phone: "" };
+  const [form, setForm] = useState(blank);
+  const [list, setList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const upd = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    let query = supabase.from("recurring_lessons").select("*").order("created_at", { ascending: false });
+    if (!canManage(profile)) query = query.eq("instructor_id", profile.id);
+    const { data } = await query;
+    setList(data || []);
+    setLoading(false);
+  }, [profile.id, profile.role]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const create = async () => {
+    const { child_name, day_of_week, start_time, parent_phone } = form;
+    if (!child_name || start_time === "" || !parent_phone) return toast.show(t("fillAllFields"));
+    if (!isValidStartTime(start_time)) return toast.show(t("invalidTime"));
+    setSaving(true);
+    const { error } = await supabase.from("recurring_lessons").insert([{
+      child_name,
+      day_of_week: Number(day_of_week),
+      start_time,
+      parent_phone,
+      instructor_name: profile.full_name,
+      instructor_id: profile.id,
+    }]);
+    if (error) {
+      toast.show(`${t("recurringError")}: ${error.message}`);
+      setSaving(false);
+      return;
+    }
+    toast.show(t("recurringCreated"));
+    setForm(blank);
+    setSaving(false);
+    load();
+  };
+
+  const toggleActive = async (item) => {
+    const { error } = await supabase.from("recurring_lessons")
+      .update({ active: !item.active })
+      .eq("id", item.id);
+    if (error) return toast.show(`${t("recurringError")}: ${error.message}`);
+    toast.show(item.active ? t("recurringPaused") : t("recurringResumed"));
+    load();
+  };
+
+  return (
+    <div>
+      <div className="section-title">{t("lessonRecurring")}</div>
+      <div className="section-sub">{t("recurringSub")}</div>
+      <div className="card">
+        <div className="field"><label className="label">{t("childName")}</label>
+          <input className="input" placeholder={t("childPlaceholder")} value={form.child_name}
+            onChange={upd("child_name")} dir={dir} /></div>
+        <div className="field"><label className="label">{t("dayOfWeek")}</label>
+          <select className="input" value={form.day_of_week} onChange={upd("day_of_week")}>
+            {days.map((label, i) => (
+              <option key={i} value={i}>{label}</option>
+            ))}
+          </select></div>
+        <div className="field"><label className="label">{t("lessonStartTime")}</label>
+          <TimeScrollPicker value={form.start_time}
+            onChange={v => setForm(f => ({ ...f, start_time: v }))} />
+          <div style={{ fontSize: 11, color: "var(--ink-soft)", marginTop: 6 }}>{t("timeHint")}</div>
+        </div>
+        <div className="field"><label className="label">{t("parentPhone")}</label>
+          <input className="input" type="tel" placeholder="050-0000000" value={form.parent_phone}
+            onChange={upd("parent_phone")} dir="ltr" /></div>
+        <button className="btn btn-primary mt-8" onClick={create} disabled={saving}>
+          {saving ? <><div className="spinner" /> {t("creating")}</> : t("createRecurring")}
+        </button>
+      </div>
+
+      <div className="divider" />
+      <div className="section-title" style={{ fontSize: 17 }}>{t("recurringList")}</div>
+      <div className="section-sub">{t("recurringListSub")}</div>
+      {loading ? (
+        <div style={{ textAlign: "center", padding: 24, color: "var(--ink-soft)" }}>{t("loading")}</div>
+      ) : list.length === 0 ? (
+        <div className="empty" style={{ padding: 32 }}>
+          <div className="empty-icon">🔁</div>
+          <div className="empty-text">{t("noRecurring")}</div>
+        </div>
+      ) : (
+        <div className="card" style={{ padding: "4px 16px" }}>
+          {list.map(item => (
+            <div className="log-item" key={item.id}>
+              <div className="log-dot" style={{ background: item.active ? "var(--pool)" : "var(--ink-soft)" }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div className="log-name">{item.child_name}</div>
+                  <span className={`badge ${item.active ? "badge-active" : "badge-pending"}`}>
+                    {item.active ? t("active") : t("paused")}
+                  </span>
+                </div>
+                <div className="log-meta">
+                  {t("everyWeek")}: {days[item.day_of_week]} · {fmt_time(item.start_time)}
+                </div>
+                <div className="log-meta">{t("instructor")}: {item.instructor_name}</div>
+                <div className="log-actions">
+                  <button className="btn btn-outline btn-sm" onClick={() => toggleActive(item)}>
+                    {item.active ? t("pauseRecurring") : t("resumeRecurring")}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 //  INSTRUCTOR TAB
 // ─────────────────────────────────────────────────────────────
 function InstructorTab({ profile, toast }) {
   const i18n = useLang();
   const { t, fmtDateDay, dir } = i18n;
+  const [mode, setMode] = useState("once");
   const blank = { child_name:"", lesson_date:"", start_time:"09:00", parent_phone:"" };
   const [form, setForm]       = useState(blank);
   const [created, setCreated] = useState(null);
   const [loading, setLoading] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const upd = k => e => setForm(f => ({...f, [k]: e.target.value}));
+
+  useEffect(() => { ensureWeeklyLessonsGenerated(); }, []);
 
   const create = async () => {
     const { child_name, lesson_date, start_time, parent_phone } = form;
@@ -749,7 +1053,10 @@ function InstructorTab({ profile, toast }) {
     if (!isValidStartTime(start_time)) return toast.show(t("invalidTime"));
     setLoading(true);
     const { data, error } = await supabase.from("lessons")
-      .insert([{ child_name, lesson_date, start_time, end_time: start_time, instructor_name: profile.full_name }])
+      .insert([{
+        child_name, lesson_date, start_time, end_time: start_time,
+        instructor_name: profile.full_name, instructor_id: profile.id, parent_phone,
+      }])
       .select().single();
     if (error) { toast.show(`${t("createError")}: ${error.message}`); setLoading(false); return; }
     setCreated({ ...data, parent_phone });
@@ -761,6 +1068,7 @@ function InstructorTab({ profile, toast }) {
     setSharing(true);
     try {
       await shareTicketViaWhatsApp(created, created.parent_phone, toast, i18n);
+      await markLessonNotified(created.id);
     } catch {
       toast.show(t("shareError"));
     }
@@ -792,27 +1100,49 @@ function InstructorTab({ profile, toast }) {
 
   return (
     <div>
-      <div className="section-title">{t("newLesson")}</div>
-      <div className="section-sub">{t("newLessonSub")}</div>
-      <div className="card">
-        <div className="field"><label className="label">{t("childName")}</label>
-          <input className="input" placeholder={t("childPlaceholder")} value={form.child_name} onChange={upd("child_name")} dir={dir} /></div>
-        <div className="field"><label className="label">{t("lessonDate")}</label>
-          <input className="input" type="date" value={form.lesson_date} onChange={upd("lesson_date")} />
-          {form.lesson_date && (
-            <div style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 6 }}>{fmtDateDay(form.lesson_date)}</div>
-          )}
-        </div>
-        <div className="field"><label className="label">{t("lessonStartTime")}</label>
-          <TimeScrollPicker value={form.start_time} onChange={v => setForm(f => ({ ...f, start_time: v }))} />
-          <div style={{fontSize:11,color:"var(--ink-soft)",marginTop:6}}>{t("timeHint")}</div>
-        </div>
-        <div className="field"><label className="label">{t("parentPhone")}</label>
-          <input className="input" type="tel" placeholder="050-0000000" value={form.parent_phone} onChange={upd("parent_phone")} dir="ltr" /></div>
-        <button className="btn btn-primary mt-8" onClick={create} disabled={loading}>
-          {loading ? <><div className="spinner"/> {t("creating")}</> : t("createBarcode")}
+      <PendingWeeklyBarcodes
+        key={refreshKey}
+        profile={profile}
+        toast={toast}
+        onSent={() => setRefreshKey(k => k + 1)}
+      />
+
+      <div className="mode-switch">
+        <button type="button" className={`mode-btn ${mode === "once" ? "active" : ""}`} onClick={() => setMode("once")}>
+          {t("lessonOnce")}
+        </button>
+        <button type="button" className={`mode-btn ${mode === "recurring" ? "active" : ""}`} onClick={() => setMode("recurring")}>
+          {t("lessonRecurring")}
         </button>
       </div>
+
+      {mode === "recurring" ? (
+        <RecurringLessonsPanel profile={profile} toast={toast} />
+      ) : (
+        <>
+          <div className="section-title">{t("newLesson")}</div>
+          <div className="section-sub">{t("newLessonSub")}</div>
+          <div className="card">
+            <div className="field"><label className="label">{t("childName")}</label>
+              <input className="input" placeholder={t("childPlaceholder")} value={form.child_name} onChange={upd("child_name")} dir={dir} /></div>
+            <div className="field"><label className="label">{t("lessonDate")}</label>
+              <input className="input" type="date" value={form.lesson_date} onChange={upd("lesson_date")} />
+              {form.lesson_date && (
+                <div style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 6 }}>{fmtDateDay(form.lesson_date)}</div>
+              )}
+            </div>
+            <div className="field"><label className="label">{t("lessonStartTime")}</label>
+              <TimeScrollPicker value={form.start_time} onChange={v => setForm(f => ({ ...f, start_time: v }))} />
+              <div style={{fontSize:11,color:"var(--ink-soft)",marginTop:6}}>{t("timeHint")}</div>
+            </div>
+            <div className="field"><label className="label">{t("parentPhone")}</label>
+              <input className="input" type="tel" placeholder="050-0000000" value={form.parent_phone} onChange={upd("parent_phone")} dir="ltr" /></div>
+            <button className="btn btn-primary mt-8" onClick={create} disabled={loading}>
+              {loading ? <><div className="spinner"/> {t("creating")}</> : t("createBarcode")}
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -866,10 +1196,11 @@ function GuardTab({ toast }) {
   const processQR = async (uuid) => {
     stopScan(); setLoading(true);
     try {
-      const { data: lesson, error } = await supabase.from("lessons").select("*").eq("id", uuid).single();
-      if (error || !lesson) { setResult({ ok:false, msg: t("barcodeNotFound") }); setLoading(false); return; }
+      const lesson = await lookupLessonByQr(uuid);
+      if (!lesson) { setResult({ ok:false, msg: t("barcodeNotFound") }); setLoading(false); return; }
+      if (lesson.cancelled) { setResult({ ok:false, lesson, msg: t("barcodeCancelled") }); setLoading(false); return; }
       if (lesson.used) { setResult({ ok:false, lesson, msg:`${t("barcodeUsed")}\n${t("scannedOn")}: ${new Date(lesson.used_at).toLocaleString(locale)}` }); setLoading(false); return; }
-      const { error: upErr } = await supabase.from("lessons").update({ used:true, used_at: new Date().toISOString() }).eq("id", uuid);
+      const { error: upErr } = await supabase.from("lessons").update({ used:true, used_at: new Date().toISOString() }).eq("id", lesson.id);
       if (upErr) throw upErr;
       setResult({ ok:true, lesson }); loadLog();
     } catch { setResult({ ok:false, msg: t("systemError") }); }
@@ -943,19 +1274,130 @@ function GuardTab({ toast }) {
 // ─────────────────────────────────────────────────────────────
 //  LOG TAB
 // ─────────────────────────────────────────────────────────────
-function LogTab() {
-  const { t, fmtDateDay, locale } = useLang();
+function LogTab({ toast }) {
+  const i18n = useLang();
+  const { t, fmtDateDay, locale, dir } = i18n;
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter,  setFilter]  = useState("");
+  const [filter, setFilter] = useState("");
+  const [editing, setEditing] = useState(null);
+  const [editForm, setEditForm] = useState(null);
+  const [acting, setActing] = useState(false);
+  const [phonePrompt, setPhonePrompt] = useState(null);
 
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase.from("lessons").select("*").order("created_at",{ascending:false}).limit(200);
-      if (data) setEntries(data);
-      setLoading(false);
-    })();
-  }, []);
+  const load = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("lessons").select("*").order("created_at", { ascending: false }).limit(200);
+    if (data) setEntries(data);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const lessonStatus = (l) => {
+    if (l.cancelled) return "cancelled";
+    if (l.used) return "used";
+    return "waiting";
+  };
+
+  const statusBadge = (l) => {
+    const status = lessonStatus(l);
+    const cls = { used: "badge-used", waiting: "badge-active", cancelled: "badge-cancelled" }[status];
+    const label = { used: t("used"), waiting: t("waiting"), cancelled: t("cancelled") }[status];
+    return <span className={`badge ${cls}`}>{label}</span>;
+  };
+
+  const dotColor = (l) => {
+    const status = lessonStatus(l);
+    return { used: "var(--success)", waiting: "var(--warn)", cancelled: "var(--danger)" }[status];
+  };
+
+  const canManageLesson = (l) => !l.used && !l.cancelled;
+
+  const startEdit = (lesson) => {
+    setEditing(lesson);
+    setEditForm({
+      child_name: lesson.child_name,
+      lesson_date: lesson.lesson_date,
+      start_time: lesson.start_time?.slice(0, 5) || "09:00",
+      parent_phone: lesson.parent_phone || "",
+    });
+    setPhonePrompt(null);
+  };
+
+  const cancelEdit = () => {
+    setEditing(null);
+    setEditForm(null);
+  };
+
+  const saveEdit = async () => {
+    const { child_name, lesson_date, start_time, parent_phone } = editForm;
+    if (!child_name || !lesson_date || !start_time || !parent_phone)
+      return toast.show(t("fillAllFields"));
+    if (!isValidStartTime(start_time)) return toast.show(t("invalidTime"));
+    setActing(true);
+    const { data, error } = await supabase.from("lessons")
+      .update({
+        child_name,
+        lesson_date,
+        start_time,
+        end_time: start_time,
+        parent_phone,
+        qr_token: crypto.randomUUID(),
+      })
+      .eq("id", editing.id)
+      .select()
+      .single();
+    if (error) {
+      toast.show(`${t("editError")}: ${error.message}`);
+      setActing(false);
+      return;
+    }
+    try {
+      await shareTicketViaWhatsApp(data, parent_phone, toast, i18n, { updated: true });
+    } catch {
+      toast.show(t("shareError"));
+    }
+    toast.show(t("lessonUpdated"));
+    cancelEdit();
+    setActing(false);
+    load();
+  };
+
+  const requestCancel = (lesson) => {
+    if (!lesson.parent_phone) {
+      setPhonePrompt({ lesson, phone: "", action: "cancel" });
+      setEditing(null);
+      setEditForm(null);
+      return;
+    }
+    if (!confirm(t("cancelConfirm", { name: lesson.child_name }))) return;
+    performCancel(lesson, lesson.parent_phone);
+  };
+
+  const performCancel = async (lesson, phone) => {
+    if (!phone) return toast.show(t("phoneRequiredForNotify"));
+    setActing(true);
+    const { data, error } = await supabase.from("lessons")
+      .update({ cancelled: true, cancelled_at: new Date().toISOString(), parent_phone: phone })
+      .eq("id", lesson.id)
+      .select()
+      .single();
+    if (error) {
+      toast.show(`${t("cancelError")}: ${error.message}`);
+      setActing(false);
+      return;
+    }
+    try {
+      await shareCancellationViaWhatsApp(data, phone, i18n);
+    } catch {
+      toast.show(t("shareError"));
+    }
+    toast.show(t("lessonCancelled"));
+    setPhonePrompt(null);
+    setActing(false);
+    load();
+  };
 
   const filtered = entries.filter(e =>
     !filter || e.child_name.includes(filter) || e.instructor_name?.includes(filter)
@@ -965,25 +1407,82 @@ function LogTab() {
     <div>
       <div className="section-title">{t("history")}</div>
       <div className="section-sub">{t("historySub")}</div>
+
+      {editing && editForm && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="section-title" style={{ fontSize: 17 }}>{t("editLesson")}</div>
+          <div className="section-sub" style={{ marginBottom: 16 }}>{t("editLessonSub")}</div>
+          <div className="field"><label className="label">{t("childName")}</label>
+            <input className="input" value={editForm.child_name}
+              onChange={e => setEditForm(f => ({ ...f, child_name: e.target.value }))} dir={dir} /></div>
+          <div className="field"><label className="label">{t("lessonDate")}</label>
+            <input className="input" type="date" value={editForm.lesson_date}
+              onChange={e => setEditForm(f => ({ ...f, lesson_date: e.target.value }))} /></div>
+          <div className="field"><label className="label">{t("lessonStartTime")}</label>
+            <TimeScrollPicker value={editForm.start_time}
+              onChange={v => setEditForm(f => ({ ...f, start_time: v }))} /></div>
+          <div className="field"><label className="label">{t("parentPhone")}</label>
+            <input className="input" type="tel" value={editForm.parent_phone}
+              onChange={e => setEditForm(f => ({ ...f, parent_phone: e.target.value }))} dir="ltr" /></div>
+          <div className="gap-8">
+            <button className="btn btn-primary" onClick={saveEdit} disabled={acting}>
+              {acting ? <><div className="spinner" /> {t("preparingImage")}</> : t("saveAndNotify")}
+            </button>
+            <button className="btn btn-outline" onClick={cancelEdit} disabled={acting}>{t("cancel")}</button>
+          </div>
+        </div>
+      )}
+
+      {phonePrompt && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="section-title" style={{ fontSize: 17 }}>{t("cancelLesson")}</div>
+          <div className="section-sub" style={{ marginBottom: 16 }}>
+            {t("cancelConfirm", { name: phonePrompt.lesson.child_name })}
+          </div>
+          <div className="field"><label className="label">{t("parentPhone")}</label>
+            <input className="input" type="tel" placeholder="050-0000000" value={phonePrompt.phone}
+              onChange={e => setPhonePrompt(p => ({ ...p, phone: e.target.value }))} dir="ltr" /></div>
+          <div className="gap-8">
+            <button className="btn btn-danger" onClick={() => performCancel(phonePrompt.lesson, phonePrompt.phone)} disabled={acting}>
+              {acting ? <><div className="spinner" /> {t("saving")}</> : t("sendCancelWhatsApp")}
+            </button>
+            <button className="btn btn-outline" onClick={() => setPhonePrompt(null)} disabled={acting}>{t("cancel")}</button>
+          </div>
+        </div>
+      )}
+
       <input className="input" placeholder={t("searchPlaceholder")} value={filter}
-        onChange={e => setFilter(e.target.value)} style={{marginBottom:16}} />
+        onChange={e => setFilter(e.target.value)} style={{ marginBottom: 16 }} />
       {loading ? (
-        <div style={{textAlign:"center",padding:32,color:"var(--ink-soft)"}}>{t("loading")}</div>
+        <div style={{ textAlign: "center", padding: 32, color: "var(--ink-soft)" }}>{t("loading")}</div>
       ) : filtered.length === 0 ? (
         <div className="empty"><div className="empty-icon">📋</div><div className="empty-text">{t("noResults")}</div></div>
       ) : (
-        <div className="card" style={{padding:"4px 16px"}}>
+        <div className="card" style={{ padding: "4px 16px" }}>
           {filtered.map(l => (
             <div className="log-item" key={l.id}>
-              <div className="log-dot" style={{background: l.used ? "var(--success)" : "var(--warn)"}}/>
-              <div style={{flex:1}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div className="log-dot" style={{ background: dotColor(l) }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div className="log-name">{l.child_name}</div>
-                  <span className={`badge ${l.used ? "badge-used" : "badge-active"}`}>{l.used ? t("used") : t("waiting")}</span>
+                  {statusBadge(l)}
                 </div>
                 <div className="log-meta">{fmtDateDay(l.lesson_date)} · {fmt_time(l.start_time)}</div>
                 <div className="log-meta">{t("instructor")}: {l.instructor_name}</div>
                 {l.used && <div className="log-meta">{t("entry")}: {new Date(l.used_at).toLocaleString(locale)}</div>}
+                {l.cancelled && l.cancelled_at && (
+                  <div className="log-meta">{t("cancelled")}: {new Date(l.cancelled_at).toLocaleString(locale)}</div>
+                )}
+                {canManageLesson(l) && (
+                  <div className="log-actions">
+                    <button className="btn btn-outline btn-sm" onClick={() => startEdit(l)} disabled={acting || !!editing}>
+                      ✎ {t("editLesson")}
+                    </button>
+                    <button className="btn btn-danger btn-sm" onClick={() => requestCancel(l)} disabled={acting || !!editing}>
+                      ✕ {t("cancelLesson")}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -1192,6 +1691,19 @@ function ParentTicket({ id }) {
     </div>
   );
 
+  if (lesson.cancelled) return (
+    <div className="result-card err" style={{ margin: 24 }}>
+      <div className="result-icon">❌</div>
+      <div className="result-title">{t("ticketCancelled")}</div>
+      <div className="result-detail">{t("ticketCancelledMsg")}</div>
+      <div className="lesson-info" style={{ marginTop: 16, textAlign: "right" }}>
+        <div className="lesson-info-row"><span className="li-key">{t("child")}</span><span className="li-val">{lesson.child_name}</span></div>
+        <div className="lesson-info-row"><span className="li-key">{t("date")}</span><span className="li-val">{fmtDateDay(lesson.lesson_date)}</span></div>
+        <div className="lesson-info-row"><span className="li-key">{t("startTime")}</span><span className="li-val">{fmt_time(lesson.start_time)}</span></div>
+      </div>
+    </div>
+  );
+
   return (
     <div style={{padding:"24px 20px"}}>
       <div style={{textAlign:"center",marginBottom:8}}>
@@ -1257,6 +1769,14 @@ function CalendarAddPage({ id }) {
       <div className="result-icon">❌</div>
       <div className="result-title">{t("ticketInvalid")}</div>
       <div className="result-detail">{err}</div>
+    </div>
+  );
+
+  if (lesson.cancelled) return (
+    <div className="result-card err" style={{ margin: 24 }}>
+      <div className="result-icon">❌</div>
+      <div className="result-title">{t("ticketCancelled")}</div>
+      <div className="result-detail">{t("ticketCancelledMsg")}</div>
     </div>
   );
 
@@ -1495,7 +2015,7 @@ export default function App() {
         <div className="content">
           {tab === "instructor" && <InstructorTab profile={profile} toast={toast} />}
           {tab === "guard"      && <GuardTab toast={toast} />}
-          {tab === "log"        && <LogTab />}
+          {tab === "log"        && <LogTab toast={toast} />}
           {tab === "admin"      && <AdminTab profile={profile} toast={toast} />}
         </div>
       </div>
