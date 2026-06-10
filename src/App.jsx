@@ -11,6 +11,9 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL || "").toLowerCase();
 const VENUE_MAPS_URL = "https://maps.google.com/?q=רחוב+דגניה+1,+פתח+תקווה";
+const VENUE_NAME = "קאנטרי נווה עוז";
+const VENUE_ADDRESS = "רח' דגניה 1, פתח תקווה";
+const LESSON_DURATION_MINUTES = 30;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -236,6 +239,110 @@ const css = `
 // ─────────────────────────────────────────────────────────────
 const fmt_time = (t) => (t ? t.slice(0,5) : "");
 
+function parseLessonDateTime(lessonDate, startTime) {
+  const [y, m, d] = lessonDate.split("-").map(Number);
+  const [h, min] = startTime.slice(0, 5).split(":").map(Number);
+  return new Date(y, m - 1, d, h, min, 0);
+}
+
+function addMinutes(date, mins) {
+  return new Date(date.getTime() + mins * 60_000);
+}
+
+function formatIcsLocal(date) {
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}T${pad(date.getHours())}${pad(date.getMinutes())}00`;
+}
+
+function escapeIcs(text) {
+  return text.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
+}
+
+function buildCalendarEvent(lesson, audience, { t, fmtDateDay }) {
+  const start = parseLessonDateTime(lesson.lesson_date, lesson.start_time);
+  const end = addMinutes(start, LESSON_DURATION_MINUTES);
+  const title = t("calEventTitle", {
+    name: audience === "instructor" ? lesson.child_name : lesson.instructor_name,
+  });
+  const description = [
+    `${t("child")}: ${lesson.child_name}`,
+    `${t("date")}: ${fmtDateDay(lesson.lesson_date)}`,
+    `${t("startTime")}: ${fmt_time(lesson.start_time)}`,
+    `${t("duration")}: ${t("calDurationValue")}`,
+    `${t("instructor")}: ${lesson.instructor_name}`,
+    VENUE_MAPS_URL,
+  ].join("\n");
+  return { title, description, start, end, location: `${VENUE_NAME}, ${VENUE_ADDRESS}` };
+}
+
+function buildIcsContent(event) {
+  const uid = `${Date.now()}-${Math.random().toString(36).slice(2)}@pool-app`;
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Neve Oz Pool//HE",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    "BEGIN:VTIMEZONE",
+    "TZID:Asia/Jerusalem",
+    "BEGIN:STANDARD",
+    "TZOFFSETFROM:+0300",
+    "TZOFFSETTO:+0200",
+    "END:STANDARD",
+    "BEGIN:DAYLIGHT",
+    "TZOFFSETFROM:+0200",
+    "TZOFFSETTO:+0300",
+    "END:DAYLIGHT",
+    "END:VTIMEZONE",
+    "BEGIN:VEVENT",
+    `UID:${uid}`,
+    `DTSTAMP:${formatIcsLocal(new Date())}`,
+    `DTSTART;TZID=Asia/Jerusalem:${formatIcsLocal(event.start)}`,
+    `DTEND;TZID=Asia/Jerusalem:${formatIcsLocal(event.end)}`,
+    `SUMMARY:${escapeIcs(event.title)}`,
+    `DESCRIPTION:${escapeIcs(event.description)}`,
+    `LOCATION:${escapeIcs(event.location)}`,
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+}
+
+function buildGoogleCalendarUrl(event) {
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: event.title,
+    dates: `${formatIcsLocal(event.start)}/${formatIcsLocal(event.end)}`,
+    details: event.description,
+    location: event.location,
+    ctz: "Asia/Jerusalem",
+  });
+  return `https://calendar.google.com/calendar/render?${params}`;
+}
+
+function downloadIcs(event) {
+  const blob = new Blob([buildIcsContent(event)], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${event.title}.ics`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function addToCalendar(lesson, audience, i18n) {
+  const event = buildCalendarEvent(lesson, audience, i18n);
+  if (/Android/i.test(navigator.userAgent)) {
+    window.open(buildGoogleCalendarUrl(event), "_blank");
+    return;
+  }
+  downloadIcs(event);
+}
+
+function getCalendarLinkUrl(lessonId) {
+  const base = `${window.location.origin}${window.location.pathname}`;
+  return `${base}?calendar=${lessonId}`;
+}
+
 const PICKER_HOURS   = Array.from({ length: 19 }, (_, i) => i + 5);   // 05–23
 const PICKER_MINUTES = Array.from({ length: 12 }, (_, i) => i * 5);   // 00,05,…,55
 const PICKER_ITEM_H  = 44;
@@ -418,6 +525,9 @@ function ticketCaption(lesson, { t, fmtDateDay }) {
     "",
     t("waLocation"),
     VENUE_MAPS_URL,
+    "",
+    t("waAddCalendar"),
+    getCalendarLinkUrl(lesson.id),
   ].join("\n");
 }
 
@@ -663,6 +773,9 @@ function InstructorTab({ profile, toast }) {
       <div className="gap-8">
         <button className="btn btn-whatsapp" onClick={sendWhatsApp} disabled={sharing}>
           {sharing ? <><div className="spinner"/> {t("preparingImage")}</> : t("sendWhatsApp")}
+        </button>
+        <button className="btn btn-outline" onClick={() => addToCalendar(created, "instructor", i18n)}>
+          📅 {t("addToCalendar")}
         </button>
         <button className="btn btn-outline" onClick={() => setCreated(null)}>+ {t("createAnother")}</button>
       </div>
@@ -1094,6 +1207,65 @@ function ParentTicket({ id }) {
           {t("scannedOn")}: {new Date(lesson.used_at).toLocaleString(locale)}
         </div>
       )}
+      <button
+        className="btn btn-outline mt-8"
+        onClick={() => addToCalendar(lesson, "parent", { t, fmtDateDay })}
+      >
+        📅 {t("addToCalendar")}
+      </button>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+//  CALENDAR ADD (public — ?calendar=UUID)
+// ─────────────────────────────────────────────────────────────
+function CalendarAddPage({ id }) {
+  const i18n = useLang();
+  const { t, fmtDateDay } = i18n;
+  const [lesson, setLesson] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState(null);
+  const triggered = useRef(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase.from("lessons").select("*").eq("id", id).single();
+      if (error || !data) setErr(t("ticketNotFound"));
+      else setLesson(data);
+      setLoading(false);
+    })();
+  }, [id, t]);
+
+  useEffect(() => {
+    if (!lesson || triggered.current) return;
+    triggered.current = true;
+    addToCalendar(lesson, "parent", i18n);
+  }, [lesson, i18n]);
+
+  if (loading) return <div style={{ padding: 40, textAlign: "center", color: "var(--ink-soft)" }}>{t("loading")}</div>;
+  if (err || !lesson) return (
+    <div className="result-card err" style={{ margin: 24 }}>
+      <div className="result-icon">❌</div>
+      <div className="result-title">{t("ticketInvalid")}</div>
+      <div className="result-detail">{err}</div>
+    </div>
+  );
+
+  return (
+    <div style={{ padding: "24px 20px" }}>
+      <div className="section-title">{t("calendarPageTitle")}</div>
+      <div className="section-sub">{t("calendarPageSub")}</div>
+      <div className="lesson-info">
+        <div className="lesson-info-row"><span className="li-key">{t("child")}</span><span className="li-val">{lesson.child_name}</span></div>
+        <div className="lesson-info-row"><span className="li-key">{t("date")}</span><span className="li-val">{fmtDateDay(lesson.lesson_date)}</span></div>
+        <div className="lesson-info-row"><span className="li-key">{t("startTime")}</span><span className="li-val">{fmt_time(lesson.start_time)}</span></div>
+        <div className="lesson-info-row"><span className="li-key">{t("duration")}</span><span className="li-val">{t("calDurationValue")}</span></div>
+        <div className="lesson-info-row"><span className="li-key">{t("instructor")}</span><span className="li-val">{lesson.instructor_name}</span></div>
+      </div>
+      <button className="btn btn-primary mt-8" onClick={() => addToCalendar(lesson, "parent", i18n)}>
+        📅 {t("addToCalendar")}
+      </button>
     </div>
   );
 }
@@ -1108,8 +1280,9 @@ export default function App() {
   const [tab,      setTab]      = useState("instructor");
   const toast = useToast();
 
-  // Check for ?ticket= param
-  const ticketId = new URLSearchParams(window.location.search).get("ticket");
+  const urlParams = new URLSearchParams(window.location.search);
+  const ticketId = urlParams.get("ticket");
+  const calendarId = urlParams.get("calendar");
 
   // Auth listener
   useEffect(() => {
@@ -1178,6 +1351,26 @@ export default function App() {
   };
 
   const logout = async () => { await supabase.auth.signOut(); };
+
+  // ── Calendar add (public, no auth needed) ─────────────────
+  if (calendarId) return (
+    <>
+      <style>{css}</style>
+      <div className="app" dir={dir}>
+        <div className="header">
+          <div className="header-top">
+            <div className="header-logo"><BrandLogo height={32} /> {t("calendarPageTitle")}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <LanguageSwitcher compact />
+            </div>
+          </div>
+          <div className="header-sub">{t("neveOz")}</div>
+        </div>
+        <CalendarAddPage id={calendarId} />
+      </div>
+      <div className={`toast ${toast.visible ? "show" : ""}`}>{toast.msg}</div>
+    </>
+  );
 
   // ── Ticket view (public, no auth needed) ──────────────────
   if (ticketId) return (
