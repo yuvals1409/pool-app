@@ -10,6 +10,7 @@ import { useLang, LanguageSwitcher, fmtDate as fmt_date } from "./i18n.jsx";
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL || "").toLowerCase();
+const VENUE_MAPS_URL = "https://maps.google.com/?q=רחוב+דגניה+1,+פתח+תקווה";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -411,7 +412,12 @@ function ticketCaption(lesson, { t, fmtDateDay }) {
     `${t("startTime")}: ${fmt_time(lesson.start_time)}`,
     `${t("instructor")}: ${lesson.instructor_name}`,
     "",
+    t("waOneTimeNote"),
+    "",
     t("waShowGuard"),
+    "",
+    t("waLocation"),
+    VENUE_MAPS_URL,
   ].join("\n");
 }
 
