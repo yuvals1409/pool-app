@@ -71,11 +71,16 @@ npm run build
 
 ## שלב 6 — הגדרת Redirect URL ב-Supabase
 
-לאחר שיש לך URL קבוע (מ-Vercel):
-
 1. **Supabase → Authentication → URL Configuration**
-2. Site URL: `https://your-app.vercel.app`
-3. Redirect URLs: `https://your-app.vercel.app/**`
+2. **Site URL** (פרודקשן): `https://your-app.vercel.app`
+3. **Redirect URLs** — הוסף את **כל** הכתובות הבאות (שורה לכל אחת):
+   ```
+   https://your-app.vercel.app/**
+   http://localhost:5173/**
+   http://127.0.0.1:5173/**
+   ```
+
+> **חשוב:** בלי `localhost` ברשימה, התחברות מקומית תחזיר אותך אוטומטית ל-Vercel אחרי Google.
 
 ---
 

@@ -5,8 +5,8 @@ import {
 import { LESSON_DURATION_MINUTES } from "../../lib/config.js";
 import LessonBlock from "./LessonBlock.jsx";
 
-const SLOT_H = 48;
-const HOUR_SLOTS = 2;
+const SLOT_H = 24;
+const SLOT_GAP = 1;
 
 function getWeekDays(anchorDate) {
   const { start } = getWeekBounds(anchorDate);
@@ -22,6 +22,15 @@ function slotTime(hour, half) {
   return `${String(hour).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
+function slotTop(index) {
+  return index * (SLOT_H + SLOT_GAP);
+}
+
+function lessonHeight(durationMinutes) {
+  const slots = durationMinutes / 30;
+  return slots * SLOT_H + (slots - 1) * SLOT_GAP;
+}
+
 export default function WeekView({
   anchorDate,
   lessons,
@@ -33,23 +42,28 @@ export default function WeekView({
 }) {
   const { t, days: dayNames } = useLang();
   const weekDays = getWeekDays(anchorDate);
+  const totalSlots = SCHEDULE_HOURS.length * 2;
 
   const byDate = {};
   for (const l of lessons) {
     (byDate[l.lesson_date] ||= []).push(l);
   }
 
-  const totalSlots = SCHEDULE_HOURS.length * HOUR_SLOTS;
+  const axisLabels = SCHEDULE_HOURS.flatMap(h => [
+    { key: `${h}-0`, text: `${String(h).padStart(2, "0")}:00`, half: false },
+    { key: `${h}-1`, text: ":30", half: true },
+  ]);
 
   return (
     <div className="schedule-calendar time-grid-wrap">
       <div className="time-grid">
         <div className="time-axis">
-          <div className="time-col-header" style={{ height: 52 }} />
-          {SCHEDULE_HOURS.flatMap(h => [
-            <div key={`${h}-0`} className="time-axis-label">{String(h).padStart(2, "0")}:00</div>,
-            <div key={`${h}-1`} className="time-axis-label" style={{ opacity: 0.4 }}>:</div>,
-          ])}
+          <div className="time-axis-corner" />
+          {axisLabels.map(({ key, text, half }) => (
+            <div key={key} className={`time-axis-label ${half ? "time-axis-label-half" : ""}`}>
+              {text}
+            </div>
+          ))}
         </div>
         {weekDays.map((day, colIdx) => {
           const dateStr = toLocalDateStr(day);
@@ -62,16 +76,15 @@ export default function WeekView({
                 {dayNames[colIdx]}
                 <span className="day-num">{day.getDate()}</span>
               </div>
-              <div style={{ position: "relative" }}>
+              <div className="time-col-body">
                 {SCHEDULE_HOURS.flatMap(h =>
                   [0, 1].map(half => {
                     const time = slotTime(h, half);
                     const dropKey = `${dateStr}|${time}`;
-                    const isDrop = dropTarget === dropKey;
                     return (
                       <div
                         key={dropKey}
-                        className={`time-slot ${isDrop ? "drop-target" : ""}`}
+                        className={`time-slot ${dropTarget === dropKey ? "drop-target" : ""}`}
                         data-drop-date={dateStr}
                         data-drop-time={time}
                         onClick={() => canEdit && onSlotClick?.(dateStr, time)}
@@ -82,8 +95,6 @@ export default function WeekView({
                 {dayLessons.map(lesson => {
                   const mins = timeToMinutes(lesson.start_time);
                   const startSlot = (mins - 5 * 60) / 30;
-                  const height = (LESSON_DURATION_MINUTES / 30) * SLOT_H;
-                  const top = startSlot * SLOT_H;
                   if (startSlot < 0 || startSlot >= totalSlots) return null;
                   return (
                     <LessonBlock
@@ -95,10 +106,10 @@ export default function WeekView({
                       onDragStart={onDragStart}
                       style={{
                         position: "absolute",
-                        left: 2,
-                        right: 2,
-                        top: top + 1,
-                        height: Math.max(height - 2, 22),
+                        left: 3,
+                        right: 3,
+                        top: slotTop(startSlot),
+                        height: Math.max(lessonHeight(LESSON_DURATION_MINUTES), SLOT_H),
                         zIndex: 2,
                       }}
                     />

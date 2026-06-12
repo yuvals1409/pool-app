@@ -21,6 +21,7 @@ import {
 } from "./lib/lessonNotify.js";
 import TimeScrollPicker from "./components/TimeScrollPicker.jsx";
 import ScheduleTab from "./components/schedule/ScheduleTab.jsx";
+import { getOAuthRedirectUrl } from "./lib/authRedirect.js";
 
 // ─────────────────────────────────────────────────────────────
 //  DESIGN TOKENS
@@ -495,9 +496,13 @@ function LoginPage({ toast }) {
 
   const signIn = async () => {
     setLoading(true);
+    const redirectTo = getOAuthRedirectUrl();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin },
+      options: {
+        redirectTo,
+        queryParams: { prompt: "select_account" },
+      },
     });
     if (error) { toast.show(t("loginError")); setLoading(false); }
   };
