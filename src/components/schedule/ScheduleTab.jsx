@@ -137,6 +137,14 @@ export default function ScheduleTab({ profile, toast }) {
       return;
     }
 
+    if (action.type === "edit" && scope === RECURRING_SCOPE.SINGLE) {
+      const newDate = action.form?.lesson_date ?? lesson.lesson_date;
+      if (newDate !== lesson.lesson_date) {
+        toast.show(t("recurringSingleDateError"));
+        return;
+      }
+    }
+
     const confirmMsg = action.type === "reschedule"
       ? t("rescheduleConfirm", { name: lesson.child_name, time: action.updates.start_time })
       : t("editConfirm", { name: lesson.child_name });
@@ -255,6 +263,7 @@ export default function ScheduleTab({ profile, toast }) {
 
       {panel && (
         <LessonPanel
+          key={panel.lesson?.id || panel.mode}
           mode={panel.mode}
           lesson={panel.lesson}
           profile={profile}

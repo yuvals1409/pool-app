@@ -73,10 +73,20 @@ export async function updateLesson({
   const newDate = updates.lesson_date ?? lesson.lesson_date;
   const newTime = (updates.start_time ?? lesson.start_time)?.slice(0, 5);
 
+  if (lesson.recurring_lesson_id && scope === RECURRING_SCOPE.SINGLE && newDate !== lesson.lesson_date) {
+    const msg = i18n?.t?.("recurringSingleDateError") || "Cannot change date for a single occurrence";
+    return { error: { message: msg } };
+  }
+
   if (lesson.recurring_lesson_id && scope === RECURRING_SCOPE.FORWARD) {
     const day_of_week = dateToDayOfWeek(newDate);
     await supabase.from("recurring_lessons")
-      .update({ start_time: newTime, day_of_week })
+      .update({
+        start_time: newTime,
+        day_of_week,
+        child_name: updates.child_name ?? lesson.child_name,
+        parent_phone: parentPhone,
+      })
       .eq("id", lesson.recurring_lesson_id);
 
     const future = await fetchFutureSeriesLessons(lesson.recurring_lesson_id, lesson.lesson_date);
@@ -109,10 +119,12 @@ export async function updateLesson({
     return { data: updatedLessons.find(l => l.id === lesson.id) || updatedLessons[0], updatedLessons };
   }
 
+  const singleDate = lesson.recurring_lesson_id ? lesson.lesson_date : newDate;
+
   const { data, error } = await supabase.from("lessons")
     .update({
       child_name: updates.child_name ?? lesson.child_name,
-      lesson_date: newDate,
+      lesson_date: singleDate,
       start_time: newTime,
       end_time: newTime,
       parent_phone: parentPhone,

@@ -13,6 +13,17 @@ const blankForm = () => ({
   instructor_id: "",
 });
 
+function lessonToForm(lesson) {
+  return {
+    child_name: lesson.child_name,
+    lesson_date: lesson.lesson_date,
+    start_time: lesson.start_time?.slice(0, 5) || "09:00",
+    parent_phone: lesson.parent_phone || "",
+    lesson_type: "once",
+    instructor_id: lesson.instructor_id || "",
+  };
+}
+
 export default function LessonPanel({
   mode,
   lesson,
@@ -29,16 +40,7 @@ export default function LessonPanel({
   const { t, fmtDateDay, dir } = useLang();
   const [form, setForm] = useState(() => {
     if (mode === "create") return { ...blankForm(), ...initialForm };
-    if (mode === "edit" && lesson) {
-      return {
-        child_name: lesson.child_name,
-        lesson_date: lesson.lesson_date,
-        start_time: lesson.start_time?.slice(0, 5) || "09:00",
-        parent_phone: lesson.parent_phone || "",
-        lesson_type: "once",
-        instructor_id: lesson.instructor_id || "",
-      };
-    }
+    if (lesson) return lessonToForm(lesson);
     return blankForm();
   });
   const [editMode, setEditMode] = useState(mode === "create" || mode === "edit");
@@ -47,6 +49,12 @@ export default function LessonPanel({
   const editable = lesson && canEditLesson(profile, lesson);
   const status = lesson ? lessonStatus(lesson) : null;
   const past = lesson ? isPastLesson(lesson) : false;
+  const isRecurring = Boolean(lesson?.recurring_lesson_id);
+
+  const enterEditMode = () => {
+    if (lesson) setForm(lessonToForm(lesson));
+    setEditMode(true);
+  };
 
   const handleSave = () => {
     const { child_name, lesson_date, start_time, parent_phone } = form;
@@ -162,7 +170,7 @@ export default function LessonPanel({
             </div>
             {editable && (
               <div className="gap-8" style={{ marginTop: 16 }}>
-                <button type="button" className="btn btn-outline" onClick={() => setEditMode(true)} disabled={acting}>
+                <button type="button" className="btn btn-outline" onClick={enterEditMode} disabled={acting}>
                   ✎ {t("editLesson")}
                 </button>
                 <button type="button" className="btn btn-danger" onClick={requestCancel} disabled={acting}>
@@ -187,6 +195,9 @@ export default function LessonPanel({
               <label className="label">{t("lessonDate")}</label>
               <input className="input" type="date" value={form.lesson_date}
                 onChange={e => setForm(f => ({ ...f, lesson_date: e.target.value }))} />
+              {isRecurring && (
+                <div className="schedule-readonly-hint" style={{ marginTop: 6 }}>{t("recurringDateHint")}</div>
+              )}
             </div>
             <div className="field">
               <label className="label">{t("lessonStartTime")}</label>
@@ -202,7 +213,7 @@ export default function LessonPanel({
               <button type="button" className="btn btn-primary" onClick={handleSave} disabled={acting}>
                 {acting ? <><div className="spinner" /> {t("preparingImage")}</> : t("saveAndNotify")}
               </button>
-              <button type="button" className="btn btn-outline" onClick={() => setEditMode(false)} disabled={acting}>{t("cancel")}</button>
+              <button type="button" className="btn btn-outline" onClick={() => { if (lesson) setForm(lessonToForm(lesson)); setEditMode(false); }} disabled={acting}>{t("cancel")}</button>
             </div>
           </>
         )}
