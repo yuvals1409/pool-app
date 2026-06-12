@@ -1,49 +1,26 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { createClient } from "@supabase/supabase-js";
 import QRCode from "qrcode";
 import jsQR from "jsqr";
 import { useLang, LanguageSwitcher, fmtDate as fmt_date } from "./i18n.jsx";
-
-// ─────────────────────────────────────────────────────────────
-//  CONFIG — החלף עם הערכים מ-Supabase
-// ─────────────────────────────────────────────────────────────
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL || "").toLowerCase();
-const VENUE_MAPS_URL = "https://maps.google.com/?q=רחוב+דגניה+1,+פתח+תקווה";
-const VENUE_NAME = "קאנטרי נווה עוז";
-const VENUE_ADDRESS = "רח' דגניה 1, פתח תקווה";
-const LESSON_DURATION_MINUTES = 30;
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storage: localStorage,
-    storageKey: "pool-app-auth",
-  },
-});
-
-const isOwner       = (p) => !!p && p.email?.toLowerCase() === ADMIN_EMAIL;
-const canManage     = (p) => isOwner(p) || p?.role === "admin";
-const canCreateLesson = (p) => isOwner(p) || p?.role === "admin" || p?.role === "instructor";
-const canScan       = (p) => isOwner(p) || p?.role === "admin" || p?.role === "instructor" || p?.role === "guard";
-const canViewHistory = (p) => canCreateLesson(p);
-
-const ACTIVE_USER_ROLE_ORDER = ["admin", "instructor", "guard"];
-
-const assignableRoles = (p) => {
-  if (isOwner(p)) return ["admin", "instructor", "guard"];
-  if (p?.role === "admin") return ["instructor", "guard"];
-  return [];
-};
-
-const canRevokeUser = (actor, target) => {
-  if (!target || isOwner(target)) return false;
-  if (target.role === "admin" && !isOwner(actor)) return false;
-  return canManage(actor);
-};
+import {
+  ADMIN_EMAIL, VENUE_MAPS_URL, VENUE_NAME, VENUE_ADDRESS,
+  LESSON_DURATION_MINUTES, ENTRY_WINDOW_MINUTES,
+} from "./lib/config.js";
+import { supabase, ensureWeeklyLessonsGenerated, markLessonNotified } from "./lib/supabase.js";
+import {
+  isOwner, canManage, canCreateLesson, canScan, canViewSchedule,
+  ACTIVE_USER_ROLE_ORDER, assignableRoles, canRevokeUser,
+} from "./lib/permissions.js";
+import {
+  fmt_time, toLocalDateStr, dateToDayOfWeek, getWeekBounds,
+  parseLessonDateTime, addMinutes, isValidStartTime,
+} from "./lib/lessonDates.js";
+import {
+  getLessonQrValue,
+  shareTicketViaWhatsApp, shareCancellationViaWhatsApp,
+} from "./lib/lessonNotify.js";
+import TimeScrollPicker from "./components/TimeScrollPicker.jsx";
+import ScheduleTab from "./components/schedule/ScheduleTab.jsx";
 
 // ─────────────────────────────────────────────────────────────
 //  DESIGN TOKENS
@@ -270,44 +247,6 @@ const css = `
 // ─────────────────────────────────────────────────────────────
 //  HELPERS
 // ─────────────────────────────────────────────────────────────
-const fmt_time = (t) => (t ? t.slice(0,5) : "");
-
-function getLessonQrValue(lesson) {
-  return lesson.qr_token || lesson.id;
-}
-
-function toLocalDateStr(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-
-function dateToDayOfWeek(lessonDate) {
-  const [y, m, d] = lessonDate.split("-").map(Number);
-  return new Date(y, m - 1, d).getDay();
-}
-
-function getWeekBounds(date = new Date()) {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  const sunday = new Date(d);
-  sunday.setDate(d.getDate() - d.getDay());
-  const saturday = new Date(sunday);
-  saturday.setDate(sunday.getDate() + 6);
-  return { start: sunday, end: saturday };
-}
-
-async function markLessonNotified(lessonId) {
-  await supabase.from("lessons")
-    .update({ notified_at: new Date().toISOString() })
-    .eq("id", lessonId);
-}
-
-async function ensureWeeklyLessonsGenerated() {
-  await supabase.rpc("generate_weekly_recurring_lessons");
-}
-
 async function lookupLessonByQr(value) {
   const { data: byToken } = await supabase.from("lessons").select("*").eq("qr_token", value).maybeSingle();
   if (byToken) return byToken;
@@ -315,18 +254,6 @@ async function lookupLessonByQr(value) {
   if (byId && byId.qr_token === byId.id) return byId;
   return null;
 }
-
-function parseLessonDateTime(lessonDate, startTime) {
-  const [y, m, d] = lessonDate.split("-").map(Number);
-  const [h, min] = startTime.slice(0, 5).split(":").map(Number);
-  return new Date(y, m - 1, d, h, min, 0);
-}
-
-function addMinutes(date, mins) {
-  return new Date(date.getTime() + mins * 60_000);
-}
-
-const ENTRY_WINDOW_MINUTES = 30;
 
 function getEarliestEntryTime(lesson) {
   return addMinutes(parseLessonDateTime(lesson.lesson_date, lesson.start_time), -ENTRY_WINDOW_MINUTES);
@@ -430,97 +357,6 @@ function addToCalendar(lesson, audience, i18n) {
   downloadIcs(event);
 }
 
-function getCalendarLinkUrl(lessonId) {
-  const base = `${window.location.origin}${window.location.pathname}`;
-  return `${base}?calendar=${lessonId}`;
-}
-
-const PICKER_HOURS   = Array.from({ length: 19 }, (_, i) => i + 5);   // 05–23
-const PICKER_MINUTES = Array.from({ length: 12 }, (_, i) => i * 5);   // 00,05,…,55
-const PICKER_ITEM_H  = 44;
-const MIN_START_MINS = 5 * 60;    // 05:00
-const MAX_START_MINS = 23 * 60;   // 23:00
-
-function minutesForHour(hour) {
-  return hour === 23 ? [0] : PICKER_MINUTES;
-}
-
-function snapMinute(m, options = PICKER_MINUTES) {
-  return options.reduce((best, n) => Math.abs(n - m) < Math.abs(best - m) ? n : best, options[0]);
-}
-
-function parsePickerTime(value) {
-  if (!value) return [9, 0];
-  const [hh, mm] = value.split(":").map(Number);
-  const hour = PICKER_HOURS.includes(hh) ? hh : 9;
-  const mins = minutesForHour(hour);
-  const minute = hour === 23 ? 0 : snapMinute(mm, mins);
-  return [hour, minute];
-}
-
-function isValidStartTime(time) {
-  if (!time) return false;
-  const [h, m] = time.split(":").map(Number);
-  const total = h * 60 + m;
-  return total >= MIN_START_MINS && total <= MAX_START_MINS;
-}
-
-function TimeScrollPicker({ value, onChange }) {
-  const hourRef = useRef(null);
-  const minRef  = useRef(null);
-  const [hour, minute] = parsePickerTime(value);
-  const minuteOptions = minutesForHour(hour);
-
-  const scrollTo = (ref, index) => {
-    if (ref.current) ref.current.scrollTop = index * PICKER_ITEM_H;
-  };
-
-  useEffect(() => {
-    const [h, m] = parsePickerTime(value);
-    scrollTo(hourRef, PICKER_HOURS.indexOf(h));
-    scrollTo(minRef, minutesForHour(h).indexOf(m));
-  }, []);
-
-  useEffect(() => {
-    if (hour === 23) scrollTo(minRef, 0);
-  }, [hour]);
-
-  const emit = (h, m) => onChange(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
-
-  const onHourScroll = () => {
-    const idx = Math.round(hourRef.current.scrollTop / PICKER_ITEM_H);
-    const h = PICKER_HOURS[Math.max(0, Math.min(PICKER_HOURS.length - 1, idx))];
-    const m = h === 23 ? 0 : minute;
-    if (h !== hour || m !== minute) emit(h, m);
-  };
-
-  const onMinScroll = () => {
-    if (hour === 23) return;
-    const idx = Math.round(minRef.current.scrollTop / PICKER_ITEM_H);
-    const m = minuteOptions[Math.max(0, Math.min(minuteOptions.length - 1, idx))];
-    if (m !== minute) emit(hour, m);
-  };
-
-  return (
-    <div className="time-picker">
-      <div className="time-col" ref={hourRef} onScroll={onHourScroll}>
-        <div className="time-col-spacer" />
-        {PICKER_HOURS.map(h => (
-          <div key={h} className={`time-item ${h === hour ? "active" : ""}`}>{String(h).padStart(2, "0")}</div>
-        ))}
-        <div className="time-col-spacer" />
-      </div>
-      <span className="time-sep">:</span>
-      <div className="time-col" ref={minRef} onScroll={onMinScroll}>
-        <div className="time-col-spacer" />
-        {minuteOptions.map(m => (
-          <div key={m} className={`time-item ${m === minute ? "active" : ""}`}>{String(m).padStart(2, "0")}</div>
-        ))}
-        <div className="time-col-spacer" />
-      </div>
-    </div>
-  );
-}
 const initials  = (name) => name ? name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase() : "?";
 
 function useToast() {
@@ -600,148 +436,6 @@ function TicketCard({ lesson, qrSize = 200, label }) {
       <div className="qr-label">{label || t("ticketOneTime")}</div>
     </div>
   );
-}
-
-function cancellationCaption(lesson, { t, fmtDateDay }) {
-  return [
-    t("waHello"),
-    t("waLessonCancelled", { name: lesson.child_name }),
-    "",
-    `${t("date")}: ${fmtDateDay(lesson.lesson_date)}`,
-    `${t("startTime")}: ${fmt_time(lesson.start_time)}`,
-    `${t("instructor")}: ${lesson.instructor_name}`,
-    "",
-    t("waBarcodeInvalid"),
-  ].join("\n");
-}
-
-function ticketCaption(lesson, { t, fmtDateDay }, { updated = false } = {}) {
-  return [
-    t("waHello"),
-    updated ? t("waLessonUpdated", { name: lesson.child_name }) : t("waBarcodeFor", { name: lesson.child_name }),
-    "",
-    `${t("date")}: ${fmtDateDay(lesson.lesson_date)}`,
-    `${t("startTime")}: ${fmt_time(lesson.start_time)}`,
-    `${t("instructor")}: ${lesson.instructor_name}`,
-    "",
-    t("waOneTimeNote"),
-    "",
-    t("waShowGuard"),
-    "",
-    t("waLocation"),
-    VENUE_MAPS_URL,
-    "",
-    t("waAddCalendar"),
-    getCalendarLinkUrl(lesson.id),
-  ].join("\n");
-}
-
-async function generateTicketImage(lesson, { t, fmtDateDay, dir }) {
-  const [logo] = await Promise.all([
-    loadProcessedLogo(),
-    document.fonts?.load?.('600 15px "IBM Plex Sans Hebrew"'),
-    document.fonts?.load?.('700 16px "IBM Plex Sans Hebrew"'),
-  ].filter(Boolean));
-
-  const qrSize = 280;
-  const qrCanvas = document.createElement("canvas");
-  await QRCode.toCanvas(qrCanvas, getLessonQrValue(lesson), {
-    width: qrSize, margin: 2, color: { dark: "#012A4A", light: "#FFFFFF" },
-  });
-
-  const W = 400, pad = 28, logoH = 56;
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  canvas.width = W;
-  canvas.height = pad + logoH + 36 + qrSize + 120 + pad;
-
-  ctx.fillStyle = "#FFFFFF";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  const logoW = logo.width * (logoH / logo.height);
-  ctx.drawImage(logo, (W - logoW) / 2, pad, logoW, logoH);
-
-  let y = pad + logoH + 36;
-  ctx.fillStyle = "#012A4A";
-  ctx.font = '700 16px "IBM Plex Sans Hebrew", Arial, sans-serif';
-  ctx.textAlign = "center";
-  ctx.fillText(t("ticketTitle"), W / 2, y);
-  y += 28;
-
-  ctx.drawImage(qrCanvas, (W - qrSize) / 2, y, qrSize, qrSize);
-  y += qrSize + 28;
-
-  ctx.font = '600 15px "IBM Plex Sans Hebrew", Arial, sans-serif';
-  const rtl = dir === "rtl";
-  ctx.textAlign = rtl ? "right" : "left";
-  const textX = rtl ? W - pad : pad;
-  for (const line of [
-    `${t("child")}: ${lesson.child_name}`,
-    `${t("date")}: ${fmtDateDay(lesson.lesson_date)}`,
-    `${t("startTime")}: ${fmt_time(lesson.start_time)}`,
-    `${t("instructor")}: ${lesson.instructor_name}`,
-  ]) {
-    ctx.fillText(line, textX, y);
-    y += 24;
-  }
-
-  ctx.font = '500 12px "IBM Plex Sans Hebrew", Arial, sans-serif';
-  ctx.fillStyle = "#6BA3BE";
-  ctx.textAlign = "center";
-  ctx.fillText(t("ticketOneTime"), W / 2, y + 8);
-
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(b => (b ? resolve(b) : reject(new Error("image"))), "image/png");
-  });
-}
-
-const isMobileDevice = () => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-async function shareMessageViaWhatsApp(phone, message) {
-  const digits = phone.replace(/\D/g, "").replace(/^0/, "972");
-  if (isMobileDevice() && navigator.share) {
-    try {
-      await navigator.share({ text: message });
-      return;
-    } catch (e) {
-      if (e.name === "AbortError") return;
-    }
-  }
-  window.open(`https://wa.me/${digits}?text=${encodeURIComponent(message)}`, "_blank");
-}
-
-async function shareCancellationViaWhatsApp(lesson, phone, i18n) {
-  await shareMessageViaWhatsApp(phone, cancellationCaption(lesson, i18n));
-}
-
-async function shareTicketViaWhatsApp(lesson, phone, toast, i18n, { updated = false } = {}) {
-  const blob = await generateTicketImage(lesson, i18n);
-  const file = new File([blob], `ticket-${lesson.child_name}.png`, { type: "image/png" });
-  const caption = ticketCaption(lesson, i18n, { updated });
-  const digits = phone.replace(/\D/g, "").replace(/^0/, "972");
-
-  // בטלפון — שיתוף ישיר עם תמונה מצורפת (בוחרים WhatsApp ואז את ההורה)
-  if (isMobileDevice() && navigator.canShare?.({ files: [file] })) {
-    try {
-      await navigator.share({ files: [file], text: caption });
-      return;
-    } catch (e) {
-      if (e.name === "AbortError") return;
-    }
-  }
-
-  // במחשב — מוריד את התמונה ופותח WhatsApp עם ההודעה (צרף את התמונה ידנית)
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `כרטיס-${lesson.child_name}.png`;
-  a.click();
-  URL.revokeObjectURL(url);
-
-  toast.show(i18n.t("imageDownloaded"));
-  setTimeout(() => {
-    window.open(`https://wa.me/${digits}?text=${encodeURIComponent(caption)}`, "_blank");
-  }, 600);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1217,227 +911,6 @@ function GuardTab({ toast }) {
             ))}
           </div>
         </>
-      )}
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────
-//  LOG TAB
-// ─────────────────────────────────────────────────────────────
-function LogTab({ toast }) {
-  const i18n = useLang();
-  const { t, fmtDateDay, locale, dir } = i18n;
-  const [entries, setEntries] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("");
-  const [editing, setEditing] = useState(null);
-  const [editForm, setEditForm] = useState(null);
-  const [acting, setActing] = useState(false);
-  const [phonePrompt, setPhonePrompt] = useState(null);
-
-  const load = async () => {
-    setLoading(true);
-    const { data } = await supabase.from("lessons").select("*").order("created_at", { ascending: false }).limit(200);
-    if (data) setEntries(data);
-    setLoading(false);
-  };
-
-  useEffect(() => { load(); }, []);
-
-  const lessonStatus = (l) => {
-    if (l.cancelled) return "cancelled";
-    if (l.used) return "used";
-    return "waiting";
-  };
-
-  const statusBadge = (l) => {
-    const status = lessonStatus(l);
-    const cls = { used: "badge-used", waiting: "badge-active", cancelled: "badge-cancelled" }[status];
-    const label = { used: t("used"), waiting: t("waiting"), cancelled: t("cancelled") }[status];
-    return <span className={`badge ${cls}`}>{label}</span>;
-  };
-
-  const dotColor = (l) => {
-    const status = lessonStatus(l);
-    return { used: "var(--success)", waiting: "var(--warn)", cancelled: "var(--danger)" }[status];
-  };
-
-  const canManageLesson = (l) => !l.used && !l.cancelled;
-
-  const startEdit = (lesson) => {
-    setEditing(lesson);
-    setEditForm({
-      child_name: lesson.child_name,
-      lesson_date: lesson.lesson_date,
-      start_time: lesson.start_time?.slice(0, 5) || "09:00",
-      parent_phone: lesson.parent_phone || "",
-    });
-    setPhonePrompt(null);
-  };
-
-  const cancelEdit = () => {
-    setEditing(null);
-    setEditForm(null);
-  };
-
-  const saveEdit = async () => {
-    const { child_name, lesson_date, start_time, parent_phone } = editForm;
-    if (!child_name || !lesson_date || !start_time || !parent_phone)
-      return toast.show(t("fillAllFields"));
-    if (!isValidStartTime(start_time)) return toast.show(t("invalidTime"));
-    setActing(true);
-    const { data, error } = await supabase.from("lessons")
-      .update({
-        child_name,
-        lesson_date,
-        start_time,
-        end_time: start_time,
-        parent_phone,
-        qr_token: crypto.randomUUID(),
-      })
-      .eq("id", editing.id)
-      .select()
-      .single();
-    if (error) {
-      toast.show(`${t("editError")}: ${error.message}`);
-      setActing(false);
-      return;
-    }
-    try {
-      await shareTicketViaWhatsApp(data, parent_phone, toast, i18n, { updated: true });
-    } catch {
-      toast.show(t("shareError"));
-    }
-    toast.show(t("lessonUpdated"));
-    cancelEdit();
-    setActing(false);
-    load();
-  };
-
-  const requestCancel = (lesson) => {
-    if (!lesson.parent_phone) {
-      setPhonePrompt({ lesson, phone: "", action: "cancel" });
-      setEditing(null);
-      setEditForm(null);
-      return;
-    }
-    if (!confirm(t("cancelConfirm", { name: lesson.child_name }))) return;
-    performCancel(lesson, lesson.parent_phone);
-  };
-
-  const performCancel = async (lesson, phone) => {
-    if (!phone) return toast.show(t("phoneRequiredForNotify"));
-    setActing(true);
-    const { data, error } = await supabase.from("lessons")
-      .update({ cancelled: true, cancelled_at: new Date().toISOString(), parent_phone: phone })
-      .eq("id", lesson.id)
-      .select()
-      .single();
-    if (error) {
-      toast.show(`${t("cancelError")}: ${error.message}`);
-      setActing(false);
-      return;
-    }
-    try {
-      await shareCancellationViaWhatsApp(data, phone, i18n);
-    } catch {
-      toast.show(t("shareError"));
-    }
-    toast.show(t("lessonCancelled"));
-    setPhonePrompt(null);
-    setActing(false);
-    load();
-  };
-
-  const filtered = entries.filter(e =>
-    !filter || e.child_name.includes(filter) || e.instructor_name?.includes(filter)
-  );
-
-  return (
-    <div>
-      <div className="section-title">{t("history")}</div>
-      <div className="section-sub">{t("historySub")}</div>
-
-      {editing && editForm && (
-        <div className="card" style={{ marginBottom: 16 }}>
-          <div className="section-title" style={{ fontSize: 17 }}>{t("editLesson")}</div>
-          <div className="section-sub" style={{ marginBottom: 16 }}>{t("editLessonSub")}</div>
-          <div className="field"><label className="label">{t("childName")}</label>
-            <input className="input" value={editForm.child_name}
-              onChange={e => setEditForm(f => ({ ...f, child_name: e.target.value }))} dir={dir} /></div>
-          <div className="field"><label className="label">{t("lessonDate")}</label>
-            <input className="input" type="date" value={editForm.lesson_date}
-              onChange={e => setEditForm(f => ({ ...f, lesson_date: e.target.value }))} /></div>
-          <div className="field"><label className="label">{t("lessonStartTime")}</label>
-            <TimeScrollPicker value={editForm.start_time}
-              onChange={v => setEditForm(f => ({ ...f, start_time: v }))} /></div>
-          <div className="field"><label className="label">{t("parentPhone")}</label>
-            <input className="input" type="tel" value={editForm.parent_phone}
-              onChange={e => setEditForm(f => ({ ...f, parent_phone: e.target.value }))} dir="ltr" /></div>
-          <div className="gap-8">
-            <button className="btn btn-primary" onClick={saveEdit} disabled={acting}>
-              {acting ? <><div className="spinner" /> {t("preparingImage")}</> : t("saveAndNotify")}
-            </button>
-            <button className="btn btn-outline" onClick={cancelEdit} disabled={acting}>{t("cancel")}</button>
-          </div>
-        </div>
-      )}
-
-      {phonePrompt && (
-        <div className="card" style={{ marginBottom: 16 }}>
-          <div className="section-title" style={{ fontSize: 17 }}>{t("cancelLesson")}</div>
-          <div className="section-sub" style={{ marginBottom: 16 }}>
-            {t("cancelConfirm", { name: phonePrompt.lesson.child_name })}
-          </div>
-          <div className="field"><label className="label">{t("parentPhone")}</label>
-            <input className="input" type="tel" placeholder="050-0000000" value={phonePrompt.phone}
-              onChange={e => setPhonePrompt(p => ({ ...p, phone: e.target.value }))} dir="ltr" /></div>
-          <div className="gap-8">
-            <button className="btn btn-danger" onClick={() => performCancel(phonePrompt.lesson, phonePrompt.phone)} disabled={acting}>
-              {acting ? <><div className="spinner" /> {t("saving")}</> : t("sendCancelWhatsApp")}
-            </button>
-            <button className="btn btn-outline" onClick={() => setPhonePrompt(null)} disabled={acting}>{t("cancel")}</button>
-          </div>
-        </div>
-      )}
-
-      <input className="input" placeholder={t("searchPlaceholder")} value={filter}
-        onChange={e => setFilter(e.target.value)} style={{ marginBottom: 16 }} />
-      {loading ? (
-        <div style={{ textAlign: "center", padding: 32, color: "var(--ink-soft)" }}>{t("loading")}</div>
-      ) : filtered.length === 0 ? (
-        <div className="empty"><div className="empty-icon">📋</div><div className="empty-text">{t("noResults")}</div></div>
-      ) : (
-        <div className="card" style={{ padding: "4px 16px" }}>
-          {filtered.map(l => (
-            <div className="log-item" key={l.id}>
-              <div className="log-dot" style={{ background: dotColor(l) }} />
-              <div style={{ flex: 1 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div className="log-name">{l.child_name}</div>
-                  {statusBadge(l)}
-                </div>
-                <div className="log-meta">{fmtDateDay(l.lesson_date)} · {fmt_time(l.start_time)}</div>
-                <div className="log-meta">{t("instructor")}: {l.instructor_name}</div>
-                {l.used && <div className="log-meta">{t("entry")}: {new Date(l.used_at).toLocaleString(locale)}</div>}
-                {l.cancelled && l.cancelled_at && (
-                  <div className="log-meta">{t("cancelled")}: {new Date(l.cancelled_at).toLocaleString(locale)}</div>
-                )}
-                {canManageLesson(l) && (
-                  <div className="log-actions">
-                    <button className="btn btn-outline btn-sm" onClick={() => startEdit(l)} disabled={acting || !!editing}>
-                      ✎ {t("editLesson")}
-                    </button>
-                    <button className="btn btn-danger btn-sm" onClick={() => requestCancel(l)} disabled={acting || !!editing}>
-                      ✕ {t("cancelLesson")}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
       )}
     </div>
   );
@@ -1966,7 +1439,7 @@ export default function App() {
   const allTabs = [
     canCreateLesson(profile) && { id:"instructor", icon:"🏊", label: t("tabLesson") },
     canScan(profile)         && { id:"guard",      icon:"🔍", label: t("tabScan") },
-    canViewHistory(profile)  && { id:"log",        icon:"📋", label: t("tabHistory") },
+    canViewSchedule(profile) && { id:"schedule",   icon:"📅", label: t("tabSchedule") },
     canManage(profile)       && { id:"admin",      icon:"⚙️", label: t("tabAdmin") },
   ].filter(Boolean);
 
@@ -2004,7 +1477,7 @@ export default function App() {
         <div className="content">
           {tab === "instructor" && <InstructorTab profile={profile} toast={toast} />}
           {tab === "guard"      && <GuardTab toast={toast} />}
-          {tab === "log"        && <LogTab toast={toast} />}
+          {tab === "schedule"   && <ScheduleTab profile={profile} toast={toast} />}
           {tab === "admin"      && <AdminTab profile={profile} toast={toast} />}
         </div>
       </div>
