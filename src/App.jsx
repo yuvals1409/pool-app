@@ -31,6 +31,8 @@ const canCreateLesson = (p) => isOwner(p) || p?.role === "admin" || p?.role === 
 const canScan       = (p) => isOwner(p) || p?.role === "admin" || p?.role === "instructor" || p?.role === "guard";
 const canViewHistory = (p) => canCreateLesson(p);
 
+const ACTIVE_USER_ROLE_ORDER = ["admin", "instructor", "guard"];
+
 const assignableRoles = (p) => {
   if (isOwner(p)) return ["admin", "instructor", "guard"];
   if (p?.role === "admin") return ["instructor", "guard"];
@@ -233,6 +235,16 @@ const css = `
   .user-display { font-weight:600; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .user-email { font-size:12px; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .user-actions { display:flex; gap:6px; flex-shrink:0; }
+  .role-section { margin-bottom: 10px; }
+  .role-section-header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; cursor:pointer; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); transition:background .15s; user-select:none; }
+  .role-section-header:hover { background:var(--pool-pale); }
+  .role-section-header.open { border-bottom-left-radius:0; border-bottom-right-radius:0; }
+  .role-section-title { display:flex; align-items:center; gap:8px; font-size:14px; font-weight:700; color:var(--ink); }
+  .role-section-count { font-size:12px; font-weight:600; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; }
+  .role-section-chevron { font-size:12px; color:var(--ink-soft); transition:transform .2s; flex-shrink:0; }
+  .role-section-header.open .role-section-chevron { transform:rotate(180deg); }
+  .role-section-body { display:none; border:1px solid var(--border); border-top:none; border-radius:0 0 var(--radius-sm) var(--radius-sm); padding:4px 16px; background:var(--surface); }
+  .role-section-body.open { display:block; }
 
   /* MISC */
   .divider { height:1px; background:var(--border); margin:20px 0; }
@@ -312,6 +324,21 @@ function parseLessonDateTime(lessonDate, startTime) {
 
 function addMinutes(date, mins) {
   return new Date(date.getTime() + mins * 60_000);
+}
+
+const ENTRY_WINDOW_MINUTES = 30;
+
+function getEarliestEntryTime(lesson) {
+  return addMinutes(parseLessonDateTime(lesson.lesson_date, lesson.start_time), -ENTRY_WINDOW_MINUTES);
+}
+
+function formatEntryFromTime(date, locale) {
+  const now = new Date();
+  const sameDay = date.getFullYear() === now.getFullYear()
+    && date.getMonth() === now.getMonth()
+    && date.getDate() === now.getDate();
+  if (sameDay) return date.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+  return date.toLocaleString(locale, { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
 function formatIcsLocal(date) {
@@ -1118,6 +1145,12 @@ function GuardTab({ toast }) {
       if (!lesson) { setResult({ ok:false, msg: t("barcodeNotFound") }); setLoading(false); return; }
       if (lesson.cancelled) { setResult({ ok:false, lesson, msg: t("barcodeCancelled") }); setLoading(false); return; }
       if (lesson.used) { setResult({ ok:false, lesson, msg:`${t("barcodeUsed")}\n${t("scannedOn")}: ${new Date(lesson.used_at).toLocaleString(locale)}` }); setLoading(false); return; }
+      const earliestEntry = getEarliestEntryTime(lesson);
+      if (new Date() < earliestEntry) {
+        setResult({ ok:false, lesson, msg: t("entryTooEarly", { time: formatEntryFromTime(earliestEntry, locale) }) });
+        setLoading(false);
+        return;
+      }
       const { error: upErr } = await supabase.from("lessons").update({ used:true, used_at: new Date().toISOString() }).eq("id", lesson.id);
       if (upErr) throw upErr;
       setResult({ ok:true, lesson }); loadLog();
@@ -1419,10 +1452,20 @@ function AdminTab({ profile, toast }) {
   const [invites,  setInvites]  = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [saving,   setSaving]   = useState(false);
-  const [email,    setEmail]    = useState("");
-  const [role,     setRole]     = useState("instructor");
+  const [email,      setEmail]      = useState("");
+  const [role,       setRole]       = useState("instructor");
+  const [openRoles,  setOpenRoles]  = useState(() => new Set());
 
   const roles = assignableRoles(profile);
+
+  const toggleRoleSection = (roleKey) => {
+    setOpenRoles(prev => {
+      const next = new Set(prev);
+      if (next.has(roleKey)) next.delete(roleKey);
+      else next.add(roleKey);
+      return next;
+    });
+  };
 
   const load = async () => {
     setLoading(true);
@@ -1489,9 +1532,34 @@ function AdminTab({ profile, toast }) {
   const approved = users.filter(u => u.status === "approved" && u.role);
   const approvedEmails = new Set(approved.map(u => u.email?.toLowerCase()));
   const waitingInvites = invites.filter(i => !approvedEmails.has(i.email?.toLowerCase()));
+  const approvedByRole = ACTIVE_USER_ROLE_ORDER
+    .map(r => ({ role: r, users: approved.filter(u => u.role === r) }))
+    .filter(g => g.users.length > 0);
 
   const roleBadgeClass = (r) =>
     r === "admin" ? "badge-admin" : r === "instructor" ? "badge-active" : "badge-pending";
+
+  const renderUserRow = (u, key) => (
+    <div className="user-row" key={key}>
+      <div className="user-avatar">
+        {u.avatar_url ? <img src={u.avatar_url} alt="" /> : initials(u.full_name || u.email)}
+      </div>
+      <div className="user-info">
+        <div className="user-display" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          {u.full_name || "—"}
+          {isOwner(u) && (
+            <span className={`badge ${roleBadgeClass(u.role)}`}>
+              {roleLabel(u.role, true)}
+            </span>
+          )}
+        </div>
+        <div className="user-email">{u.email}</div>
+      </div>
+      {canRevokeUser(profile, u) && (
+        <button className="btn btn-danger btn-sm" onClick={() => revoke(u)}>{t("revoke")}</button>
+      )}
+    </div>
+  );
 
   return (
     <div>
@@ -1554,26 +1622,29 @@ function AdminTab({ profile, toast }) {
           {approved.length === 0 ? (
             <div className="empty"><div className="empty-icon">👥</div><div className="empty-text">{t("noActiveUsers")}</div></div>
           ) : (
-            <div className="card" style={{ padding: "4px 16px" }}>
-              {approved.map(u => (
-                <div className="user-row" key={u.id}>
-                  <div className="user-avatar">
-                    {u.avatar_url ? <img src={u.avatar_url} alt="" /> : initials(u.full_name)}
-                  </div>
-                  <div className="user-info">
-                    <div className="user-display" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      {u.full_name || "—"}
-                      <span className={`badge ${roleBadgeClass(u.role)}`}>
-                        {roleLabel(u.role, isOwner(u))}
+            <div>
+              {approvedByRole.map(({ role: roleKey, users: roleUsers }) => {
+                const isOpen = openRoles.has(roleKey);
+                return (
+                  <div className="role-section" key={roleKey}>
+                    <button
+                      type="button"
+                      className={`role-section-header${isOpen ? " open" : ""}`}
+                      onClick={() => toggleRoleSection(roleKey)}
+                      aria-expanded={isOpen}
+                    >
+                      <span className="role-section-title">
+                        <span className={`badge ${roleBadgeClass(roleKey)}`}>{roleLabel(roleKey)}</span>
+                        <span className="role-section-count">({roleUsers.length})</span>
                       </span>
+                      <span className="role-section-chevron" aria-hidden="true">▼</span>
+                    </button>
+                    <div className={`role-section-body${isOpen ? " open" : ""}`}>
+                      {roleUsers.map(u => renderUserRow(u, u.id))}
                     </div>
-                    <div className="user-email">{u.email}</div>
                   </div>
-                  {canRevokeUser(profile, u) && (
-                    <button className="btn btn-danger btn-sm" onClick={() => revoke(u)}>{t("revoke")}</button>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </>
