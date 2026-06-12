@@ -8,7 +8,7 @@ export default function MonthView({
   anchorDate,
   lessons,
   onLessonClick,
-  onSlotClick,
+  onDayClick,
   onDragStart,
   canEdit,
   dropTargetDate,
@@ -47,8 +47,12 @@ export default function MonthView({
                 today ? "today" : "",
                 isDrop ? "drop-target" : "",
               ].filter(Boolean).join(" ")}
-              onClick={() => canEdit && onSlotClick?.(dateStr, "09:00")}
+              onClick={() => onDayClick?.(dateStr)}
               data-drop-date={dateStr}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === "Enter") onDayClick?.(dateStr); }}
+              title={t("openDayView")}
             >
               <div className="month-day-num">{day.getDate()}</div>
               {dayLessons.slice(0, MAX_VISIBLE).map(l => (

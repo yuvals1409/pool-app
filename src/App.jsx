@@ -108,12 +108,12 @@ const css = `
   /* TIME SCROLL PICKER */
   .time-picker { display:flex; align-items:center; justify-content:center; gap:2px; background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius-sm); height:168px; overflow:hidden; position:relative; user-select:none; touch-action:pan-y; direction:ltr; }
   .time-picker::before { content:''; position:absolute; left:10px; right:10px; top:50%; transform:translateY(-50%); height:44px; background:rgba(0,119,182,.07); border-radius:8px; border:1.5px solid var(--pool-light); pointer-events:none; z-index:1; }
-  .time-col { flex:1; height:100%; overflow-y:scroll; scroll-snap-type:y mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; overscroll-behavior:contain; }
-  .time-col::-webkit-scrollbar { display:none; }
-  .time-col-spacer { height:62px; flex-shrink:0; }
-  .time-item { height:44px; display:flex; align-items:center; justify-content:center; scroll-snap-align:center; font-size:22px; font-weight:600; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; transition:color .15s, font-size .15s; }
-  .time-item.active { color:var(--pool-deep); font-size:24px; }
-  .time-sep { font-size:24px; font-weight:700; color:var(--ink-mid); z-index:2; line-height:1; padding-bottom:2px; }
+  .time-picker .time-col { flex:1; height:100%; overflow-y:scroll; scroll-snap-type:y mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; overscroll-behavior:contain; position:relative; z-index:2; }
+  .time-picker .time-col::-webkit-scrollbar { display:none; }
+  .time-picker .time-col-spacer { height:62px; flex-shrink:0; }
+  .time-picker .time-item { height:44px; display:flex; align-items:center; justify-content:center; scroll-snap-align:center; font-size:22px; font-weight:600; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; transition:color .15s, font-size .15s; }
+  .time-picker .time-item.active { color:var(--pool-deep); font-size:24px; font-weight:700; }
+  .time-picker .time-sep { font-size:24px; font-weight:700; color:var(--ink-mid); z-index:2; line-height:1; padding-bottom:2px; }
 
   /* BUTTONS */
   .btn { width:100%; padding:14px; border:none; border-radius:var(--radius-sm); font-family:inherit; font-size:15px; font-weight:600; cursor:pointer; transition:all .18s; display:flex; align-items:center; justify-content:center; gap:8px; }

@@ -4,7 +4,7 @@ import { supabase, ensureWeeklyLessonsGenerated } from "../../lib/supabase.js";
 import {
   canEditSchedule, canManage, canViewAllInstructors,
 } from "../../lib/permissions.js";
-import { getViewDateRange, toLocalDateStr } from "../../lib/lessonDates.js";
+import { getViewDateRange, toLocalDateStr, parseDateStr } from "../../lib/lessonDates.js";
 import { buildInstructorMap } from "../../lib/instructorColors.js";
 import {
   updateLesson, cancelLesson, createAndNotify, RECURRING_SCOPE,
@@ -147,6 +147,11 @@ export default function ScheduleTab({ profile, toast }) {
     });
   };
 
+  const onDayClick = (dateStr) => {
+    setAnchorDate(parseDateStr(dateStr));
+    setView("day");
+  };
+
   const handlePanelSave = ({ form, lesson, error }) => {
     if (error) return toast.show(error);
     const updates = {
@@ -198,6 +203,7 @@ export default function ScheduleTab({ profile, toast }) {
     lessons,
     onLessonClick,
     onSlotClick,
+    onDayClick,
     onDragStart: startDrag,
     canEdit,
     dropTarget,

@@ -36,6 +36,7 @@ export default function WeekView({
   lessons,
   onLessonClick,
   onSlotClick,
+  onDayClick,
   onDragStart,
   canEdit,
   dropTarget,
@@ -72,10 +73,15 @@ export default function WeekView({
 
           return (
             <div key={dateStr} className="time-col">
-              <div className={`time-col-header ${today ? "today" : ""}`}>
+              <button
+                type="button"
+                className={`time-col-header time-col-header-btn ${today ? "today" : ""}`}
+                onClick={() => onDayClick?.(dateStr)}
+                title={t("openDayView")}
+              >
                 {dayNames[colIdx]}
                 <span className="day-num">{day.getDate()}</span>
-              </div>
+              </button>
               <div className="time-col-body">
                 {SCHEDULE_HOURS.flatMap(h =>
                   [0, 1].map(half => {
