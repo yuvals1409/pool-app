@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLang } from "../../i18n.jsx";
+import { AnimatedSheetOverlay, AnimatedSheetPanel } from "../ui/AnimatedSheet.jsx";
 import { canEditLesson } from "../../lib/permissions.js";
 import { fmt_time, isPastLesson, isValidStartTime, lessonStatus } from "../../lib/lessonDates.js";
 import TimeScrollPicker from "../TimeScrollPicker.jsx";
@@ -91,8 +92,8 @@ export default function LessonPanel({
   };
 
   return (
-    <div className="schedule-panel-overlay" onClick={onClose}>
-      <div className="schedule-panel" onClick={e => e.stopPropagation()}>
+      <AnimatedSheetOverlay onClose={onClose}>
+        <AnimatedSheetPanel onClick={e => e.stopPropagation()}>
         <div className="schedule-panel-handle" />
 
         {mode === "create" && (
@@ -237,7 +238,7 @@ export default function LessonPanel({
             </div>
           </>
         )}
-      </div>
-    </div>
+        </AnimatedSheetPanel>
+      </AnimatedSheetOverlay>
   );
 }

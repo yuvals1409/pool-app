@@ -1,6 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { CheckCircle2, XCircle } from "lucide-react";
 import QRCode from "qrcode";
 import jsQR from "jsqr";
+import AnimatedToast from "./components/ui/AnimatedToast.jsx";
+import { AnimatedSheetOverlay, AnimatedSheetPanel } from "./components/ui/AnimatedSheet.jsx";
+import { TabIcon } from "./lib/tabIcons.jsx";
+import { triggerScanFeedback } from "./lib/scanFeedback.js";
 import { useLang, LanguageSwitcher, fmtDate as fmt_date } from "./i18n.jsx";
 import {
   ADMIN_EMAIL, VENUE_MAPS_URL, VENUE_NAME, VENUE_ADDRESS,
@@ -22,228 +28,6 @@ import {
 import TimeScrollPicker from "./components/TimeScrollPicker.jsx";
 import ScheduleTab from "./components/schedule/ScheduleTab.jsx";
 import { getOAuthRedirectUrl } from "./lib/authRedirect.js";
-
-// ─────────────────────────────────────────────────────────────
-//  DESIGN TOKENS
-// ─────────────────────────────────────────────────────────────
-const css = `
-  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --pool:        #0077B6;
-    --pool-deep:   #023E8A;
-    --pool-light:  #90E0EF;
-    --pool-pale:   #CAF0F8;
-    --surface:     #F0F8FF;
-    --white:       #FFFFFF;
-    --ink:         #012A4A;
-    --ink-mid:     #2C6E8A;
-    --ink-soft:    #6BA3BE;
-    --success:     #00B894;
-    --success-bg:  #EAFAF6;
-    --danger:      #D63031;
-    --danger-bg:   #FFF0F0;
-    --warn:        #FDCB6E;
-    --warn-bg:     #FFFBF0;
-    --border:      #C8E6F0;
-    --radius:      16px;
-    --radius-sm:   10px;
-    --shadow:      0 4px 24px rgba(0,119,182,.10);
-    --shadow-lg:   0 8px 40px rgba(0,119,182,.16);
-  }
-  html, body { height: 100%; background: var(--surface); direction: rtl; }
-  body { font-family: 'IBM Plex Sans Hebrew', sans-serif; color: var(--ink); min-height: 100vh; }
-
-  /* APP SHELL */
-  .app { max-width: 440px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; background: var(--white); box-shadow: var(--shadow-lg); }
-
-  /* HEADER */
-  .header { background: linear-gradient(135deg, var(--pool-deep) 0%, var(--pool) 100%); padding: 20px 24px 28px; color: var(--white); position: relative; overflow: hidden; }
-  .header::after { content:''; position:absolute; bottom:-20px; left:-10%; right:-10%; height:40px; background:var(--white); border-radius:50% 50% 0 0/100% 100% 0 0; }
-  .header-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
-  .header-logo { font-size:20px; font-weight:700; display:flex; align-items:center; gap:8px; }
-  .brand-logo { width:auto; object-fit:contain; display:block; }
-  .ticket-title { font-size:14px; font-weight:700; color:var(--ink-mid); margin:12px 0 14px; text-align:center; }
-  .header-sub { font-size:12px; opacity:.75; font-weight:300; }
-  .role-badge { font-family:'IBM Plex Mono',monospace; font-size:11px; background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.3); padding:4px 10px; border-radius:20px; font-weight:500; }
-  .header-user { display:flex; align-items:center; gap:8px; margin-top:10px; }
-  .avatar { width:30px; height:30px; border-radius:50%; border:2px solid rgba(255,255,255,.4); object-fit:cover; }
-  .avatar-placeholder { width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,.25); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff; }
-  .user-name { font-size:13px; font-weight:500; flex:1; }
-  .user-name-btn { background:none; border:none; color:#fff; font-family:inherit; font-size:13px; font-weight:500; flex:1; text-align:right; cursor:pointer; padding:0; display:flex; align-items:center; gap:6px; }
-  .user-name-btn:hover { opacity:.85; }
-  .name-edit { flex:1; display:flex; gap:6px; align-items:center; min-width:0; }
-  .name-edit-input { flex:1; min-width:0; padding:5px 10px; border-radius:8px; border:1px solid rgba(255,255,255,.4); background:rgba(255,255,255,.15); color:#fff; font-family:inherit; font-size:13px; outline:none; }
-  .name-edit-input::placeholder { color:rgba(255,255,255,.55); }
-  .name-edit-btn { background:rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.3); color:#fff; padding:4px 10px; border-radius:8px; font-size:11px; cursor:pointer; font-family:inherit; white-space:nowrap; flex-shrink:0; }
-  .btn-logout { background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.25); color:#fff; padding:5px 12px; border-radius:20px; font-size:12px; cursor:pointer; font-family:inherit; transition:background .15s; flex-shrink:0; }
-  .btn-logout:hover { background:rgba(255,255,255,.25); }
-
-  /* NAV */
-  .nav { display:flex; background:var(--white); border-bottom:1px solid var(--border); padding:0 8px; gap:4px; position:sticky; top:0; z-index:10; }
-  .nav-btn { flex:1; padding:13px 6px; background:none; border:none; border-bottom:2px solid transparent; cursor:pointer; font-family:inherit; font-size:12px; font-weight:500; color:var(--ink-soft); transition:all .18s; display:flex; flex-direction:column; align-items:center; gap:3px; }
-  .nav-btn .nav-icon { font-size:17px; }
-  .nav-btn.active { color:var(--pool); border-bottom-color:var(--pool); }
-  .nav-btn:hover { color:var(--pool); background:var(--surface); }
-
-  /* CONTENT */
-  .content { flex:1; padding:28px 20px 48px; }
-
-  /* SECTION */
-  .section-title { font-size:20px; font-weight:700; color:var(--ink); margin-bottom:4px; }
-  .section-sub { font-size:13px; color:var(--ink-soft); margin-bottom:24px; }
-
-  /* CARD */
-  .card { background:var(--white); border:1px solid var(--border); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); margin-bottom:16px; }
-
-  /* FORM */
-  .field { margin-bottom:16px; }
-  .label { display:block; font-size:11px; font-weight:700; color:var(--ink-mid); margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px; }
-  .input { width:100%; padding:12px 14px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-family:inherit; font-size:15px; color:var(--ink); background:var(--surface); transition:border-color .15s; outline:none; direction:rtl; }
-  .input:focus { border-color:var(--pool); background:var(--white); }
-  .input-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-  select.input { cursor:pointer; }
-
-  /* TIME SCROLL PICKER */
-  .time-picker { display:flex; align-items:center; justify-content:center; gap:2px; background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius-sm); height:168px; overflow:hidden; position:relative; user-select:none; touch-action:pan-y; direction:ltr; }
-  .time-picker::before { content:''; position:absolute; left:10px; right:10px; top:50%; transform:translateY(-50%); height:44px; background:rgba(0,119,182,.07); border-radius:8px; border:1.5px solid var(--pool-light); pointer-events:none; z-index:1; }
-  .time-picker .time-col { flex:1; height:100%; overflow-y:scroll; scroll-snap-type:y mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; overscroll-behavior:contain; position:relative; z-index:2; }
-  .time-picker .time-col::-webkit-scrollbar { display:none; }
-  .time-picker .time-col-spacer { height:62px; flex-shrink:0; }
-  .time-picker .time-item { height:44px; display:flex; align-items:center; justify-content:center; scroll-snap-align:center; font-size:22px; font-weight:600; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; transition:color .15s, font-size .15s; }
-  .time-picker .time-item.active { color:var(--pool-deep); font-size:24px; font-weight:700; }
-  .time-picker .time-sep { font-size:24px; font-weight:700; color:var(--ink-mid); z-index:2; line-height:1; padding-bottom:2px; }
-
-  /* BUTTONS */
-  .btn { width:100%; padding:14px; border:none; border-radius:var(--radius-sm); font-family:inherit; font-size:15px; font-weight:600; cursor:pointer; transition:all .18s; display:flex; align-items:center; justify-content:center; gap:8px; }
-  .btn-primary { background:linear-gradient(135deg,var(--pool) 0%,var(--pool-deep) 100%); color:#fff; box-shadow:0 4px 16px rgba(0,119,182,.28); }
-  .btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(0,119,182,.36); }
-  .btn-primary:active { transform:translateY(0); }
-  .btn-google { background:#fff; color:#3c4043; border:1.5px solid var(--border); box-shadow:0 2px 8px rgba(0,0,0,.08); }
-  .btn-google:hover { background:var(--surface); }
-  .btn-success { background:var(--success); color:#fff; }
-  .btn-danger { background:var(--danger); color:#fff; }
-  .btn-whatsapp { background:#25D366; color:#fff; }
-  .btn-outline { background:var(--white); color:var(--pool); border:1.5px solid var(--pool); }
-  .btn-sm { padding:8px 16px; font-size:13px; width:auto; border-radius:8px; }
-  .btn:disabled { opacity:.45; cursor:not-allowed; transform:none !important; box-shadow:none !important; }
-  .mt-8 { margin-top:8px; }
-  .mt-16 { margin-top:16px; }
-
-  /* LOGIN PAGE */
-  .login-page { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px 24px; background:var(--surface); }
-  .login-logo { margin-bottom:16px; display:flex; justify-content:center; }
-  .login-logo .brand-logo { height:72px; }
-  .login-title { font-size:26px; font-weight:700; color:var(--ink); margin-bottom:6px; text-align:center; }
-  .login-sub { font-size:14px; color:var(--ink-soft); margin-bottom:36px; text-align:center; line-height:1.6; }
-  .login-card { background:var(--white); border-radius:var(--radius); padding:28px 24px; box-shadow:var(--shadow-lg); width:100%; max-width:360px; }
-
-  /* PENDING PAGE */
-  .pending-page { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px 24px; text-align:center; }
-  .pending-icon { font-size:64px; margin-bottom:16px; }
-  .pending-title { font-size:22px; font-weight:700; color:var(--ink); margin-bottom:8px; }
-  .pending-sub { font-size:14px; color:var(--ink-soft); line-height:1.7; max-width:300px; }
-
-  /* QR */
-  .qr-wrap { display:flex; flex-direction:column; align-items:center; padding:24px 20px 20px; background:var(--surface); border-radius:var(--radius); border:2px dashed var(--pool-light); margin:20px 0; }
-  .qr-wrap canvas { border-radius:8px; }
-  .qr-label { margin-top:14px; font-size:13px; color:var(--ink-mid); text-align:center; font-weight:500; }
-
-  /* LESSON INFO */
-  .lesson-info { background:var(--pool-pale); border-radius:var(--radius-sm); padding:16px; margin:12px 0; }
-  .lesson-info-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; font-size:14px; }
-  .lesson-info-row:not(:last-child) { border-bottom:1px solid var(--pool-light); }
-  .li-key { color:var(--ink-mid); font-weight:500; }
-  .li-val { font-weight:700; color:var(--ink); }
-
-  /* SCANNER */
-  .scanner-wrap { position:relative; border-radius:var(--radius); overflow:hidden; background:#000; aspect-ratio:1; margin:16px 0; }
-  .scanner-wrap video, .scanner-wrap canvas { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; }
-  .scan-overlay { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:62%; aspect-ratio:1; border:2.5px solid var(--pool-light); border-radius:12px; box-shadow:0 0 0 999px rgba(0,0,0,.4); pointer-events:none; animation:scanPulse 2s ease-in-out infinite; }
-  .scan-line { position:absolute; left:8%; right:8%; height:2px; background:var(--pool-light); animation:scanLine 2s linear infinite; }
-  @keyframes scanLine { 0%{top:10%;opacity:1} 90%{top:88%;opacity:1} 100%{top:88%;opacity:0} }
-  @keyframes scanPulse { 0%,100%{border-color:var(--pool-light)} 50%{border-color:var(--pool)} }
-  .scan-hint { text-align:center; font-size:13px; color:var(--ink-soft); margin-top:8px; }
-
-  /* RESULT */
-  .result-card { border-radius:var(--radius); padding:24px 20px; text-align:center; margin:16px 0; animation:popIn .25s ease; }
-  .result-card.ok { background:var(--success-bg); border:2px solid var(--success); }
-  .result-card.err { background:var(--danger-bg); border:2px solid var(--danger); }
-  .result-icon { font-size:52px; margin-bottom:10px; }
-  .result-title { font-size:22px; font-weight:700; margin-bottom:6px; }
-  .result-card.ok .result-title { color:var(--success); }
-  .result-card.err .result-title { color:var(--danger); }
-  .result-detail { font-size:14px; color:var(--ink-mid); line-height:1.6; white-space:pre-line; margin-top:8px; }
-  @keyframes popIn { from{transform:scale(.92);opacity:0} to{transform:scale(1);opacity:1} }
-
-  /* LOG */
-  .log-item { display:flex; align-items:flex-start; gap:14px; padding:14px 0; border-bottom:1px solid var(--border); }
-  .log-item:last-child { border-bottom:none; }
-  .log-dot { width:10px; height:10px; border-radius:50%; margin-top:5px; flex-shrink:0; }
-  .log-name { font-weight:600; font-size:15px; }
-  .log-meta { font-size:12px; color:var(--ink-soft); margin-top:2px; font-family:'IBM Plex Mono',monospace; }
-
-  /* BADGE */
-  .badge { display:inline-flex; align-items:center; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; font-family:'IBM Plex Mono',monospace; }
-  .badge-used      { background:var(--danger-bg);  color:var(--danger);  }
-  .badge-active    { background:var(--success-bg); color:var(--success); }
-  .badge-cancelled { background:var(--danger-bg);  color:var(--danger);  }
-  .badge-pending   { background:var(--warn-bg);    color:#b7791f; }
-  .badge-admin     { background:#EDE9FE;            color:#5B21B6; }
-  .log-actions { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
-  .mode-switch { display:flex; gap:4px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:4px; margin-bottom:20px; }
-  .mode-btn { flex:1; padding:10px 8px; border:none; border-radius:8px; background:transparent; font-family:inherit; font-size:13px; font-weight:600; color:var(--ink-soft); cursor:pointer; transition:all .15s; }
-  .mode-btn.active { background:var(--pool); color:#fff; box-shadow:0 2px 8px rgba(0,119,182,.25); }
-  .pending-banner { background:var(--warn-bg); border:1.5px solid var(--warn); border-radius:var(--radius); padding:16px; margin-bottom:20px; }
-  .pending-banner-title { font-size:15px; font-weight:700; color:var(--ink); margin-bottom:4px; }
-  .pending-banner-sub { font-size:13px; color:var(--ink-mid); margin-bottom:12px; line-height:1.5; }
-  .pending-item { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px solid rgba(0,0,0,.06); }
-  .pending-item:last-child { border-bottom:none; }
-  .pending-item-info { flex:1; min-width:0; }
-  .pending-item-name { font-weight:600; font-size:14px; }
-  .pending-item-meta { font-size:12px; color:var(--ink-soft); margin-top:2px; }
-
-  /* ADMIN USER ROW */
-  .user-row { display:flex; align-items:center; gap:12px; padding:14px 0; border-bottom:1px solid var(--border); }
-  .user-row:last-child { border-bottom:none; }
-  .user-avatar { width:38px; height:38px; border-radius:50%; background:var(--pool-pale); display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:700; color:var(--pool); flex-shrink:0; overflow:hidden; }
-  .user-avatar img { width:100%; height:100%; object-fit:cover; }
-  .user-info { flex:1; min-width:0; }
-  .user-display { font-weight:600; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .user-email { font-size:12px; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .user-actions { display:flex; gap:6px; flex-shrink:0; }
-  .role-section { margin-bottom: 10px; }
-  .role-section-header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; cursor:pointer; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); transition:background .15s; user-select:none; }
-  .role-section-header:hover { background:var(--pool-pale); }
-  .role-section-header.open { border-bottom-left-radius:0; border-bottom-right-radius:0; }
-  .role-section-title { display:flex; align-items:center; gap:8px; font-size:14px; font-weight:700; color:var(--ink); }
-  .role-section-count { font-size:12px; font-weight:600; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; }
-  .role-section-chevron { font-size:12px; color:var(--ink-soft); transition:transform .2s; flex-shrink:0; }
-  .role-section-header.open .role-section-chevron { transform:rotate(180deg); }
-  .role-section-body { display:none; border:1px solid var(--border); border-top:none; border-radius:0 0 var(--radius-sm) var(--radius-sm); padding:4px 16px; background:var(--surface); }
-  .role-section-body.open { display:block; }
-
-  /* MISC */
-  .divider { height:1px; background:var(--border); margin:20px 0; }
-  .empty { text-align:center; padding:48px 20px; color:var(--ink-soft); }
-  .empty-icon { font-size:48px; margin-bottom:12px; }
-  .empty-text { font-size:15px; font-weight:500; }
-  .empty-sub { font-size:13px; margin-top:6px; }
-  .gap-8 { display:flex; flex-direction:column; gap:8px; }
-  .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--ink); color:#fff; padding:12px 22px; border-radius:40px; font-size:14px; font-weight:500; box-shadow:var(--shadow-lg); transition:transform .3s ease; z-index:100; white-space:nowrap; }
-  .toast.show { transform:translateX(-50%) translateY(0); }
-  .spinner { width:20px; height:20px; border:2.5px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; }
-  @keyframes spin { to{transform:rotate(360deg)} }
-  .info-box { background:var(--pool-pale); border:1px solid var(--pool-light); border-radius:var(--radius-sm); padding:14px 16px; font-size:13px; color:var(--ink-mid); line-height:1.6; margin-bottom:20px; }
-  .lang-switcher { display:flex; gap:4px; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.22); border-radius:20px; padding:3px; }
-  .lang-switcher-compact .lang-btn { padding:3px 8px; font-size:10px; }
-  .lang-btn { background:transparent; border:none; color:rgba(255,255,255,.75); font-family:inherit; font-size:11px; font-weight:600; padding:4px 10px; border-radius:16px; cursor:pointer; transition:all .15s; }
-  .lang-btn.active { background:rgba(255,255,255,.92); color:var(--pool-deep); }
-  .lang-switcher-login { background:var(--surface); border-color:var(--border); margin-bottom:16px; }
-  .lang-switcher-login .lang-btn { color:var(--ink-soft); }
-  .lang-switcher-login .lang-btn.active { background:var(--pool); color:#fff; }
-`;
 
 // ─────────────────────────────────────────────────────────────
 //  HELPERS
@@ -794,13 +578,42 @@ function InstructorTab({ profile, toast }) {
 // ─────────────────────────────────────────────────────────────
 //  GUARD TAB
 // ─────────────────────────────────────────────────────────────
+function ScanResultCard({ result, t, fmtDateDay }) {
+  const reduced = useReducedMotion();
+  const Icon = result.ok ? CheckCircle2 : XCircle;
+  return (
+    <motion.div
+      className={`result-card ${result.ok ? "ok" : "err"}`}
+      initial={{ scale: reduced ? 1 : 0.92, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={reduced ? { duration: 0.01 } : { type: "spring", stiffness: 400, damping: 30, bounce: 0.15 }}
+    >
+      <div className="result-icon" aria-hidden>
+        <Icon size={52} strokeWidth={1.75} color={result.ok ? "var(--success)" : "var(--danger)"} />
+      </div>
+      <div className="result-title">{result.ok ? t("entryApproved") : t("entryDenied")}</div>
+      {result.ok && result.lesson && (
+        <div className="lesson-info" style={{ marginTop: 12 }}>
+          <div className="lesson-info-row"><span className="li-key">{t("child")}</span><span className="li-val">{result.lesson.child_name}</span></div>
+          <div className="lesson-info-row"><span className="li-key">{t("date")}</span><span className="li-val">{fmtDateDay(result.lesson.lesson_date)}</span></div>
+          <div className="lesson-info-row"><span className="li-key">{t("startTime")}</span><span className="li-val">{fmt_time(result.lesson.start_time)}</span></div>
+          <div className="lesson-info-row"><span className="li-key">{t("instructor")}</span><span className="li-val">{result.lesson.instructor_name}</span></div>
+        </div>
+      )}
+      {!result.ok && <div className="result-detail">{result.msg}</div>}
+    </motion.div>
+  );
+}
+
 function GuardTab({ toast }) {
   const { t, fmtDateDay, locale } = useLang();
   const videoRef = useRef(); const canvasRef = useRef(); const animRef = useRef();
   const [scanning, setScanning] = useState(false);
   const [result,   setResult]   = useState(null);
+  const [flash,    setFlash]    = useState(null);
   const [loading,  setLoading]  = useState(false);
   const [log,      setLog]      = useState([]);
+  const [logOpen,  setLogOpen]  = useState(false);
 
   useEffect(() => { loadLog(); }, []);
 
@@ -837,43 +650,59 @@ function GuardTab({ toast }) {
     if (code) processQR(code.data); else animRef.current = requestAnimationFrame(tick);
   };
 
+  const showScanResult = (scanResult) => {
+    setResult(scanResult);
+    setFlash(scanResult.ok ? "ok" : "err");
+    triggerScanFeedback(scanResult.ok);
+    setTimeout(() => setFlash(null), 350);
+  };
+
   const processQR = async (uuid) => {
     stopScan(); setLoading(true);
     try {
       const lesson = await lookupLessonByQr(uuid);
-      if (!lesson) { setResult({ ok:false, msg: t("barcodeNotFound") }); setLoading(false); return; }
-      if (lesson.cancelled) { setResult({ ok:false, lesson, msg: t("barcodeCancelled") }); setLoading(false); return; }
-      if (lesson.used) { setResult({ ok:false, lesson, msg:`${t("barcodeUsed")}\n${t("scannedOn")}: ${new Date(lesson.used_at).toLocaleString(locale)}` }); setLoading(false); return; }
-      const earliestEntry = getEarliestEntryTime(lesson);
-      if (new Date() < earliestEntry) {
-        setResult({ ok:false, lesson, msg: t("entryTooEarly", { time: formatEntryFromTime(earliestEntry, locale) }) });
+      if (!lesson) { showScanResult({ ok: false, msg: t("barcodeNotFound") }); setLoading(false); return; }
+      if (lesson.cancelled) { showScanResult({ ok: false, lesson, msg: t("barcodeCancelled") }); setLoading(false); return; }
+      if (lesson.used) {
+        showScanResult({ ok: false, lesson, msg: `${t("barcodeUsed")}\n${t("scannedOn")}: ${new Date(lesson.used_at).toLocaleString(locale)}` });
         setLoading(false);
         return;
       }
-      const { error: upErr } = await supabase.from("lessons").update({ used:true, used_at: new Date().toISOString() }).eq("id", lesson.id);
+      const earliestEntry = getEarliestEntryTime(lesson);
+      if (new Date() < earliestEntry) {
+        showScanResult({ ok: false, lesson, msg: t("entryTooEarly", { time: formatEntryFromTime(earliestEntry, locale) }) });
+        setLoading(false);
+        return;
+      }
+      const { error: upErr } = await supabase.from("lessons").update({ used: true, used_at: new Date().toISOString() }).eq("id", lesson.id);
       if (upErr) throw upErr;
-      setResult({ ok:true, lesson }); loadLog();
-    } catch { setResult({ ok:false, msg: t("systemError") }); }
+      showScanResult({ ok: true, lesson });
+      loadLog();
+    } catch { showScanResult({ ok: false, msg: t("systemError") }); }
     setLoading(false);
   };
 
   return (
     <div>
+      <AnimatePresence>
+        {flash && <motion.div className={`scan-flash ${flash}`} initial={{ opacity: 0.85 }} exit={{ opacity: 0 }} aria-hidden />}
+      </AnimatePresence>
+
       <div className="section-title">{t("poolEntry")}</div>
       <div className="section-sub">{t("scanSub")}</div>
 
-      {loading && <div style={{textAlign:"center",padding:40,color:"var(--ink-mid)",fontWeight:600}}>⏳ {t("verifying")}</div>}
+      {loading && <div style={{ textAlign: "center", padding: 40, color: "var(--ink-mid)", fontWeight: 600 }}>⏳ {t("verifying")}</div>}
 
       {!scanning && !loading && !result && (
-        <button className="btn btn-primary" onClick={startScan}>📷 {t("scanBarcode")}</button>
+        <button className="btn btn-primary btn-scan" onClick={startScan}>{t("scanBarcode")}</button>
       )}
 
       {scanning && (
         <>
           <div className="scanner-wrap">
-            <video ref={videoRef} playsInline muted style={{display:"block"}} />
-            <canvas ref={canvasRef} style={{display:"none"}} />
-            <div className="scan-overlay"><div className="scan-line"/></div>
+            <video ref={videoRef} playsInline muted style={{ display: "block" }} />
+            <canvas ref={canvasRef} style={{ display: "none" }} />
+            <div className="scan-overlay"><div className="scan-line" /></div>
           </div>
           <div className="scan-hint">{t("scanHint")}</div>
           <button className="btn btn-outline mt-8" onClick={stopScan}>{t("cancel")}</button>
@@ -882,41 +711,40 @@ function GuardTab({ toast }) {
 
       {result && !loading && (
         <>
-          <div className={`result-card ${result.ok ? "ok" : "err"}`}>
-            <div className="result-icon">{result.ok ? "✅" : "🚫"}</div>
-            <div className="result-title">{result.ok ? t("entryApproved") : t("entryDenied")}</div>
-            {result.ok && result.lesson && (
-              <div className="lesson-info" style={{marginTop:12}}>
-                <div className="lesson-info-row"><span className="li-key">{t("child")}</span><span className="li-val">{result.lesson.child_name}</span></div>
-                <div className="lesson-info-row"><span className="li-key">{t("date")}</span><span className="li-val">{fmtDateDay(result.lesson.lesson_date)}</span></div>
-                <div className="lesson-info-row"><span className="li-key">{t("startTime")}</span><span className="li-val">{fmt_time(result.lesson.start_time)}</span></div>
-                <div className="lesson-info-row"><span className="li-key">{t("instructor")}</span><span className="li-val">{result.lesson.instructor_name}</span></div>
-              </div>
-            )}
-            {!result.ok && <div className="result-detail">{result.msg}</div>}
-          </div>
+          <ScanResultCard result={result} t={t} fmtDateDay={fmtDateDay} />
           <button className="btn btn-outline" onClick={() => setResult(null)}>{t("scanAnother")}</button>
         </>
       )}
 
       {log.length > 0 && (
-        <>
-          <div className="divider"/>
-          <div style={{fontSize:12,fontWeight:700,color:"var(--ink-mid)",marginBottom:12,textTransform:"uppercase",letterSpacing:.5}}>{t("recentEntries")}</div>
-          <div className="card" style={{padding:"4px 16px"}}>
-            {log.slice(0,8).map(l => (
-              <div className="log-item" key={l.id}>
-                <div className="log-dot" style={{background:"var(--success)"}}/>
-                <div>
-                  <div className="log-name">{l.child_name}</div>
-                  <div className="log-meta">{fmtDateDay(l.lesson_date)} · {fmt_time(l.start_time)} · {l.instructor_name}</div>
-                  <div className="log-meta">{t("scannedAt")}: {new Date(l.used_at).toLocaleTimeString(locale)}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
+        <button type="button" className="btn btn-outline guard-log-toggle" onClick={() => setLogOpen(true)}>
+          {t("recentEntries")} ({log.length})
+        </button>
       )}
+
+      <AnimatePresence>
+        {logOpen && (
+          <AnimatedSheetOverlay onClose={() => setLogOpen(false)}>
+            <AnimatedSheetPanel onClick={e => e.stopPropagation()}>
+              <div className="schedule-panel-handle" />
+              <div className="section-title" style={{ fontSize: 17 }}>{t("recentEntries")}</div>
+              <div className="grouped-list" style={{ marginTop: 16 }}>
+                {log.slice(0, 15).map(l => (
+                  <div className="log-item" key={l.id}>
+                    <div className="log-dot" style={{ background: "var(--success)" }} />
+                    <div>
+                      <div className="log-name">{l.child_name}</div>
+                      <div className="log-meta">{fmtDateDay(l.lesson_date)} · {fmt_time(l.start_time)} · {l.instructor_name}</div>
+                      <div className="log-meta">{t("scannedAt")}: {new Date(l.used_at).toLocaleTimeString(locale)}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button type="button" className="btn btn-outline mt-16" onClick={() => setLogOpen(false)}>{t("cancel")}</button>
+            </AnimatedSheetPanel>
+          </AnimatedSheetOverlay>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -1071,10 +899,8 @@ function AdminTab({ profile, toast }) {
         <>
           {waitingInvites.length > 0 && (
             <>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#b7791f", marginBottom: 12, textTransform: "uppercase", letterSpacing: .5 }}>
-                {t("waitingLogin")} ({waitingInvites.length})
-              </div>
-              <div className="card" style={{ padding: "4px 16px", marginBottom: 24 }}>
+              <div className="grouped-list-header">{t("waitingLogin")} ({waitingInvites.length})</div>
+              <div className="grouped-list" style={{ marginBottom: 24 }}>
                 {waitingInvites.map(i => (
                   <div className="user-row" key={i.email}>
                     <div className="user-avatar">{initials(i.email)}</div>
@@ -1094,9 +920,7 @@ function AdminTab({ profile, toast }) {
             </>
           )}
 
-          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-mid)", marginBottom: 12, textTransform: "uppercase", letterSpacing: .5 }}>
-            {t("activeUsers")} ({approved.length})
-          </div>
+          <div className="grouped-list-header">{t("activeUsers")} ({approved.length})</div>
           {approved.length === 0 ? (
             <div className="empty"><div className="empty-icon">👥</div><div className="empty-text">{t("noActiveUsers")}</div></div>
           ) : (
@@ -1364,7 +1188,6 @@ export default function App() {
   // ── Calendar add (public, no auth needed) ─────────────────
   if (calendarId) return (
     <>
-      <style>{css}</style>
       <div className="app" dir={dir}>
         <div className="header">
           <div className="header-top">
@@ -1375,16 +1198,17 @@ export default function App() {
           </div>
           <div className="header-sub">{t("neveOz")}</div>
         </div>
-        <CalendarAddPage id={calendarId} />
+        <div className="content" style={{ paddingBottom: "var(--space-5)" }}>
+          <CalendarAddPage id={calendarId} />
+        </div>
       </div>
-      <div className={`toast ${toast.visible ? "show" : ""}`}>{toast.msg}</div>
+      <AnimatedToast msg={toast.msg} visible={toast.visible} standalone />
     </>
   );
 
   // ── Ticket view (public, no auth needed) ──────────────────
   if (ticketId) return (
     <>
-      <style>{css}</style>
       <div className="app" dir={dir}>
         <div className="header">
           <div className="header-top">
@@ -1396,16 +1220,17 @@ export default function App() {
           </div>
           <div className="header-sub">{t("neveOz")}</div>
         </div>
-        <ParentTicket id={ticketId} />
+        <div className="content" style={{ paddingBottom: "var(--space-5)" }}>
+          <ParentTicket id={ticketId} />
+        </div>
       </div>
-      <div className={`toast ${toast.visible ? "show" : ""}`}>{toast.msg}</div>
+      <AnimatedToast msg={toast.msg} visible={toast.visible} standalone />
     </>
   );
 
   // ── Loading ───────────────────────────────────────────────
   if (session === undefined) return (
     <>
-      <style>{css}</style>
       <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",color:"var(--ink-soft)"}}>
         <div style={{textAlign:"center"}}><div style={{fontSize:40}}>🏊</div><div style={{marginTop:12}}>{t("loading")}</div></div>
       </div>
@@ -1415,16 +1240,14 @@ export default function App() {
   // ── Not logged in ─────────────────────────────────────────
   if (!session) return (
     <>
-      <style>{css}</style>
       <LoginPage toast={toast} />
-      <div className={`toast ${toast.visible ? "show" : ""}`}>{toast.msg}</div>
+      <AnimatedToast msg={toast.msg} visible={toast.visible} standalone />
     </>
   );
 
   // ── Logged in but profile not loaded yet ──────────────────
   if (!profile) return (
     <>
-      <style>{css}</style>
       <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",color:"var(--ink-soft)"}}>
         <div style={{textAlign:"center"}}><div style={{fontSize:40}}>🏊</div><div style={{marginTop:12}}>{t("loadingProfile")}</div></div>
       </div>
@@ -1434,23 +1257,21 @@ export default function App() {
   // ── Pending approval ──────────────────────────────────────
   if (profile.status === "pending") return (
     <>
-      <style>{css}</style>
       <PendingPage user={profile} onLogout={logout} />
-      <div className={`toast ${toast.visible ? "show" : ""}`}>{toast.msg}</div>
+      <AnimatedToast msg={toast.msg} visible={toast.visible} standalone />
     </>
   );
 
   // ── Approved — build tabs based on role hierarchy ─────────
   const allTabs = [
-    canCreateLesson(profile) && { id:"instructor", icon:"🏊", label: t("tabLesson") },
-    canScan(profile)         && { id:"guard",      icon:"🔍", label: t("tabScan") },
-    canViewSchedule(profile) && { id:"schedule",   icon:"📅", label: t("tabSchedule") },
-    canManage(profile)       && { id:"admin",      icon:"⚙️", label: t("tabAdmin") },
+    canCreateLesson(profile) && { id: "instructor", label: t("tabLesson") },
+    canScan(profile)         && { id: "guard",      label: t("tabScan") },
+    canViewSchedule(profile) && { id: "schedule",   label: t("tabSchedule") },
+    canManage(profile)       && { id: "admin",      label: t("tabAdmin") },
   ].filter(Boolean);
 
   return (
     <>
-      <style>{css}</style>
       <div className="app" dir={dir}>
         <div className="header">
           <div className="header-top">
@@ -1460,7 +1281,6 @@ export default function App() {
               <span className="role-badge">{roleLabel(profile.role, isOwner(profile))}</span>
             </div>
           </div>
-          <div className="header-sub">{t("headerSub")}</div>
           <div className="header-user">
             {profile.avatar_url
               ? <img className="avatar" src={profile.avatar_url} alt="" />
@@ -1471,22 +1291,30 @@ export default function App() {
           </div>
         </div>
 
-        <nav className="nav">
-          {allTabs.map(t => (
-            <button key={t.id} className={`nav-btn ${tab===t.id?"active":""}`} onClick={() => setTab(t.id)}>
-              <span className="nav-icon">{t.icon}</span>{t.label}
-            </button>
-          ))}
-        </nav>
-
         <div className="content">
           {tab === "instructor" && <InstructorTab profile={profile} toast={toast} />}
           {tab === "guard"      && <GuardTab toast={toast} />}
           {tab === "schedule"   && <ScheduleTab profile={profile} toast={toast} />}
           {tab === "admin"      && <AdminTab profile={profile} toast={toast} />}
         </div>
+
+        <nav className="nav" role="tablist">
+          {allTabs.map(tabItem => (
+            <button
+              key={tabItem.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === tabItem.id}
+              className={`nav-btn ${tab === tabItem.id ? "active" : ""}`}
+              onClick={() => setTab(tabItem.id)}
+            >
+              <span className="nav-icon"><TabIcon id={tabItem.id} /></span>
+              {tabItem.label}
+            </button>
+          ))}
+        </nav>
       </div>
-      <div className={`toast ${toast.visible ? "show" : ""}`}>{toast.msg}</div>
+      <AnimatedToast msg={toast.msg} visible={toast.visible} />
     </>
   );
 }

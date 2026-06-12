@@ -1,0 +1,119 @@
+:root {
+  /* Brand (pool) */
+  --pool:        #0077B6;
+  --pool-deep:   #023E8A;
+  --pool-light:  #90E0EF;
+  --pool-pale:   #CAF0F8;
+  --surface:     #F0F8FF;
+  --white:       #FFFFFF;
+  --ink:         #012A4A;
+  --ink-mid:     #2C6E8A;
+  --ink-soft:    #6BA3BE;
+  --success:     #00B894;
+  --success-bg:  #EAFAF6;
+  --danger:      #D63031;
+  --danger-bg:   #FFF0F0;
+  --warn:        #FDCB6E;
+  --warn-bg:     #FFFBF0;
+  --border:      #C8E6F0;
+
+  /* Apple semantic aliases */
+  --label: var(--ink);
+  --label-secondary: var(--ink-soft);
+  --label-tertiary: rgba(107, 163, 190, 0.6);
+  --bg: var(--white);
+  --bg-secondary: var(--surface);
+  --bg-tertiary: var(--white);
+  --separator: var(--border);
+  --accent: var(--pool);
+
+  /* Spacing — 8pt grid */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-8: 48px;
+
+  /* iOS type scale */
+  --text-large-title: 2.125rem;
+  --text-title1: 1.75rem;
+  --text-title2: 1.375rem;
+  --text-headline: 1.0625rem;
+  --text-body: 1.0625rem;
+  --text-subhead: 0.9375rem;
+  --text-footnote: 0.8125rem;
+  --text-caption: 0.75rem;
+  --tracking-body: -0.022em;
+
+  /* Radius */
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-pill: 999px;
+  --radius-card: 16px;
+  --radius-control: 10px;
+
+  /* Shadows */
+  --shadow:      0 4px 24px rgba(0,119,182,.10);
+  --shadow-lg:   0 8px 40px rgba(0,119,182,.16);
+
+  /* Layout */
+  --tab-bar-h: 56px;
+  --tap-target-min: 44px;
+  --header-h: auto;
+
+  /* Materials */
+  --nav-bg: rgba(255, 255, 255, 0.72);
+  --nav-border: rgba(60, 60, 67, 0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pool:        #0a84ff;
+    --pool-deep:   #0066cc;
+    --pool-light:  #3a9ee8;
+    --pool-pale:   #1c2c3e;
+    --surface:     #1c1c1e;
+    --white:       #2c2c2e;
+    --ink:         rgba(255, 255, 255, 0.92);
+    --ink-mid:     rgba(235, 235, 245, 0.75);
+    --ink-soft:    rgba(235, 235, 245, 0.55);
+    --success:     #30d158;
+    --success-bg:  rgba(48, 209, 88, 0.15);
+    --danger:      #ff453a;
+    --danger-bg:   rgba(255, 69, 58, 0.15);
+    --warn:        #ff9f0a;
+    --warn-bg:     rgba(255, 159, 10, 0.15);
+    --border:      rgba(84, 84, 88, 0.45);
+
+    --label: rgba(255, 255, 255, 0.92);
+    --label-secondary: rgba(235, 235, 245, 0.6);
+    --label-tertiary: rgba(235, 235, 245, 0.3);
+    --bg: #000000;
+    --bg-secondary: #1c1c1e;
+    --bg-tertiary: #2c2c2e;
+    --separator: rgba(84, 84, 88, 0.6);
+    --accent: #0a84ff;
+
+    --shadow:      0 4px 24px rgba(0, 0, 0, 0.35);
+    --shadow-lg:   0 8px 40px rgba(0, 0, 0, 0.5);
+
+    --nav-bg: rgba(28, 28, 30, 0.82);
+    --nav-border: rgba(84, 84, 88, 0.5);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --nav-bg: var(--bg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

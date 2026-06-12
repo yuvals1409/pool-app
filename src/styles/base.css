@@ -1,0 +1,29 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg-secondary);
+  direction: rtl;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
+               "IBM Plex Sans Hebrew", sans-serif;
+  font-size: var(--text-body);
+  letter-spacing: var(--tracking-body);
+  color: var(--label);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* APP SHELL */
+.app {
+  max-width: 440px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  box-shadow: var(--shadow-lg);
+  position: relative;
+}

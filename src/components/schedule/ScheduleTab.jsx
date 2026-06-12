@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { AnimatePresence } from "framer-motion";
 import { useLang } from "../../i18n.jsx";
 import { supabase, ensureWeeklyLessonsGenerated } from "../../lib/supabase.js";
 import {
@@ -261,22 +262,24 @@ export default function ScheduleTab({ profile, toast }) {
         </>
       )}
 
-      {panel && (
-        <LessonPanel
-          key={panel.lesson?.id || panel.mode}
-          mode={panel.mode}
-          lesson={panel.lesson}
-          profile={profile}
-          instructors={instructors}
-          showInstructorPicker={showInstructorPicker && panel.mode === "create"}
-          initialForm={panel.initial || {}}
-          onClose={() => setPanel(null)}
-          onSave={handlePanelSave}
-          onCancel={handlePanelCancel}
-          onCreate={handlePanelCreate}
-          acting={acting}
-        />
-      )}
+      <AnimatePresence>
+        {panel && (
+          <LessonPanel
+            key={panel.lesson?.id || panel.mode}
+            mode={panel.mode}
+            lesson={panel.lesson}
+            profile={profile}
+            instructors={instructors}
+            showInstructorPicker={showInstructorPicker && panel.mode === "create"}
+            initialForm={panel.initial || {}}
+            onClose={() => setPanel(null)}
+            onSave={handlePanelSave}
+            onCancel={handlePanelCancel}
+            onCreate={handlePanelCreate}
+            acting={acting}
+          />
+        )}
+      </AnimatePresence>
 
       {pendingAction && (
         <RecurringScopeDialog
