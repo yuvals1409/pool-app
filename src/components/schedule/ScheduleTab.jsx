@@ -76,14 +76,15 @@ export default function ScheduleTab({ profile, toast }) {
 
   const handleDrop = useCallback((lesson, date, time) => {
     if (!canEdit) return;
-    const updates = { lesson_date: date, start_time: time };
+    if (date !== lesson.lesson_date) return;
+    if (!confirm(t("rescheduleConfirm", { name: lesson.child_name, time }))) return;
+    const updates = { lesson_date: lesson.lesson_date, start_time: time };
     if (lesson.recurring_lesson_id) {
-      setPanel(null);
       setPendingAction({ type: "reschedule", lesson, updates });
     } else {
       performUpdate(lesson, updates, RECURRING_SCOPE.SINGLE);
     }
-  }, [canEdit]);
+  }, [canEdit, t]);
 
   const { startDrag, dropTarget, ghost } = useLessonDrag({
     enabled: canEdit,
@@ -128,12 +129,23 @@ export default function ScheduleTab({ profile, toast }) {
     const scope = scopeKey === "forward" ? RECURRING_SCOPE.FORWARD : RECURRING_SCOPE.SINGLE;
     const action = pendingAction;
     if (!action) return;
+    const { lesson } = action;
+
+    if (action.type === "cancel") {
+      if (!confirm(t("cancelConfirm", { name: lesson.child_name }))) return;
+      performCancel(lesson, scope, action.phone);
+      return;
+    }
+
+    const confirmMsg = action.type === "reschedule"
+      ? t("rescheduleConfirm", { name: lesson.child_name, time: action.updates.start_time })
+      : t("editConfirm", { name: lesson.child_name });
+    if (!confirm(confirmMsg)) return;
+
     if (action.type === "reschedule") {
-      performUpdate(action.lesson, action.updates, scope);
-    } else if (action.type === "edit") {
-      performUpdate(action.lesson, action.form || action.updates, scope);
-    } else if (action.type === "cancel") {
-      performCancel(action.lesson, scope, action.phone);
+      performUpdate(lesson, action.updates, scope);
+    } else {
+      performUpdate(lesson, action.form || action.updates, scope);
     }
   };
 

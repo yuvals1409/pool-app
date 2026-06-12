@@ -61,7 +61,7 @@ export default function MonthView({
                   lesson={l}
                   compact
                   t={t}
-                  draggable={canEdit && !l.used && !l.cancelled}
+                  draggable={false}
                   onClick={onLessonClick}
                   onDragStart={onDragStart}
                 />

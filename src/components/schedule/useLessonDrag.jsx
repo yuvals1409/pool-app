@@ -9,14 +9,15 @@ export function useLessonDrag({ enabled, onDrop }) {
   const [dropTarget, setDropTarget] = useState(null);
   const dragging = useRef(false);
 
-  const findDropTarget = useCallback((clientX, clientY) => {
+  const findDropTarget = useCallback((clientX, clientY, lessonDate) => {
     const el = document.elementFromPoint(clientX, clientY);
     if (!el) return null;
-    const slot = el.closest("[data-drop-date]");
+    const slot = el.closest("[data-drop-time]");
     if (!slot) return null;
     const date = slot.getAttribute("data-drop-date");
-    const time = slot.getAttribute("data-drop-time") || null;
-    return { date, time, key: time ? `${date}|${time}` : date };
+    const time = slot.getAttribute("data-drop-time");
+    if (!date || !time || date !== lessonDate) return null;
+    return { date, time, key: `${date}|${time}` };
   }, []);
 
   const startDrag = useCallback((lesson, e) => {
@@ -33,18 +34,18 @@ export function useLessonDrag({ enabled, onDrop }) {
     const onMove = (e) => {
       if (!dragging.current) return;
       setGhostPos({ x: e.clientX, y: e.clientY });
-      const target = findDropTarget(e.clientX, e.clientY);
+      const target = findDropTarget(e.clientX, e.clientY, dragLesson.lesson_date);
       setDropTarget(target?.key || null);
     };
 
     const onUp = (e) => {
       if (!dragging.current) return;
       dragging.current = false;
-      const target = findDropTarget(e.clientX, e.clientY);
+      const target = findDropTarget(e.clientX, e.clientY, dragLesson.lesson_date);
       if (target && dragLesson) {
-        const newTime = target.time || dragLesson.start_time?.slice(0, 5) || "09:00";
-        if (target.date !== dragLesson.lesson_date || newTime !== dragLesson.start_time?.slice(0, 5)) {
-          onDrop(dragLesson, target.date, newTime);
+        const newTime = target.time;
+        if (newTime !== dragLesson.start_time?.slice(0, 5)) {
+          onDrop(dragLesson, dragLesson.lesson_date, newTime);
         }
       }
       setDragLesson(null);

@@ -55,6 +55,7 @@ export default function LessonPanel({
     if (mode === "create" && showInstructorPicker && !form.instructor_id) {
       return onSave?.({ error: t("selectInstructor") });
     }
+    if (lesson && !lesson.recurring_lesson_id && !confirm(t("editConfirm", { name: child_name }))) return;
     onSave?.({ form, lesson });
   };
 
@@ -71,12 +72,13 @@ export default function LessonPanel({
       setPhonePrompt(true);
       return;
     }
-    if (!confirm(t("cancelConfirm", { name: lesson.child_name }))) return;
+    if (!lesson.recurring_lesson_id && !confirm(t("cancelConfirm", { name: lesson.child_name }))) return;
     onCancel?.({ lesson, phone: lesson.parent_phone });
   };
 
   const confirmCancelWithPhone = () => {
     if (!form.parent_phone) return onCancel?.({ error: t("phoneRequiredForNotify") });
+    if (!lesson.recurring_lesson_id && !confirm(t("cancelConfirm", { name: lesson.child_name }))) return;
     onCancel?.({ lesson, phone: form.parent_phone });
   };
 
