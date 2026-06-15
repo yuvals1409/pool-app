@@ -122,8 +122,10 @@ export default function LessonPanel({
             </div>
             <div className="field">
               <label className="label">{t("lessonDate")}</label>
-              <input className="input" type="date" value={form.lesson_date}
-                onChange={e => setForm(f => ({ ...f, lesson_date: e.target.value }))} />
+              <div className="date-input-wrap">
+                <input className="input" type="date" dir="ltr" value={form.lesson_date}
+                  onChange={e => setForm(f => ({ ...f, lesson_date: e.target.value }))} />
+              </div>
             </div>
             <div className="field">
               <label className="label">{t("lessonStartTime")}</label>
@@ -194,8 +196,10 @@ export default function LessonPanel({
             </div>
             <div className="field">
               <label className="label">{t("lessonDate")}</label>
-              <input className="input" type="date" value={form.lesson_date}
-                onChange={e => setForm(f => ({ ...f, lesson_date: e.target.value }))} />
+              <div className="date-input-wrap">
+                <input className="input" type="date" dir="ltr" value={form.lesson_date}
+                  onChange={e => setForm(f => ({ ...f, lesson_date: e.target.value }))} />
+              </div>
               {isRecurring && (
                 <div className="schedule-readonly-hint" style={{ marginTop: 6 }}>{t("recurringDateHint")}</div>
               )}

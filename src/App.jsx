@@ -44,6 +44,10 @@ function getEarliestEntryTime(lesson) {
   return addMinutes(parseLessonDateTime(lesson.lesson_date, lesson.start_time), -ENTRY_WINDOW_MINUTES);
 }
 
+function getLatestEntryTime(lesson) {
+  return addMinutes(parseLessonDateTime(lesson.lesson_date, lesson.start_time), LESSON_DURATION_MINUTES);
+}
+
 function formatEntryFromTime(date, locale) {
   const now = new Date();
   const sameDay = date.getFullYear() === now.getFullYear()
@@ -538,7 +542,9 @@ function InstructorTab({ profile, toast }) {
         <div className="field"><label className="label">{t("childName")}</label>
           <input className="input" placeholder={t("childPlaceholder")} value={form.child_name} onChange={upd("child_name")} dir={dir} /></div>
         <div className="field"><label className="label">{t("lessonDate")}</label>
-          <input className="input" type="date" value={form.lesson_date} onChange={upd("lesson_date")} />
+          <div className="date-input-wrap">
+            <input className="input" type="date" dir="ltr" value={form.lesson_date} onChange={upd("lesson_date")} />
+          </div>
           {form.lesson_date && (
             <div style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 6 }}>{fmtDateDay(form.lesson_date)}</div>
           )}
@@ -669,8 +675,15 @@ function GuardTab({ toast }) {
         return;
       }
       const earliestEntry = getEarliestEntryTime(lesson);
-      if (new Date() < earliestEntry) {
+      const latestEntry = getLatestEntryTime(lesson);
+      const now = new Date();
+      if (now < earliestEntry) {
         showScanResult({ ok: false, lesson, msg: t("entryTooEarly", { time: formatEntryFromTime(earliestEntry, locale) }) });
+        setLoading(false);
+        return;
+      }
+      if (now > latestEntry) {
+        showScanResult({ ok: false, lesson, msg: t("entryTooLate", { time: formatEntryFromTime(latestEntry, locale) }) });
         setLoading(false);
         return;
       }

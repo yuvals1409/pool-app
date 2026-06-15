@@ -151,6 +151,8 @@
   flex: 1;
   padding: var(--space-5) var(--space-4);
   padding-bottom: calc(var(--tab-bar-h) + env(safe-area-inset-bottom, 0px) + var(--space-5));
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 /* SECTION */
@@ -177,6 +179,7 @@
   padding: var(--space-4);
   margin-bottom: var(--space-4);
   overflow: hidden;
+  min-width: 0;
 }
 
 .card-group {
@@ -194,7 +197,7 @@
 .card-group .card:last-child { margin-bottom: 0; }
 
 /* FORM */
-.field { margin-bottom: var(--space-4); }
+.field { margin-bottom: var(--space-4); min-width: 0; }
 
 .label {
   display: block;
@@ -215,11 +218,47 @@
   background: var(--bg-secondary);
   transition: border-color .15s;
   outline: none;
-  direction: rtl;
   min-height: var(--tap-target-min);
+  max-width: 100%;
+  min-width: 0;
 }
 
 .input:focus { border-color: var(--accent); background: var(--bg); }
+
+/* iOS Safari: clip native date input inside RTL layout */
+.date-input-wrap {
+  display: grid;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: var(--radius-control);
+}
+
+.date-input-wrap > .input[type="date"] {
+  grid-area: 1 / 1;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  direction: ltr;
+  text-align: right;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.date-input-wrap > .input[type="date"]::-webkit-datetime-edit {
+  width: 100%;
+  overflow: hidden;
+  text-align: right;
+}
+
+.date-input-wrap > .input[type="date"]::-webkit-date-and-time-value {
+  text-align: right;
+}
+
+.date-input-wrap > .input[type="date"]::-webkit-calendar-picker-indicator {
+  margin-inline-start: var(--space-2);
+}
 
 .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
 
