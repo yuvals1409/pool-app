@@ -37,9 +37,7 @@ export default function WeekView({
   onLessonClick,
   onSlotClick,
   onDayClick,
-  onDragStart,
   canEdit,
-  dropTarget,
 }) {
   const { t, days: dayNames } = useLang();
   const weekDays = getWeekDays(anchorDate);
@@ -86,13 +84,10 @@ export default function WeekView({
                 {SCHEDULE_HOURS.flatMap(h =>
                   [0, 1].map(half => {
                     const time = slotTime(h, half);
-                    const dropKey = `${dateStr}|${time}`;
                     return (
                       <div
-                        key={dropKey}
-                        className={`time-slot ${dropTarget === dropKey ? "drop-target" : ""}`}
-                        data-drop-date={dateStr}
-                        data-drop-time={time}
+                        key={`${dateStr}|${time}`}
+                        className="time-slot"
                         onClick={() => canEdit && onSlotClick?.(dateStr, time)}
                       />
                     );
@@ -107,9 +102,7 @@ export default function WeekView({
                       key={lesson.id}
                       lesson={lesson}
                       t={t}
-                      draggable={canEdit && !lesson.used && !lesson.cancelled}
                       onClick={onLessonClick}
-                      onDragStart={onDragStart}
                       style={{
                         position: "absolute",
                         left: 3,

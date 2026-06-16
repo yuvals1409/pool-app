@@ -9,9 +9,7 @@ export default function MonthView({
   lessons,
   onLessonClick,
   onDayClick,
-  onDragStart,
   canEdit,
-  dropTargetDate,
 }) {
   const { t, days: dayNames } = useLang();
   const gridDays = getMonthGridDays(anchorDate);
@@ -36,7 +34,6 @@ export default function MonthView({
           const dayLessons = byDate[dateStr] || [];
           const otherMonth = day.getMonth() !== currentMonth;
           const today = isToday(day);
-          const isDrop = dropTargetDate === dateStr;
 
           return (
             <div
@@ -45,10 +42,8 @@ export default function MonthView({
                 "month-day",
                 otherMonth ? "other-month" : "",
                 today ? "today" : "",
-                isDrop ? "drop-target" : "",
               ].filter(Boolean).join(" ")}
               onClick={() => onDayClick?.(dateStr)}
-              data-drop-date={dateStr}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => { if (e.key === "Enter") onDayClick?.(dateStr); }}
@@ -61,9 +56,7 @@ export default function MonthView({
                   lesson={l}
                   compact
                   t={t}
-                  draggable={false}
                   onClick={onLessonClick}
-                  onDragStart={onDragStart}
                 />
               ))}
               {dayLessons.length > MAX_VISIBLE && (

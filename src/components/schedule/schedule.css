@@ -63,7 +63,6 @@
 .month-day:focus-visible { outline: 2px solid var(--pool); outline-offset: -2px; }
 .month-day.other-month { opacity: .45; }
 .month-day.today { background: rgba(0,119,182,.06); }
-.month-day.drop-target { background: var(--pool-pale); outline: 2px dashed var(--pool); outline-offset: -2px; z-index: 1; }
 .month-day-num {
   font-size: 11px; font-weight: 700; color: var(--ink-mid);
   font-family: 'IBM Plex Mono', monospace; text-align: center; line-height: 1.2;
@@ -142,17 +141,14 @@
   transition: background .12s; flex-shrink: 0;
 }
 .schedule-calendar .time-slot:hover { background: rgba(0,119,182,.04); }
-.schedule-calendar .time-slot.drop-target { background: var(--pool-pale); outline: 2px dashed var(--pool); outline-offset: -2px; z-index: 1; }
 
 /* Lesson block */
 .lesson-block {
   border-radius: 4px; padding: 2px 5px; font-size: 11px; font-weight: 600; line-height: 1.25;
-  cursor: pointer; overflow: hidden; position: relative; touch-action: none;
+  cursor: pointer; overflow: hidden; position: relative;
   box-shadow: 0 1px 3px rgba(0,0,0,.1); border: 1px solid rgba(255,255,255,.25);
-  user-select: none; box-sizing: border-box;
+  box-sizing: border-box;
 }
-.lesson-block.draggable { cursor: grab; }
-.lesson-block.draggable:active { cursor: grabbing; }
 .lesson-block.past { opacity: .75; }
 .lesson-block.cancelled { opacity: .55; text-decoration: line-through; }
 .lesson-block.used { opacity: .7; }
@@ -165,12 +161,6 @@
 .lesson-block.month .lesson-block-time { display: none; }
 .lesson-block-more {
   font-size: 10px; color: var(--ink-soft); padding: 2px 4px; font-weight: 600; text-align: center;
-}
-
-.lesson-block-ghost {
-  position: fixed; z-index: 200; pointer-events: none; opacity: .92;
-  box-shadow: 0 8px 24px rgba(0,0,0,.2); transform: translate(-50%, -50%);
-  max-width: 140px;
 }
 
 /* Panel overlay */

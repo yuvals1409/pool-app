@@ -391,6 +391,22 @@ select.input { cursor: pointer; }
 .btn-sm { padding: var(--space-2) var(--space-4); font-size: var(--text-subhead); width: auto; border-radius: var(--radius-control); min-height: var(--tap-target-min); }
 .btn:disabled { opacity: .45; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
 
+.contact-picker-btn { width: 100%; }
+.contact-picker-hint { font-size: var(--text-caption); color: var(--label-secondary); margin-top: var(--space-2); line-height: 1.4; }
+.contact-picker-selected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-secondary);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-control);
+}
+.contact-picker-info { min-width: 0; flex: 1; }
+.contact-picker-name { font-size: var(--text-subhead); font-weight: 600; color: var(--label); margin-bottom: 2px; }
+.contact-picker-phone { font-size: var(--text-footnote); color: var(--label-secondary); font-variant-numeric: tabular-nums; }
+
 .mt-8 { margin-top: var(--space-2); }
 .mt-16 { margin-top: var(--space-4); }
 

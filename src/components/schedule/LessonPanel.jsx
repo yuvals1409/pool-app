@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLang } from "../../i18n.jsx";
 import { AnimatedSheetOverlay, AnimatedSheetPanel } from "../ui/AnimatedSheet.jsx";
+import ParentContactPicker from "../ParentContactPicker.jsx";
 import { canEditLesson } from "../../lib/permissions.js";
 import { fmt_time, isPastLesson, isValidStartTime, lessonStatus } from "../../lib/lessonDates.js";
 import TimeScrollPicker from "../TimeScrollPicker.jsx";
@@ -37,6 +38,7 @@ export default function LessonPanel({
   onCancel,
   onCreate,
   acting,
+  toast,
 }) {
   const { t, fmtDateDay, dir } = useLang();
   const [form, setForm] = useState(() => {
@@ -134,8 +136,11 @@ export default function LessonPanel({
             </div>
             <div className="field">
               <label className="label">{t("parentPhone")}</label>
-              <input className="input" type="tel" value={form.parent_phone}
-                onChange={e => setForm(f => ({ ...f, parent_phone: e.target.value }))} dir="ltr" />
+              <ParentContactPicker
+                value={form.parent_phone}
+                onChange={phone => setForm(f => ({ ...f, parent_phone: phone }))}
+                onError={msg => toast?.show(msg)}
+              />
             </div>
             <div className="field">
               <label className="label">{t("lessonType")}</label>
@@ -211,8 +216,11 @@ export default function LessonPanel({
             </div>
             <div className="field">
               <label className="label">{t("parentPhone")}</label>
-              <input className="input" type="tel" value={form.parent_phone}
-                onChange={e => setForm(f => ({ ...f, parent_phone: e.target.value }))} dir="ltr" />
+              <ParentContactPicker
+                value={form.parent_phone}
+                onChange={phone => setForm(f => ({ ...f, parent_phone: phone }))}
+                onError={msg => toast?.show(msg)}
+              />
             </div>
             <div className="gap-8">
               <button type="button" className="btn btn-primary" onClick={handleSave} disabled={acting}>
@@ -231,8 +239,11 @@ export default function LessonPanel({
             </div>
             <div className="field">
               <label className="label">{t("parentPhone")}</label>
-              <input className="input" type="tel" placeholder="050-0000000" value={form.parent_phone}
-                onChange={e => setForm(f => ({ ...f, parent_phone: e.target.value }))} dir="ltr" />
+              <ParentContactPicker
+                value={form.parent_phone}
+                onChange={phone => setForm(f => ({ ...f, parent_phone: phone }))}
+                onError={msg => toast?.show(msg)}
+              />
             </div>
             <div className="gap-8">
               <button type="button" className="btn btn-danger" onClick={confirmCancelWithPhone} disabled={acting}>

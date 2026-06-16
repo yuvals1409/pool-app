@@ -17,7 +17,6 @@ import DayView from "./DayView.jsx";
 import InstructorLegend from "./InstructorLegend.jsx";
 import LessonPanel from "./LessonPanel.jsx";
 import RecurringScopeDialog from "./RecurringScopeDialog.jsx";
-import { useLessonDrag } from "./useLessonDrag.jsx";
 import "./schedule.css";
 
 export default function ScheduleTab({ profile, toast }) {
@@ -75,23 +74,6 @@ export default function ScheduleTab({ profile, toast }) {
     });
   };
 
-  const handleDrop = useCallback((lesson, date, time) => {
-    if (!canEdit) return;
-    if (date !== lesson.lesson_date) return;
-    if (!confirm(t("rescheduleConfirm", { name: lesson.child_name, time }))) return;
-    const updates = { lesson_date: lesson.lesson_date, start_time: time };
-    if (lesson.recurring_lesson_id) {
-      setPendingAction({ type: "reschedule", lesson, updates });
-    } else {
-      performUpdate(lesson, updates, RECURRING_SCOPE.SINGLE);
-    }
-  }, [canEdit, t]);
-
-  const { startDrag, dropTarget, ghost } = useLessonDrag({
-    enabled: canEdit,
-    onDrop: handleDrop,
-  });
-
   const performUpdate = async (lesson, updates, scope) => {
     setActing(true);
     const result = await updateLesson({
@@ -146,16 +128,8 @@ export default function ScheduleTab({ profile, toast }) {
       }
     }
 
-    const confirmMsg = action.type === "reschedule"
-      ? t("rescheduleConfirm", { name: lesson.child_name, time: action.updates.start_time })
-      : t("editConfirm", { name: lesson.child_name });
-    if (!confirm(confirmMsg)) return;
-
-    if (action.type === "reschedule") {
-      performUpdate(lesson, action.updates, scope);
-    } else {
-      performUpdate(lesson, action.form || action.updates, scope);
-    }
+    if (!confirm(t("editConfirm", { name: lesson.child_name }))) return;
+    performUpdate(lesson, action.form, scope);
   };
 
   const onLessonClick = (lesson) => setPanel({ mode: "view", lesson });
@@ -225,9 +199,7 @@ export default function ScheduleTab({ profile, toast }) {
     onLessonClick,
     onSlotClick,
     onDayClick,
-    onDragStart: startDrag,
     canEdit,
-    dropTarget,
   };
 
   return (
@@ -253,7 +225,7 @@ export default function ScheduleTab({ profile, toast }) {
         <div style={{ textAlign: "center", padding: 32, color: "var(--ink-soft)" }}>{t("loading")}</div>
       ) : (
         <>
-          {view === "month" && <MonthView {...viewProps} dropTargetDate={dropTarget} />}
+          {view === "month" && <MonthView {...viewProps} />}
           {view === "week" && <WeekView {...viewProps} />}
           {view === "day" && <DayView {...viewProps} />}
           {lessons.length === 0 && (
@@ -277,6 +249,7 @@ export default function ScheduleTab({ profile, toast }) {
             onCancel={handlePanelCancel}
             onCreate={handlePanelCreate}
             acting={acting}
+            toast={toast}
           />
         )}
       </AnimatePresence>
@@ -287,8 +260,6 @@ export default function ScheduleTab({ profile, toast }) {
           onCancel={() => setPendingAction(null)}
         />
       )}
-
-      {ghost}
     </div>
   );
 }

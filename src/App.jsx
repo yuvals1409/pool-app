@@ -26,6 +26,7 @@ import {
   shareTicketViaWhatsApp, shareCancellationViaWhatsApp,
 } from "./lib/lessonNotify.js";
 import TimeScrollPicker from "./components/TimeScrollPicker.jsx";
+import ParentContactPicker from "./components/ParentContactPicker.jsx";
 import ScheduleTab from "./components/schedule/ScheduleTab.jsx";
 import { getOAuthRedirectUrl } from "./lib/authRedirect.js";
 
@@ -572,7 +573,12 @@ function InstructorTab({ profile, toast }) {
           )}
         </div>
         <div className="field"><label className="label">{t("parentPhone")}</label>
-          <input className="input" type="tel" placeholder="050-0000000" value={form.parent_phone} onChange={upd("parent_phone")} dir="ltr" /></div>
+          <ParentContactPicker
+            value={form.parent_phone}
+            onChange={phone => setForm(f => ({ ...f, parent_phone: phone }))}
+            onError={msg => toast.show(msg)}
+          />
+        </div>
         <button className="btn btn-primary mt-8" onClick={create} disabled={loading}>
           {loading ? <><div className="spinner"/> {t("creating")}</> : t("createBarcode")}
         </button>
