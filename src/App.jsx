@@ -613,7 +613,7 @@ function ScanResultCard({ result, t, fmtDateDay }) {
 
 function GuardTab({ toast }) {
   const { t, fmtDateDay, locale } = useLang();
-  const videoRef = useRef(); const canvasRef = useRef(); const animRef = useRef();
+  const videoRef = useRef(); const canvasRef = useRef(); const animRef = useRef(); const streamRef = useRef(null);
   const [scanning, setScanning] = useState(false);
   const [result,   setResult]   = useState(null);
   const [flash,    setFlash]    = useState(null);
@@ -623,26 +623,38 @@ function GuardTab({ toast }) {
 
   useEffect(() => { loadLog(); }, []);
 
+  useEffect(() => () => {
+    cancelAnimationFrame(animRef.current);
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+  }, []);
+
   const loadLog = async () => {
     const { data } = await supabase.from("lessons").select("*")
       .eq("used", true).order("used_at", { ascending: false }).limit(15);
     if (data) setLog(data);
   };
 
+  const ensureCamera = async () => {
+    const live = streamRef.current?.getVideoTracks().some((track) => track.readyState === "live");
+    if (live) return streamRef.current;
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    streamRef.current = stream;
+    return stream;
+  };
+
   const startScan = async () => {
     setResult(null); setScanning(true);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      const stream = await ensureCamera();
       videoRef.current.srcObject = stream;
-      videoRef.current.play();
+      await videoRef.current.play();
       requestAnimationFrame(tick);
     } catch { toast.show(t("noCamera")); setScanning(false); }
   };
 
-  const stopScan = () => {
+  const pauseScan = () => {
     cancelAnimationFrame(animRef.current);
-    videoRef.current?.srcObject?.getTracks().forEach(t => t.stop());
-    if (videoRef.current) videoRef.current.srcObject = null;
     setScanning(false);
   };
 
@@ -664,7 +676,7 @@ function GuardTab({ toast }) {
   };
 
   const processQR = async (uuid) => {
-    stopScan(); setLoading(true);
+    pauseScan(); setLoading(true);
     try {
       const lesson = await lookupLessonByQr(uuid);
       if (!lesson) { showScanResult({ ok: false, msg: t("barcodeNotFound") }); setLoading(false); return; }
@@ -718,7 +730,7 @@ function GuardTab({ toast }) {
             <div className="scan-overlay"><div className="scan-line" /></div>
           </div>
           <div className="scan-hint">{t("scanHint")}</div>
-          <button className="btn btn-outline mt-8" onClick={stopScan}>{t("cancel")}</button>
+          <button className="btn btn-outline mt-8" onClick={pauseScan}>{t("cancel")}</button>
         </>
       )}
 
