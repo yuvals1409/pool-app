@@ -22,7 +22,7 @@
 
 .nav-btn {
   flex: 1;
-  padding: var(--space-2) var(--space-1);
+  padding: 6px var(--space-1) var(--space-2);
   background: none;
   border: none;
   border-radius: var(--radius-control);
@@ -30,14 +30,17 @@
   font-family: inherit;
   font-size: 10px;
   font-weight: 500;
-  color: var(--label-secondary);
-  transition: color .18s, background .18s;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: var(--nav-inactive);
+  transition: color .22s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 2px;
   min-height: var(--tap-target-min);
+  -webkit-tap-highlight-color: transparent;
 }
 
 .nav-btn .nav-icon {
@@ -58,9 +61,10 @@
   color: var(--accent);
 }
 
-.nav-btn:hover {
-  color: var(--accent);
-  background: rgba(0, 119, 182, .06);
+@media (hover: hover) {
+  .nav-btn:hover:not(.active) {
+    color: var(--accent);
+  }
 }
 
 /* Scan flash overlay */

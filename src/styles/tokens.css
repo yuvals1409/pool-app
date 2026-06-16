@@ -59,13 +59,14 @@
   --shadow-lg:   0 8px 40px rgba(0,119,182,.16);
 
   /* Layout */
-  --tab-bar-h: 56px;
+  --tab-bar-h: 49px;
   --tap-target-min: 44px;
   --header-h: auto;
 
   /* Materials */
   --nav-bg: rgba(255, 255, 255, 0.72);
   --nav-border: rgba(60, 60, 67, 0.12);
+  --nav-inactive: rgba(60, 60, 67, 0.6);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -101,6 +102,7 @@
 
     --nav-bg: rgba(28, 28, 30, 0.82);
     --nav-border: rgba(84, 84, 88, 0.5);
+    --nav-inactive: rgba(235, 235, 245, 0.6);
   }
 }
 

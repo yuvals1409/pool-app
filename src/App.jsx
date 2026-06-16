@@ -1110,6 +1110,8 @@ export default function App() {
   const [session,  setSession]  = useState(undefined); // undefined = loading
   const [profile,  setProfile]  = useState(null);
   const [tab,      setTab]      = useState("instructor");
+  const [tabDirection, setTabDirection] = useState(0);
+  const reducedMotion = useReducedMotion();
   const toast = useToast();
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -1283,6 +1285,37 @@ export default function App() {
     canManage(profile)       && { id: "admin",      label: t("tabAdmin") },
   ].filter(Boolean);
 
+  const tabOrder = allTabs.map(ti => ti.id);
+
+  const goToTab = (nextId) => {
+    const from = tabOrder.indexOf(tab);
+    const to = tabOrder.indexOf(nextId);
+    if (from !== -1 && to !== -1 && from !== to) {
+      setTabDirection(to > from ? 1 : -1);
+    }
+    setTab(nextId);
+  };
+
+  const slideOffset = (motionDir) => {
+    if (reducedMotion) return 0;
+    const sign = dir === "rtl" ? -1 : 1;
+    return sign * motionDir * 20;
+  };
+
+  const tabTransition = reducedMotion
+    ? { duration: 0.01 }
+    : { duration: 0.3, ease: [0.32, 0.72, 0, 1] };
+
+  const renderActiveTab = () => {
+    switch (tab) {
+      case "instructor": return <InstructorTab profile={profile} toast={toast} />;
+      case "guard":      return <GuardTab toast={toast} />;
+      case "schedule":   return <ScheduleTab profile={profile} toast={toast} />;
+      case "admin":      return <AdminTab profile={profile} toast={toast} />;
+      default:           return null;
+    }
+  };
+
   return (
     <>
       <div className="app" dir={dir}>
@@ -1304,11 +1337,31 @@ export default function App() {
           </div>
         </div>
 
-        <div className="content">
-          {tab === "instructor" && <InstructorTab profile={profile} toast={toast} />}
-          {tab === "guard"      && <GuardTab toast={toast} />}
-          {tab === "schedule"   && <ScheduleTab profile={profile} toast={toast} />}
-          {tab === "admin"      && <AdminTab profile={profile} toast={toast} />}
+        <div className="content tab-stage">
+          <AnimatePresence mode="popLayout" custom={tabDirection} initial={false}>
+            <motion.div
+              key={tab}
+              custom={tabDirection}
+              className="tab-panel"
+              variants={{
+                enter: (motionDir) => ({
+                  opacity: 0,
+                  x: slideOffset(motionDir),
+                }),
+                center: { opacity: 1, x: 0 },
+                exit: (motionDir) => ({
+                  opacity: 0,
+                  x: slideOffset(-motionDir),
+                }),
+              }}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={tabTransition}
+            >
+              {renderActiveTab()}
+            </motion.div>
+          </AnimatePresence>
         </div>
 
         <nav className="nav" role="tablist">
@@ -1319,9 +1372,11 @@ export default function App() {
               role="tab"
               aria-selected={tab === tabItem.id}
               className={`nav-btn ${tab === tabItem.id ? "active" : ""}`}
-              onClick={() => setTab(tabItem.id)}
+              onClick={() => goToTab(tabItem.id)}
             >
-              <span className="nav-icon"><TabIcon id={tabItem.id} /></span>
+              <span className="nav-icon">
+                <TabIcon id={tabItem.id} active={tab === tabItem.id} />
+              </span>
               {tabItem.label}
             </button>
           ))}

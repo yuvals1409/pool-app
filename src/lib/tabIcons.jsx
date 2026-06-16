@@ -7,8 +7,14 @@ const TAB_ICON_MAP = {
   admin: Settings,
 };
 
-export function TabIcon({ id }) {
+export function TabIcon({ id, active = false }) {
   const Icon = TAB_ICON_MAP[id];
   if (!Icon) return null;
-  return <Icon aria-hidden />;
+  return (
+    <Icon
+      aria-hidden
+      fill={active ? "currentColor" : "none"}
+      strokeWidth={active ? 1.75 : 2}
+    />
+  );
 }
