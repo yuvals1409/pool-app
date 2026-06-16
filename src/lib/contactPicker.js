@@ -1,11 +1,5 @@
-function isLikelyIOS() {
-  if (typeof navigator === "undefined") return false;
-  return /iPad|iPhone|iPod/.test(navigator.userAgent)
-    || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-}
-
 export function isContactPickerSupported() {
-  return typeof navigator?.contacts?.select === "function" && !isLikelyIOS();
+  return typeof navigator?.contacts?.select === "function";
 }
 
 export function normalizePhone(raw) {
@@ -22,24 +16,17 @@ export async function pickParentContact() {
     throw err;
   }
 
-  try {
-    const contacts = await navigator.contacts.select(["name", "tel"], { multiple: false });
-    if (!contacts?.length) return null;
+  const contacts = await navigator.contacts.select(["name", "tel"], { multiple: false });
+  if (!contacts?.length) return null;
 
-    const contact = contacts[0];
-    const name = contact.name?.[0] || "";
-    const tel = contact.tel?.[0];
-    if (!tel) {
-      const err = new Error("no-phone");
-      err.code = "no-phone";
-      throw err;
-    }
-
-    return { name, phone: normalizePhone(tel) };
-  } catch (err) {
-    if (err?.code === "no-phone") throw err;
-    const fail = new Error("unsupported");
-    fail.code = "unsupported";
-    throw fail;
+  const contact = contacts[0];
+  const name = contact.name?.[0] || "";
+  const tel = contact.tel?.[0];
+  if (!tel) {
+    const err = new Error("no-phone");
+    err.code = "no-phone";
+    throw err;
   }
+
+  return { name, phone: normalizePhone(tel) };
 }

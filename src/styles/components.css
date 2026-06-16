@@ -406,6 +406,7 @@ select.input { cursor: pointer; }
 .contact-picker-info { min-width: 0; flex: 1; }
 .contact-picker-name { font-size: var(--text-subhead); font-weight: 600; color: var(--label); margin-bottom: 2px; }
 .contact-picker-phone { font-size: var(--text-footnote); color: var(--label-secondary); font-variant-numeric: tabular-nums; }
+.contact-picker-manual-fallback { margin-top: var(--space-3); }
 
 .mt-8 { margin-top: var(--space-2); }
 .mt-16 { margin-top: var(--space-4); }

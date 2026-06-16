@@ -7,8 +7,15 @@ export default function ParentContactPicker({ value, onChange, onError }) {
   const pickerAvailable = useMemo(() => isContactPickerSupported(), []);
   const [contactName, setContactName] = useState("");
   const [picking, setPicking] = useState(false);
+  const [showManual, setShowManual] = useState(!pickerAvailable);
 
   const pick = async () => {
+    if (!pickerAvailable) {
+      setShowManual(true);
+      onError?.(t("contactPickerEnableIOS"));
+      return;
+    }
+
     setPicking(true);
     try {
       const result = await pickParentContact();
@@ -18,15 +25,17 @@ export default function ParentContactPicker({ value, onChange, onError }) {
       }
     } catch (err) {
       const code = err?.code || err?.message;
-      if (code === "unsupported") onError?.(t("contactPickerUnsupported"));
-      else if (code === "no-phone") onError?.(t("contactPickerNoPhone"));
-      else onError?.(t("contactPickerError"));
+      if (code === "no-phone") onError?.(t("contactPickerNoPhone"));
+      else {
+        setShowManual(true);
+        onError?.(t("contactPickerEnableIOS"));
+      }
     } finally {
       setPicking(false);
     }
   };
 
-  if (!pickerAvailable) {
+  if (showManual && !pickerAvailable) {
     return (
       <div className="contact-picker">
         <input
@@ -40,6 +49,7 @@ export default function ParentContactPicker({ value, onChange, onError }) {
           dir="ltr"
         />
         <div className="contact-picker-hint">{t("parentPhoneManualHint")}</div>
+        <div className="contact-picker-hint">{t("contactPickerEnableIOS")}</div>
       </div>
     );
   }
@@ -51,6 +61,21 @@ export default function ParentContactPicker({ value, onChange, onError }) {
           {picking ? <><div className="spinner" /> {t("openingContacts")}</> : <>📇 {t("selectParentContact")}</>}
         </button>
         <div className="contact-picker-hint">{t("parentPhoneHint")}</div>
+        {showManual && (
+          <div className="contact-picker-manual-fallback">
+            <div className="contact-picker-hint">{t("parentPhoneManualHint")}</div>
+            <input
+              className="input"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="050-0000000"
+              value={value}
+              onChange={e => onChange?.(e.target.value)}
+              dir="ltr"
+            />
+          </div>
+        )}
       </div>
     );
   }
