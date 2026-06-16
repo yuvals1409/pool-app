@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useLang } from "../i18n.jsx";
-import { pickParentContact } from "../lib/contactPicker.js";
+import { isContactPickerSupported, pickParentContact } from "../lib/contactPicker.js";
 
 export default function ParentContactPicker({ value, onChange, onError }) {
   const { t } = useLang();
+  const pickerAvailable = useMemo(() => isContactPickerSupported(), []);
   const [contactName, setContactName] = useState("");
   const [picking, setPicking] = useState(false);
 
@@ -24,6 +25,24 @@ export default function ParentContactPicker({ value, onChange, onError }) {
       setPicking(false);
     }
   };
+
+  if (!pickerAvailable) {
+    return (
+      <div className="contact-picker">
+        <input
+          className="input"
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          placeholder="050-0000000"
+          value={value}
+          onChange={e => onChange?.(e.target.value)}
+          dir="ltr"
+        />
+        <div className="contact-picker-hint">{t("parentPhoneManualHint")}</div>
+      </div>
+    );
+  }
 
   if (!value) {
     return (
