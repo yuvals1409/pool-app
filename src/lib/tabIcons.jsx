@@ -5,6 +5,7 @@ const TAB_ICON_MAP = {
   guard: ScanLine,
   schedule: Calendar,
   admin: Settings,
+  office: Settings,
 };
 
 export function TabIcon({ id, active = false }) {

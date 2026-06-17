@@ -12,9 +12,9 @@ import {
   ADMIN_EMAIL, VENUE_MAPS_URL, VENUE_NAME, VENUE_ADDRESS,
   LESSON_DURATION_MINUTES, ENTRY_WINDOW_MINUTES,
 } from "./lib/config.js";
-import { supabase, ensureWeeklyLessonsGenerated, markLessonNotified } from "./lib/supabase.js";
+import { supabase, ensureWeeklyLessonsGenerated, ensureWeeklySessionsGenerated, ensureAccessPassesGenerated, markLessonNotified } from "./lib/supabase.js";
 import {
-  isOwner, canManage, canCreateLesson, canScan, canViewSchedule,
+  isOwner, canManage, canCreateLesson, canScan, canViewSchedule, canAccessOffice,
   ACTIVE_USER_ROLE_ORDER, assignableRoles, canRevokeUser,
 } from "./lib/permissions.js";
 import {
@@ -28,6 +28,10 @@ import {
 import TimeScrollPicker from "./components/TimeScrollPicker.jsx";
 import ParentContactPicker from "./components/ParentContactPicker.jsx";
 import ScheduleTab from "./components/schedule/ScheduleTab.jsx";
+import OfficeTab from "./components/OfficeTab.jsx";
+import {
+  lookupAndRedeemPass, fetchPublicPass, parsePublicPathToken, parseAccessLogReason,
+} from "./lib/accessPass.js";
 import { getOAuthRedirectUrl } from "./lib/authRedirect.js";
 
 // ─────────────────────────────────────────────────────────────
@@ -224,6 +228,18 @@ function TicketCard({ lesson, qrSize = 200, label }) {
       <div className="ticket-title">{t("ticketTitle")}</div>
       <QRCanvas value={getLessonQrValue(lesson)} size={qrSize} />
       <div className="qr-label">{label || t("ticketOneTime")}</div>
+    </div>
+  );
+}
+
+function PassTicketCard({ qrToken, qrSize = 200, label }) {
+  const { t } = useLang();
+  return (
+    <div className="qr-wrap">
+      <BrandLogo height={52} />
+      <div className="ticket-title">{t("annualTicket")}</div>
+      <QRCanvas value={qrToken} size={qrSize} />
+      <div className="qr-label">{label || t("showToGuard")}</div>
     </div>
   );
 }
@@ -590,9 +606,28 @@ function InstructorTab({ profile, toast }) {
 // ─────────────────────────────────────────────────────────────
 //  GUARD TAB
 // ─────────────────────────────────────────────────────────────
+function redeemPassMessage(redeem, t, locale) {
+  switch (redeem.result) {
+    case "unpaid": return t("entryUnpaid");
+    case "already_used":
+      return redeem.usedAt
+        ? `${t("passAlreadyUsed")}\n${t("scannedOn")}: ${new Date(redeem.usedAt).toLocaleString(locale)}`
+        : t("passAlreadyUsed");
+    case "too_early":
+      return t("entryTooEarly", { time: formatEntryFromTime(new Date(redeem.validFrom), locale) });
+    case "too_late":
+      return t("entryTooLate", { time: formatEntryFromTime(new Date(redeem.validUntil), locale) });
+    case "cancelled": return t("passCancelled");
+    case "inactive": return t("passInactive");
+    case "expired": return t("passExpired");
+    default: return t("barcodeNotFound");
+  }
+}
+
 function ScanResultCard({ result, t, fmtDateDay }) {
   const reduced = useReducedMotion();
   const Icon = result.ok ? CheckCircle2 : XCircle;
+  const display = result.lesson || result.pass;
   return (
     <motion.div
       className={`result-card ${result.ok ? "ok" : "err"}`}
@@ -604,12 +639,15 @@ function ScanResultCard({ result, t, fmtDateDay }) {
         <Icon size={52} strokeWidth={1.75} color={result.ok ? "var(--success)" : "var(--danger)"} />
       </div>
       <div className="result-title">{result.ok ? t("entryApproved") : t("entryDenied")}</div>
-      {result.ok && result.lesson && (
+      {result.ok && display && (
         <div className="lesson-info" style={{ marginTop: 12 }}>
-          <div className="lesson-info-row"><span className="li-key">{t("child")}</span><span className="li-val">{result.lesson.child_name}</span></div>
-          <div className="lesson-info-row"><span className="li-key">{t("date")}</span><span className="li-val">{fmtDateDay(result.lesson.lesson_date)}</span></div>
-          <div className="lesson-info-row"><span className="li-key">{t("startTime")}</span><span className="li-val">{fmt_time(result.lesson.start_time)}</span></div>
-          <div className="lesson-info-row"><span className="li-key">{t("instructor")}</span><span className="li-val">{result.lesson.instructor_name}</span></div>
+          <div className="lesson-info-row"><span className="li-key">{t("child")}</span><span className="li-val">{display.child_name || display.childName}</span></div>
+          <div className="lesson-info-row"><span className="li-key">{t("date")}</span><span className="li-val">{fmtDateDay(display.lesson_date || display.sessionDate)}</span></div>
+          <div className="lesson-info-row"><span className="li-key">{t("startTime")}</span><span className="li-val">{fmt_time(display.start_time || display.startTime)}</span></div>
+          {display.product_name || display.productName ? (
+            <div className="lesson-info-row"><span className="li-key">{t("sectionClass")}</span><span className="li-val">{display.product_name || display.productName}</span></div>
+          ) : null}
+          <div className="lesson-info-row"><span className="li-key">{t("instructor")}</span><span className="li-val">{display.instructor_name || display.instructorName}</span></div>
         </div>
       )}
       {!result.ok && <div className="result-detail">{result.msg}</div>}
@@ -628,6 +666,10 @@ function GuardTab({ toast }) {
   const [logOpen,  setLogOpen]  = useState(false);
 
   useEffect(() => { loadLog(); }, []);
+  useEffect(() => {
+    ensureWeeklySessionsGenerated();
+    ensureAccessPassesGenerated();
+  }, []);
 
   useEffect(() => () => {
     cancelAnimationFrame(animRef.current);
@@ -636,9 +678,28 @@ function GuardTab({ toast }) {
   }, []);
 
   const loadLog = async () => {
-    const { data } = await supabase.from("lessons").select("*")
-      .eq("used", true).order("used_at", { ascending: false }).limit(15);
-    if (data) setLog(data);
+    const [{ data: lessons }, { data: logs }] = await Promise.all([
+      supabase.from("lessons").select("*")
+        .eq("used", true).order("used_at", { ascending: false }).limit(15),
+      supabase.from("access_logs").select("*")
+        .eq("result", "ok").order("scanned_at", { ascending: false }).limit(15),
+    ]);
+    const passRows = (logs || []).map((l) => {
+      const meta = parseAccessLogReason(l.reason) || {};
+      return {
+        id: `pass-${l.id}`,
+        child_name: meta.child_name || "—",
+        lesson_date: meta.session_date,
+        start_time: meta.start_time,
+        instructor_name: meta.instructor_name || meta.product_name || "",
+        used_at: l.scanned_at,
+      };
+    });
+    const lessonRows = lessons || [];
+    const merged = [...lessonRows, ...passRows]
+      .sort((a, b) => new Date(b.used_at) - new Date(a.used_at))
+      .slice(0, 15);
+    setLog(merged);
   };
 
   const ensureCamera = async () => {
@@ -685,30 +746,52 @@ function GuardTab({ toast }) {
     pauseScan(); setLoading(true);
     try {
       const lesson = await lookupLessonByQr(uuid);
-      if (!lesson) { showScanResult({ ok: false, msg: t("barcodeNotFound") }); setLoading(false); return; }
-      if (lesson.cancelled) { showScanResult({ ok: false, lesson, msg: t("barcodeCancelled") }); setLoading(false); return; }
-      if (lesson.used) {
-        showScanResult({ ok: false, lesson, msg: `${t("barcodeUsed")}\n${t("scannedOn")}: ${new Date(lesson.used_at).toLocaleString(locale)}` });
+      if (lesson) {
+        if (lesson.cancelled) { showScanResult({ ok: false, lesson, msg: t("barcodeCancelled") }); setLoading(false); return; }
+        if (lesson.used) {
+          showScanResult({ ok: false, lesson, msg: `${t("barcodeUsed")}\n${t("scannedOn")}: ${new Date(lesson.used_at).toLocaleString(locale)}` });
+          setLoading(false);
+          return;
+        }
+        const earliestEntry = getEarliestEntryTime(lesson);
+        const latestEntry = getLatestEntryTime(lesson);
+        const now = new Date();
+        if (now < earliestEntry) {
+          showScanResult({ ok: false, lesson, msg: t("entryTooEarly", { time: formatEntryFromTime(earliestEntry, locale) }) });
+          setLoading(false);
+          return;
+        }
+        if (now > latestEntry) {
+          showScanResult({ ok: false, lesson, msg: t("entryTooLate", { time: formatEntryFromTime(latestEntry, locale) }) });
+          setLoading(false);
+          return;
+        }
+        const { error: upErr } = await supabase.from("lessons").update({ used: true, used_at: new Date().toISOString() }).eq("id", lesson.id);
+        if (upErr) throw upErr;
+        showScanResult({ ok: true, lesson });
+        loadLog();
         setLoading(false);
         return;
       }
-      const earliestEntry = getEarliestEntryTime(lesson);
-      const latestEntry = getLatestEntryTime(lesson);
-      const now = new Date();
-      if (now < earliestEntry) {
-        showScanResult({ ok: false, lesson, msg: t("entryTooEarly", { time: formatEntryFromTime(earliestEntry, locale) }) });
-        setLoading(false);
-        return;
+
+      const redeem = await lookupAndRedeemPass(uuid);
+      if (redeem.ok) {
+        showScanResult({
+          ok: true,
+          pass: {
+            childName: redeem.childName,
+            sessionDate: redeem.sessionDate,
+            startTime: redeem.startTime,
+            productName: redeem.productName,
+            instructorName: redeem.instructorName,
+          },
+        });
+        loadLog();
+      } else if (redeem.result === "not_found") {
+        showScanResult({ ok: false, msg: t("barcodeNotFound") });
+      } else {
+        showScanResult({ ok: false, msg: redeemPassMessage(redeem, t, locale) });
       }
-      if (now > latestEntry) {
-        showScanResult({ ok: false, lesson, msg: t("entryTooLate", { time: formatEntryFromTime(latestEntry, locale) }) });
-        setLoading(false);
-        return;
-      }
-      const { error: upErr } = await supabase.from("lessons").update({ used: true, used_at: new Date().toISOString() }).eq("id", lesson.id);
-      if (upErr) throw upErr;
-      showScanResult({ ok: true, lesson });
-      loadLog();
     } catch { showScanResult({ ok: false, msg: t("systemError") }); }
     setLoading(false);
   };
@@ -987,24 +1070,69 @@ function AdminTab({ profile, toast }) {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  PARENT TICKET (public — ?ticket=UUID)
+//  PARENT TICKET (public — ?ticket=UUID or /t/TOKEN)
 // ─────────────────────────────────────────────────────────────
+function AccessPassTicket({ pass }) {
+  const { t, fmtDateDay, locale } = useLang();
+  const used = pass.status === "used" || !!pass.usedAt;
+  const unpaid = pass.paymentStatus === "unpaid";
+
+  return (
+    <div style={{ padding: "24px 20px" }}>
+      <div style={{ textAlign: "center", marginBottom: 8 }}>
+        <span className={`badge ${used ? "badge-used" : unpaid ? "badge-used" : "badge-active"}`}>
+          {used ? `✕ ${t("ticketUsedBadge")}` : unpaid ? t("ticketUnpaidBadge") : `✓ ${t("ticketValid")}`}
+        </span>
+      </div>
+      <PassTicketCard
+        qrToken={pass.qrToken}
+        qrSize={220}
+        label={used ? t("ticketUsedMsg") : t("showToGuard")}
+      />
+      <div className="lesson-info">
+        <div className="lesson-info-row"><span className="li-key">{t("child")}</span><span className="li-val">{pass.childName}</span></div>
+        <div className="lesson-info-row"><span className="li-key">{t("date")}</span><span className="li-val">{fmtDateDay(pass.sessionDate)}</span></div>
+        <div className="lesson-info-row"><span className="li-key">{t("startTime")}</span><span className="li-val">{fmt_time(pass.startTime)}</span></div>
+        <div className="lesson-info-row"><span className="li-key">{t("sectionClass")}</span><span className="li-val">{pass.productName}</span></div>
+        <div className="lesson-info-row"><span className="li-key">{t("instructor")}</span><span className="li-val">{pass.instructorName}</span></div>
+      </div>
+      {used && pass.usedAt && (
+        <div style={{ textAlign: "center", fontSize: 12, color: "var(--danger)", marginTop: 12 }}>
+          {t("scannedOn")}: {new Date(pass.usedAt).toLocaleString(locale)}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ParentTicket({ id }) {
   const { t, fmtDateDay, locale } = useLang();
   const [lesson,  setLesson]  = useState(null);
+  const [pass,    setPass]    = useState(null);
   const [loading, setLoading] = useState(true);
   const [err,     setErr]     = useState(null);
 
   useEffect(() => {
     (async () => {
-      const { data, error } = await supabase.from("lessons").select("*").eq("id", id).single();
-      if (error || !data) setErr(t("ticketNotFound"));
-      else setLesson(data);
+      const { data, error } = await supabase.from("lessons").select("*").eq("id", id).maybeSingle();
+      if (!error && data) {
+        setLesson(data);
+        setLoading(false);
+        return;
+      }
+      try {
+        const passData = await fetchPublicPass(id);
+        if (passData.ok) setPass(passData);
+        else setErr(t("ticketNotFound"));
+      } catch {
+        setErr(t("ticketNotFound"));
+      }
       setLoading(false);
     })();
   }, [id, t]);
 
   if (loading) return <div style={{padding:40,textAlign:"center",color:"var(--ink-soft)"}}>{t("loading")}</div>;
+  if (pass) return <AccessPassTicket pass={pass} />;
   if (err || !lesson) return (
     <div className="result-card err" style={{margin:24}}>
       <div className="result-icon">❌</div>
@@ -1135,6 +1263,7 @@ export default function App() {
   const urlParams = new URLSearchParams(window.location.search);
   const ticketId = urlParams.get("ticket");
   const calendarId = urlParams.get("calendar");
+  const pathPassToken = parsePublicPathToken();
 
   const loadProfile = useCallback(async (user) => {
     const email = user.email.toLowerCase();
@@ -1213,6 +1342,7 @@ export default function App() {
   useEffect(() => {
     if (!profile) return;
     if (canCreateLesson(profile)) setTab("instructor");
+    else if (canAccessOffice(profile)) setTab("office");
     else if (canScan(profile)) setTab("guard");
   }, [profile?.id, profile?.role, profile?.email]);
 
@@ -1240,7 +1370,8 @@ export default function App() {
   );
 
   // ── Ticket view (public, no auth needed) ──────────────────
-  if (ticketId) return (
+  const publicTicketId = pathPassToken || ticketId;
+  if (publicTicketId) return (
     <>
       <div className="app" dir={dir}>
         <div className="header">
@@ -1254,7 +1385,7 @@ export default function App() {
           <div className="header-sub">{t("neveOz")}</div>
         </div>
         <div className="content" style={{ paddingBottom: "var(--space-5)" }}>
-          <ParentTicket id={ticketId} />
+          <ParentTicket id={publicTicketId} />
         </div>
       </div>
       <AnimatedToast msg={toast.msg} visible={toast.visible} standalone />
@@ -1300,6 +1431,7 @@ export default function App() {
     canCreateLesson(profile) && { id: "instructor", label: t("tabLesson") },
     canScan(profile)         && { id: "guard",      label: t("tabScan") },
     canViewSchedule(profile) && { id: "schedule",   label: t("tabSchedule") },
+    canAccessOffice(profile) && { id: "office",     label: t("tabOffice") },
     canManage(profile)       && { id: "admin",      label: t("tabAdmin") },
   ].filter(Boolean);
 
@@ -1329,6 +1461,7 @@ export default function App() {
       case "instructor": return <InstructorTab profile={profile} toast={toast} />;
       case "guard":      return <GuardTab toast={toast} />;
       case "schedule":   return <ScheduleTab profile={profile} toast={toast} />;
+      case "office":     return <OfficeTab toast={toast} />;
       case "admin":      return <AdminTab profile={profile} toast={toast} />;
       default:           return null;
     }

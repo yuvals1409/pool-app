@@ -7,11 +7,13 @@ export const canScan = (p) => isOwner(p) || p?.role === "admin" || p?.role === "
 export const canViewSchedule = (p) => canScan(p);
 export const canEditSchedule = (p) => canCreateLesson(p);
 export const canViewAllInstructors = (p) => canManage(p) || p?.role === "guard";
+export const canMarkPayment = (p) => isOwner(p) || p?.role === "admin" || p?.role === "office";
+export const canAccessOffice = (p) => canMarkPayment(p);
 
-export const ACTIVE_USER_ROLE_ORDER = ["admin", "instructor", "guard"];
+export const ACTIVE_USER_ROLE_ORDER = ["admin", "office", "instructor", "guard"];
 
 export const assignableRoles = (p) => {
-  if (isOwner(p)) return ["admin", "instructor", "guard"];
+  if (isOwner(p)) return ["admin", "office", "instructor", "guard"];
   if (p?.role === "admin") return ["instructor", "guard"];
   return [];
 };

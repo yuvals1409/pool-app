@@ -6,3 +6,5 @@ export const VENUE_NAME = "קאנטרי נווה עוז";
 export const VENUE_ADDRESS = "רח' דגניה 1, פתח תקווה";
 export const LESSON_DURATION_MINUTES = 30;
 export const ENTRY_WINDOW_MINUTES = 30;
+export const ANNUAL_LESSON_DURATION_MINUTES = 45;
+export const ANNUAL_ENTRY_WINDOW_AFTER_MINUTES = 45;
