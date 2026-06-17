@@ -1,7 +1,8 @@
-import { Waves, ScanLine, Calendar, Settings } from "lucide-react";
+import { Waves, ScanLine, Calendar, Settings, ClipboardList } from "lucide-react";
 
 const TAB_ICON_MAP = {
   instructor: Waves,
+  attendance: ClipboardList,
   guard: ScanLine,
   schedule: Calendar,
   admin: Settings,

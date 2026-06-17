@@ -157,6 +157,10 @@ export async function shareCancellationViaWhatsApp(lesson, phone, i18n) {
   await shareMessageViaWhatsApp(phone, cancellationCaption(lesson, i18n));
 }
 
+export async function shareTextViaWhatsApp(phone, message) {
+  await shareMessageViaWhatsApp(phone, message);
+}
+
 export async function shareTicketViaWhatsApp(lesson, phone, toast, i18n, { updated = false } = {}) {
   const blob = await generateTicketImage(lesson, i18n);
   const file = new File([blob], `ticket-${lesson.child_name}.png`, { type: "image/png" });

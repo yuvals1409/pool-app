@@ -14,7 +14,7 @@ import {
 } from "./lib/config.js";
 import { supabase, ensureWeeklyLessonsGenerated, ensureWeeklySessionsGenerated, ensureAccessPassesGenerated, markLessonNotified } from "./lib/supabase.js";
 import {
-  isOwner, canManage, canCreateLesson, canScan, canViewSchedule, canAccessOffice,
+  isOwner, canManage, canCreateLesson, canScan, canViewSchedule, canAccessOffice, canMarkAttendance,
   ACTIVE_USER_ROLE_ORDER, assignableRoles, canRevokeUser,
 } from "./lib/permissions.js";
 import {
@@ -31,11 +31,19 @@ import ScheduleTab from "./components/schedule/ScheduleTab.jsx";
 import OfficeTab from "./components/OfficeTab.jsx";
 import AdminEnrollmentsTab from "./components/AdminEnrollmentsTab.jsx";
 import AdminAssessmentTab from "./components/AdminAssessmentTab.jsx";
+import AdminProductsTab from "./components/AdminProductsTab.jsx";
+import AdminSeasonsTab from "./components/AdminSeasonsTab.jsx";
+import AdminAttendanceTab from "./components/AdminAttendanceTab.jsx";
+import InstructorAttendanceTab from "./components/InstructorAttendanceTab.jsx";
 import AssessmentRegisterPage from "./components/AssessmentRegisterPage.jsx";
+import SummerRegisterPage from "./components/SummerRegisterPage.jsx";
+import InstructorAssessmentResults from "./components/InstructorAssessmentResults.jsx";
 import { parseAssessmentRegisterPath } from "./lib/assessment.js";
+import { parseSummerRegisterPath } from "./lib/summerCourse.js";
 import {
   lookupAndRedeemPass, fetchPublicPass, parsePublicPathToken, parseAccessLogReason,
 } from "./lib/accessPass.js";
+import { markLessonScanAttendance } from "./lib/attendance.js";
 import { getOAuthRedirectUrl } from "./lib/authRedirect.js";
 
 // ─────────────────────────────────────────────────────────────
@@ -550,6 +558,8 @@ function InstructorTab({ profile, toast }) {
 
   return (
     <div>
+      <InstructorAssessmentResults toast={toast} />
+
       <PendingWeeklyBarcodes
         key={refreshKey}
         profile={profile}
@@ -772,6 +782,7 @@ function GuardTab({ toast }) {
         }
         const { error: upErr } = await supabase.from("lessons").update({ used: true, used_at: new Date().toISOString() }).eq("id", lesson.id);
         if (upErr) throw upErr;
+        await markLessonScanAttendance(lesson.id);
         showScanResult({ ok: true, lesson });
         loadLog();
         setLoading(false);
@@ -1006,17 +1017,44 @@ function AdminTab({ profile, toast }) {
         </button>
         <button
           type="button"
+          className={`btn btn-sm ${adminSection === "products" ? "btn-primary" : "btn-outline"}`}
+          onClick={() => setAdminSection("products")}
+        >
+          {t("tabProducts")}
+        </button>
+        <button
+          type="button"
+          className={`btn btn-sm ${adminSection === "seasons" ? "btn-primary" : "btn-outline"}`}
+          onClick={() => setAdminSection("seasons")}
+        >
+          {t("tabSeasons")}
+        </button>
+        <button
+          type="button"
           className={`btn btn-sm ${adminSection === "assessment" ? "btn-primary" : "btn-outline"}`}
           onClick={() => setAdminSection("assessment")}
         >
           {t("tabAssessment")}
         </button>
+        <button
+          type="button"
+          className={`btn btn-sm ${adminSection === "attendance" ? "btn-primary" : "btn-outline"}`}
+          onClick={() => setAdminSection("attendance")}
+        >
+          {t("tabAttendance")}
+        </button>
       </div>
 
       {adminSection === "enrollments" ? (
         <AdminEnrollmentsTab toast={toast} />
+      ) : adminSection === "products" ? (
+        <AdminProductsTab toast={toast} />
+      ) : adminSection === "seasons" ? (
+        <AdminSeasonsTab toast={toast} />
       ) : adminSection === "assessment" ? (
         <AdminAssessmentTab toast={toast} />
+      ) : adminSection === "attendance" ? (
+        <AdminAttendanceTab toast={toast} />
       ) : (
         <>
       <div className="section-sub">
@@ -1301,6 +1339,7 @@ export default function App() {
   const ticketId = urlParams.get("ticket");
   const calendarId = urlParams.get("calendar");
   const assessmentRegister = parseAssessmentRegisterPath();
+  const summerRegister = parseSummerRegisterPath();
   const pathPassToken = parsePublicPathToken();
 
   const loadProfile = useCallback(async (user) => {
@@ -1385,6 +1424,27 @@ export default function App() {
   }, [profile?.id, profile?.role, profile?.email]);
 
   const logout = async () => { await supabase.auth.signOut(); };
+
+  // ── Summer course registration (invite-only, no auth) ──────
+  if (summerRegister) return (
+    <>
+      <div className="app" dir={dir}>
+        <div className="header">
+          <div className="header-top">
+            <div className="header-logo"><BrandLogo height={32} /> {t("summerRegisterTitle")}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <LanguageSwitcher compact />
+            </div>
+          </div>
+          <div className="header-sub">{t("neveOz")}</div>
+        </div>
+        <div className="content" style={{ paddingBottom: "var(--space-5)" }}>
+          <SummerRegisterPage toast={toast} />
+        </div>
+      </div>
+      <AnimatedToast msg={toast.msg} visible={toast.visible} standalone />
+    </>
+  );
 
   // ── Assessment registration (public, no auth needed) ─────
   if (assessmentRegister) return (
@@ -1488,6 +1548,7 @@ export default function App() {
   // ── Approved — build tabs based on role hierarchy ─────────
   const allTabs = [
     canCreateLesson(profile) && { id: "instructor", label: t("tabLesson") },
+    canMarkAttendance(profile) && { id: "attendance", label: t("tabAttendance") },
     canScan(profile)         && { id: "guard",      label: t("tabScan") },
     canViewSchedule(profile) && { id: "schedule",   label: t("tabSchedule") },
     canAccessOffice(profile) && { id: "office",     label: t("tabOffice") },
@@ -1518,6 +1579,7 @@ export default function App() {
   const renderActiveTab = () => {
     switch (tab) {
       case "instructor": return <InstructorTab profile={profile} toast={toast} />;
+      case "attendance": return <InstructorAttendanceTab toast={toast} />;
       case "guard":      return <GuardTab toast={toast} />;
       case "schedule":   return <ScheduleTab profile={profile} toast={toast} />;
       case "office":     return <OfficeTab toast={toast} />;

@@ -5,6 +5,7 @@ import { useLang } from "../i18n.jsx";
 import { fmt_time } from "../lib/lessonDates.js";
 
 const LEAD_STATUSES = ["new", "converted", "cancelled"];
+const ASSESSMENT_RESULTS = ["pending", "passed", "failed"];
 const DEFAULT_TIME = "16:00";
 const DEFAULT_CAPACITY = 10;
 
@@ -17,13 +18,18 @@ export default function AdminAssessmentTab({ toast }) {
   const [saving, setSaving] = useState(false);
   const [leadFilterSlot, setLeadFilterSlot] = useState("");
   const [leadFilterStatus, setLeadFilterStatus] = useState("");
+  const [leadFilterResult, setLeadFilterResult] = useState("");
 
   const [slotDate, setSlotDate] = useState("");
   const [slotTime, setSlotTime] = useState(DEFAULT_TIME);
   const [slotCapacity, setSlotCapacity] = useState(String(DEFAULT_CAPACITY));
+  const [editingSlotId, setEditingSlotId] = useState(null);
+  const [editSlotDate, setEditSlotDate] = useState("");
+  const [editSlotTime, setEditSlotTime] = useState(DEFAULT_TIME);
+  const [editSlotCapacity, setEditSlotCapacity] = useState(String(DEFAULT_CAPACITY));
 
   const leadSelect = `
-    id, slot_id, child_age, status, source, created_at,
+    id, slot_id, child_age, status, source, created_at, assessment_result,
     slot:assessment_slots(id, slot_date, start_time),
     participant:participants(full_name),
     enrollment:enrollments(id, payment_status, active)
@@ -46,10 +52,11 @@ export default function AdminAssessmentTab({ toast }) {
       .order("created_at", { ascending: false });
     if (leadFilterSlot) q = q.eq("slot_id", leadFilterSlot);
     if (leadFilterStatus) q = q.eq("status", leadFilterStatus);
+    if (leadFilterResult) q = q.eq("assessment_result", leadFilterResult);
     const { data, error } = await q;
     if (error) toast.show(error.message);
     else setLeads(data || []);
-  }, [leadFilterSlot, leadFilterStatus, toast]);
+  }, [leadFilterSlot, leadFilterStatus, leadFilterResult, toast]);
 
   useEffect(() => {
     (async () => {
@@ -128,6 +135,47 @@ export default function AdminAssessmentTab({ toast }) {
     setSaving(false);
   };
 
+  const startEditSlot = (slot) => {
+    setEditingSlotId(slot.id);
+    setEditSlotDate(slot.slot_date);
+    setEditSlotTime(String(slot.start_time).slice(0, 5));
+    setEditSlotCapacity(String(slot.capacity));
+  };
+
+  const saveSlotEdit = async (slot) => {
+    const cap = Number(editSlotCapacity);
+    if (!editSlotDate || !Number.isInteger(cap) || cap < 1) {
+      return toast.show(t("assessmentCapacityInvalid"));
+    }
+    if (slot.enrolled_count > 0 && !confirm(t("editSlotWarning"))) return;
+
+    setSaving(true);
+    const { error } = await supabase
+      .from("assessment_slots")
+      .update({
+        slot_date: editSlotDate,
+        start_time: editSlotTime || DEFAULT_TIME,
+        capacity: cap,
+      })
+      .eq("id", slot.id);
+
+    if (error) {
+      toast.show(error.message);
+      setSaving(false);
+      return;
+    }
+
+    try {
+      await syncAssessmentSlotSession(slot.id);
+      toast.show(t("assessmentSlotUpdated"));
+      setEditingSlotId(null);
+      await loadSlots();
+    } catch (e) {
+      toast.show(e.message);
+    }
+    setSaving(false);
+  };
+
   const updateLeadStatus = async (lead, status) => {
     if (status === "cancelled" && !confirm(t("cancelLeadConfirm"))) return;
 
@@ -183,6 +231,12 @@ export default function AdminAssessmentTab({ toast }) {
     cancelled: t("leadStatusCancelled"),
   }[status] || status);
 
+  const assessmentResultLabel = (result) => ({
+    pending: t("assessmentResultPending"),
+    passed: t("assessmentResultPassed"),
+    failed: t("assessmentResultFailed"),
+  }[result] || result);
+
   if (loading && view === "slots") {
     return <div style={{ textAlign: "center", padding: 32, color: "var(--ink-soft)" }}>{t("loading")}</div>;
   }
@@ -233,21 +287,51 @@ export default function AdminAssessmentTab({ toast }) {
             <div className="grouped-list">
               {slots.map((slot) => (
                 <div className="user-row" key={slot.id} style={{ flexWrap: "wrap", gap: 8 }}>
-                  <div className="user-info" style={{ flex: 1 }}>
-                    <div className="user-display">
-                      {fmtDateDay(slot.slot_date)} · {fmt_time(slot.start_time)}
-                      <span className={`badge ${slot.active ? "badge-active" : "badge-used"}`} style={{ marginInlineStart: 8 }}>
-                        {slot.active ? t("active") : t("cancelled")}
-                      </span>
+                  {editingSlotId === slot.id ? (
+                    <div style={{ flex: 1, width: "100%" }}>
+                      <div className="field">
+                        <label className="label">{t("date")}</label>
+                        <input className="input" type="date" value={editSlotDate} onChange={(e) => setEditSlotDate(e.target.value)} dir="ltr" />
+                      </div>
+                      <div className="field">
+                        <label className="label">{t("startTime")}</label>
+                        <input className="input" type="time" value={editSlotTime} onChange={(e) => setEditSlotTime(e.target.value)} dir="ltr" />
+                      </div>
+                      <div className="field">
+                        <label className="label">{t("assessmentCapacity")}</label>
+                        <input className="input" type="number" min={1} value={editSlotCapacity} onChange={(e) => setEditSlotCapacity(e.target.value)} dir="ltr" />
+                      </div>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <button type="button" className="btn btn-primary btn-sm" onClick={() => saveSlotEdit(slot)} disabled={saving}>
+                          {t("saveChanges")}
+                        </button>
+                        <button type="button" className="btn btn-outline btn-sm" onClick={() => setEditingSlotId(null)}>{t("cancel")}</button>
+                      </div>
                     </div>
-                    <div className="user-email">
-                      {t("assessmentEnrolled", { n: slot.enrolled_count, cap: slot.capacity })}
-                    </div>
-                  </div>
-                  {slot.active && slot.slot_date >= new Date().toISOString().slice(0, 10) && (
-                    <button className="btn btn-danger btn-sm" onClick={() => cancelSlot(slot)} disabled={saving}>
-                      {t("cancelAssessmentSlot")}
-                    </button>
+                  ) : (
+                    <>
+                      <div className="user-info" style={{ flex: 1 }}>
+                        <div className="user-display">
+                          {fmtDateDay(slot.slot_date)} · {fmt_time(slot.start_time)}
+                          <span className={`badge ${slot.active ? "badge-active" : "badge-used"}`} style={{ marginInlineStart: 8 }}>
+                            {slot.active ? t("active") : t("cancelled")}
+                          </span>
+                        </div>
+                        <div className="user-email">
+                          {t("assessmentEnrolled", { n: slot.enrolled_count, cap: slot.capacity })}
+                        </div>
+                      </div>
+                      {slot.active && slot.slot_date >= new Date().toISOString().slice(0, 10) && (
+                        <div style={{ display: "flex", gap: 6 }}>
+                          <button className="btn btn-outline btn-sm" onClick={() => startEditSlot(slot)} disabled={saving}>
+                            {t("editAssessmentSlot")}
+                          </button>
+                          <button className="btn btn-danger btn-sm" onClick={() => cancelSlot(slot)} disabled={saving}>
+                            {t("cancelAssessmentSlot")}
+                          </button>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               ))}
@@ -271,6 +355,12 @@ export default function AdminAssessmentTab({ toast }) {
                 <option key={st} value={st}>{leadStatusLabel(st)}</option>
               ))}
             </select>
+            <select className="input" value={leadFilterResult} onChange={(e) => setLeadFilterResult(e.target.value)} style={{ flex: 1, minWidth: 120 }}>
+              <option value="">{t("allResults")}</option>
+              {ASSESSMENT_RESULTS.map((r) => (
+                <option key={r} value={r}>{assessmentResultLabel(r)}</option>
+              ))}
+            </select>
           </div>
 
           {leads.length === 0 ? (
@@ -290,6 +380,7 @@ export default function AdminAssessmentTab({ toast }) {
                       {lead.slot ? `${fmtDateDay(lead.slot.slot_date)} ${fmt_time(lead.slot.start_time)}` : "—"}
                       {lead.child_age != null ? ` · ${t("childAge")}: ${lead.child_age}` : ""}
                       {lead.source ? ` · ${lead.source}` : ""}
+                      {lead.assessment_result ? ` · ${assessmentResultLabel(lead.assessment_result)}` : ""}
                     </div>
                   </div>
                   {lead.status === "new" && (

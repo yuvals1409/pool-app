@@ -5,6 +5,32 @@ export function getPublicPassUrl(publicToken) {
   return `${base}/t/${publicToken}`;
 }
 
+export async function copyEnrollmentTicketLink(enrollmentId, { toast, t }) {
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: passes, error } = await supabase
+    .from("access_passes")
+    .select("public_token, scheduled_sessions(session_date)")
+    .eq("enrollment_id", enrollmentId);
+  if (error) {
+    toast.show(error.message);
+    return;
+  }
+  const upcoming = (passes || [])
+    .filter((p) => p.scheduled_sessions?.session_date >= today)
+    .sort((a, b) => a.scheduled_sessions.session_date.localeCompare(b.scheduled_sessions.session_date))[0];
+  if (!upcoming?.public_token) {
+    toast.show(t("ticketNotFound"));
+    return;
+  }
+  const url = getPublicPassUrl(upcoming.public_token);
+  try {
+    await navigator.clipboard.writeText(url);
+    toast.show(t("linkCopied"));
+  } catch {
+    toast.show(url);
+  }
+}
+
 export function parsePublicPathToken() {
   const m = window.location.pathname.match(/\/t\/([0-9a-f-]{36})\/?$/i);
   return m ? m[1] : null;

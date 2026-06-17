@@ -1,16 +1,10 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase.js";
 import { useLang } from "../i18n.jsx";
-import { fmt_time } from "../lib/lessonDates.js";
-import { getPublicPassUrl } from "../lib/accessPass.js";
+import { copyEnrollmentTicketLink } from "../lib/accessPass.js";
+import { formatProductLabel } from "../lib/productLabel.js";
 
 const PAYMENT_STATUSES = ["paid", "unpaid", "waived"];
-
-function formatProductLabel(product, days) {
-  if (!product) return "";
-  const day = days[product.day_of_week] ?? "";
-  return `${day} ${fmt_time(product.start_time)} · ${product.name}`;
-}
 
 export default function OfficeTab({ toast }) {
   const { t, days, fmtDateDay } = useLang();
@@ -57,7 +51,7 @@ export default function OfficeTab({ toast }) {
         .select(`
           id, payment_status, valid_until, active,
           participant:participants(id, full_name),
-          product:products(id, name, day_of_week, start_time, end_time, instructor_name)
+          product:products(id, name, day_of_week, start_time, end_time, instructor_name, schedule_pattern, product_templates(code))
         `)
         .in("participant_id", [...participantIds])
         .eq("active", true)
@@ -84,31 +78,7 @@ export default function OfficeTab({ toast }) {
     setSavingId(null);
   };
 
-  const copyTicketLink = async (enrollmentId) => {
-    const today = new Date().toISOString().slice(0, 10);
-    const { data: passes, error } = await supabase
-      .from("access_passes")
-      .select("public_token, scheduled_sessions(session_date)")
-      .eq("enrollment_id", enrollmentId);
-    if (error) {
-      toast.show(error.message);
-      return;
-    }
-    const upcoming = (passes || [])
-      .filter((p) => p.scheduled_sessions?.session_date >= today)
-      .sort((a, b) => a.scheduled_sessions.session_date.localeCompare(b.scheduled_sessions.session_date))[0];
-    if (!upcoming?.public_token) {
-      toast.show(t("ticketNotFound"));
-      return;
-    }
-    const url = getPublicPassUrl(upcoming.public_token);
-    try {
-      await navigator.clipboard.writeText(url);
-      toast.show(t("linkCopied"));
-    } catch {
-      toast.show(url);
-    }
-  };
+  const copyTicketLink = (enrollmentId) => copyEnrollmentTicketLink(enrollmentId, { toast, t });
 
   const paymentLabel = (status) => ({
     paid: t("paymentPaid"),
@@ -143,7 +113,7 @@ export default function OfficeTab({ toast }) {
           <div className="log-item" key={row.id} style={{ flexDirection: "column", alignItems: "stretch", gap: 8 }}>
             <div>
               <div className="log-name">{row.participant?.full_name}</div>
-              <div className="log-meta">{formatProductLabel(row.product, days)}</div>
+              <div className="log-meta">{formatProductLabel(row.product, days, row.product?.product_templates?.code)}</div>
               <div className="log-meta">{t("paymentStatus")}: {paymentLabel(row.payment_status)}</div>
               <div className="log-meta">{t("validUntil")}: {fmtDateDay(row.valid_until)}</div>
             </div>

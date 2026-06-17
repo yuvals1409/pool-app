@@ -1,15 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase, ensureWeeklySessionsGenerated, ensureAccessPassesGenerated } from "../lib/supabase.js";
+import {
+  supabase,
+  ensureWeeklySessionsGenerated,
+  ensureAccessPassesGenerated,
+  ensureCourseSeriesSessions,
+} from "../lib/supabase.js";
+import { copyEnrollmentTicketLink } from "../lib/accessPass.js";
+import { regenerateEnrollmentPasses } from "../lib/summerCourse.js";
+import { formatProductLabel } from "../lib/productLabel.js";
 import { useLang } from "../i18n.jsx";
 import { fmt_time } from "../lib/lessonDates.js";
 
 const PAYMENT_STATUSES = ["unpaid", "paid", "waived"];
-
-function formatProductLabel(product, days) {
-  if (!product) return "";
-  const day = days[product.day_of_week] ?? "";
-  return `${day} ${fmt_time(product.start_time)} · ${product.name}`;
-}
+const HISTORY_FILTERS = ["active", "all", "cancelled"];
 
 function normalizePhone(phone) {
   return phone.replace(/\s/g, "").trim();
@@ -20,6 +23,7 @@ export default function AdminEnrollmentsTab({ toast }) {
   const [products, setProducts] = useState([]);
   const [season, setSeason] = useState(null);
   const [selectedProductId, setSelectedProductId] = useState("");
+  const [historyFilter, setHistoryFilter] = useState("active");
   const [rows, setRows] = useState([]);
   const [listLoading, setListLoading] = useState(false);
   const [savingId, setSavingId] = useState(null);
@@ -37,6 +41,14 @@ export default function AdminEnrollmentsTab({ toast }) {
   const [addProductId, setAddProductId] = useState("");
   const [addPaymentStatus, setAddPaymentStatus] = useState("unpaid");
 
+  const [editingId, setEditingId] = useState(null);
+  const [editChildName, setEditChildName] = useState("");
+  const [editParentPhone, setEditParentPhone] = useState("");
+  const [editProductId, setEditProductId] = useState("");
+  const [editPaymentStatus, setEditPaymentStatus] = useState("unpaid");
+  const [editValidFrom, setEditValidFrom] = useState("");
+  const [editValidUntil, setEditValidUntil] = useState("");
+
   const paymentLabel = (status) => ({
     paid: t("paymentPaid"),
     unpaid: t("paymentUnpaid"),
@@ -44,9 +56,9 @@ export default function AdminEnrollmentsTab({ toast }) {
   }[status] || status);
 
   const enrollmentSelect = `
-    id, payment_status, valid_until, active,
-    participant:participants(id, full_name, family:families(phone, parent_name)),
-    product:products(id, name, day_of_week, start_time, end_time, instructor_name)
+    id, payment_status, valid_from, valid_until, active,
+    participant:participants(id, full_name, family:families(id, phone, parent_name)),
+    product:products(id, name, day_of_week, start_time, end_time, instructor_name, schedule_pattern, product_templates(code))
   `;
 
   useEffect(() => {
@@ -62,10 +74,9 @@ export default function AdminEnrollmentsTab({ toast }) {
       if (!seasonRow) return;
       const { data: prods, error } = await supabase
         .from("products")
-        .select("id, name, day_of_week, start_time, end_time, instructor_name")
+        .select("id, name, day_of_week, start_time, end_time, instructor_name, schedule_pattern, product_templates(code)")
         .eq("season_id", seasonRow.id)
-        .order("day_of_week")
-        .order("start_time");
+        .order("name");
       if (error) toast.show(error.message);
       else {
         setProducts(prods || []);
@@ -77,26 +88,28 @@ export default function AdminEnrollmentsTab({ toast }) {
     })();
   }, [toast]);
 
-  const loadByProduct = useCallback(async (productId) => {
+  const loadByProduct = useCallback(async (productId, filter) => {
     if (!productId) {
       setRows([]);
       return;
     }
     setListLoading(true);
-    const { data, error } = await supabase
+    let q = supabase
       .from("enrollments")
       .select(enrollmentSelect)
       .eq("product_id", productId)
-      .eq("active", true)
       .order("created_at", { ascending: true });
+    if (filter === "active") q = q.eq("active", true);
+    else if (filter === "cancelled") q = q.eq("active", false);
+    const { data, error } = await q;
     if (error) toast.show(error.message);
     else setRows(data || []);
     setListLoading(false);
   }, [toast]);
 
   useEffect(() => {
-    if (!searchMode) loadByProduct(selectedProductId);
-  }, [selectedProductId, searchMode, loadByProduct]);
+    if (!searchMode) loadByProduct(selectedProductId, historyFilter);
+  }, [selectedProductId, searchMode, historyFilter, loadByProduct]);
 
   const runSearch = async () => {
     const q = searchQuery.trim();
@@ -132,12 +145,14 @@ export default function AdminEnrollmentsTab({ toast }) {
         return;
       }
 
-      const { data: enrollments, error } = await supabase
+      let eq = supabase
         .from("enrollments")
         .select(enrollmentSelect)
         .in("participant_id", [...participantIds])
-        .eq("active", true)
         .order("valid_until", { ascending: true });
+      if (historyFilter === "active") eq = eq.eq("active", true);
+      else if (historyFilter === "cancelled") eq = eq.eq("active", false);
+      const { data: enrollments, error } = await eq;
       if (error) throw error;
       setSearchRows(enrollments || []);
     } catch (e) {
@@ -150,6 +165,21 @@ export default function AdminEnrollmentsTab({ toast }) {
     setSearchMode(false);
     setSearchQuery("");
     setSearchRows([]);
+  };
+
+  const productTemplateCode = (productId) => {
+    const p = products.find((x) => x.id === productId);
+    return p?.product_templates?.code;
+  };
+
+  const syncSessionsForProduct = async (productId) => {
+    const code = productTemplateCode(productId);
+    if (code === "summer_course") {
+      await ensureCourseSeriesSessions(productId);
+    } else {
+      await ensureWeeklySessionsGenerated();
+      await ensureAccessPassesGenerated();
+    }
   };
 
   const cancelFuturePasses = async (enrollmentId) => {
@@ -183,10 +213,63 @@ export default function AdminEnrollmentsTab({ toast }) {
     }
     await cancelFuturePasses(row.id);
     toast.show(t("enrollmentCancelled"));
-    if (searchMode) {
-      setSearchRows((prev) => prev.filter((r) => r.id !== row.id));
-    } else {
-      setRows((prev) => prev.filter((r) => r.id !== row.id));
+    if (searchMode) await runSearch();
+    else await loadByProduct(selectedProductId, historyFilter);
+    setSavingId(null);
+  };
+
+  const startEdit = (row) => {
+    setEditingId(row.id);
+    setEditChildName(row.participant?.full_name || "");
+    setEditParentPhone(row.participant?.family?.phone || "");
+    setEditProductId(row.product?.id || "");
+    setEditPaymentStatus(row.payment_status);
+    setEditValidFrom(row.valid_from || "");
+    setEditValidUntil(row.valid_until || "");
+  };
+
+  const cancelEdit = () => setEditingId(null);
+
+  const saveEdit = async (row) => {
+    setSavingId(row.id);
+    try {
+      const familyId = row.participant?.family?.id;
+      if (familyId && editParentPhone.trim()) {
+        await supabase.from("families").update({ phone: normalizePhone(editParentPhone) }).eq("id", familyId);
+      }
+      if (row.participant?.id && editChildName.trim()) {
+        await supabase.from("participants").update({ full_name: editChildName.trim() }).eq("id", row.participant.id);
+      }
+      const productChanged = editProductId && editProductId !== row.product?.id;
+      const { error } = await supabase.from("enrollments").update({
+        payment_status: editPaymentStatus,
+        valid_from: editValidFrom || row.valid_from,
+        valid_until: editValidUntil || row.valid_until,
+        ...(editProductId ? { product_id: editProductId } : {}),
+      }).eq("id", row.id);
+      if (error) throw error;
+
+      const targetProductId = editProductId || row.product?.id;
+      if (productChanged) await syncSessionsForProduct(targetProductId);
+      else await regenerateEnrollmentPasses(row.id);
+
+      toast.show(t("enrollmentUpdated"));
+      setEditingId(null);
+      if (searchMode) await runSearch();
+      else await loadByProduct(selectedProductId, historyFilter);
+    } catch (e) {
+      toast.show(e.message || t("systemError"));
+    }
+    setSavingId(null);
+  };
+
+  const handleRegeneratePasses = async (row) => {
+    setSavingId(row.id);
+    try {
+      await regenerateEnrollmentPasses(row.id);
+      toast.show(t("passesRegenerated"));
+    } catch (e) {
+      toast.show(e.message || t("systemError"));
     }
     setSavingId(null);
   };
@@ -273,8 +356,7 @@ export default function AdminEnrollmentsTab({ toast }) {
         return;
       }
 
-      await ensureWeeklySessionsGenerated();
-      await ensureAccessPassesGenerated();
+      await syncSessionsForProduct(productId);
 
       toast.show(t("enrollmentAdded"));
       setParentPhone("");
@@ -282,7 +364,7 @@ export default function AdminEnrollmentsTab({ toast }) {
       setChildName("");
       setShowAddForm(false);
       if (searchMode) await runSearch();
-      else if (productId === selectedProductId) await loadByProduct(selectedProductId);
+      else if (productId === selectedProductId) await loadByProduct(selectedProductId, historyFilter);
     } catch (e) {
       toast.show(e.message || t("systemError"));
     }
@@ -292,31 +374,91 @@ export default function AdminEnrollmentsTab({ toast }) {
   const displayRows = searchMode ? searchRows : rows;
   const displayLoading = searchMode ? searchLoading : listLoading;
 
-  const renderRow = (row) => (
-    <div className="log-item" key={row.id} style={{ flexDirection: "column", alignItems: "stretch", gap: 8 }}>
-      <div>
-        <div className="log-name">{row.participant?.full_name}</div>
-        {searchMode && (
-          <div className="log-meta">{formatProductLabel(row.product, days)}</div>
+  const productLabel = (p) => formatProductLabel(p, days, p?.product_templates?.code);
+
+  const renderRow = (row) => {
+    const isEditing = editingId === row.id;
+    return (
+      <div className="log-item" key={row.id} style={{ flexDirection: "column", alignItems: "stretch", gap: 8 }}>
+        {isEditing ? (
+          <>
+            <div className="field">
+              <label className="label">{t("childName")}</label>
+              <input className="input" value={editChildName} onChange={(e) => setEditChildName(e.target.value)} />
+            </div>
+            <div className="field">
+              <label className="label">{t("parentPhone")}</label>
+              <input className="input" type="tel" dir="ltr" value={editParentPhone} onChange={(e) => setEditParentPhone(e.target.value)} />
+            </div>
+            <div className="field">
+              <label className="label">{t("selectClass")}</label>
+              <select className="input" value={editProductId} onChange={(e) => setEditProductId(e.target.value)}>
+                {products.map((p) => (
+                  <option key={p.id} value={p.id}>{productLabel(p)}</option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label className="label">{t("paymentStatus")}</label>
+              <select className="input" value={editPaymentStatus} onChange={(e) => setEditPaymentStatus(e.target.value)}>
+                {PAYMENT_STATUSES.map((s) => (
+                  <option key={s} value={s}>{paymentLabel(s)}</option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label className="label">{t("validFrom")} / {t("validUntil")}</label>
+              <div style={{ display: "flex", gap: 8 }}>
+                <input className="input" type="date" dir="ltr" value={editValidFrom} onChange={(e) => setEditValidFrom(e.target.value)} />
+                <input className="input" type="date" dir="ltr" value={editValidUntil} onChange={(e) => setEditValidUntil(e.target.value)} />
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              <button type="button" className="btn btn-primary btn-sm" disabled={savingId === row.id} onClick={() => saveEdit(row)}>
+                {savingId === row.id ? "..." : t("saveChanges")}
+              </button>
+              <button type="button" className="btn btn-outline btn-sm" onClick={cancelEdit}>{t("cancel")}</button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div>
+              <div className="log-name">
+                {row.participant?.full_name}
+                {!row.active && <span className="badge badge-used" style={{ marginInlineStart: 8 }}>{t("cancelled")}</span>}
+              </div>
+              {(searchMode || historyFilter !== "active") && (
+                <div className="log-meta">{productLabel(row.product)}</div>
+              )}
+              <div className="log-meta">
+                {t("parentPhone")}: {row.participant?.family?.phone || "—"}
+              </div>
+              <div className="log-meta">{t("paymentStatus")}: {paymentLabel(row.payment_status)}</div>
+              <div className="log-meta">
+                {t("validFrom")}: {fmtDateDay(row.valid_from)} · {t("validUntil")}: {fmtDateDay(row.valid_until)}
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {row.active && (
+                <>
+                  <button type="button" className="btn btn-sm btn-outline" onClick={() => startEdit(row)}>{t("editEnrollment")}</button>
+                  <button type="button" className="btn btn-sm btn-outline" onClick={() => copyEnrollmentTicketLink(row.id, { toast, t })}>
+                    {t("copyTicketLink")}
+                  </button>
+                  <button type="button" className="btn btn-sm btn-outline" disabled={savingId === row.id} onClick={() => handleRegeneratePasses(row)}>
+                    {t("regeneratePasses")}
+                  </button>
+                  <button type="button" className="btn btn-sm btn-danger" disabled={savingId === row.id} onClick={() => cancelEnrollment(row)}>
+                    {savingId === row.id ? "..." : t("cancelEnrollment")}
+                  </button>
+                </>
+              )}
+            </div>
+          </>
         )}
-        <div className="log-meta">
-          {t("parentPhone")}: {row.participant?.family?.phone || "—"}
-        </div>
-        <div className="log-meta">{t("paymentStatus")}: {paymentLabel(row.payment_status)}</div>
-        <div className="log-meta">{t("validUntil")}: {fmtDateDay(row.valid_until)}</div>
       </div>
-      <div>
-        <button
-          type="button"
-          className="btn btn-sm btn-danger"
-          disabled={savingId === row.id}
-          onClick={() => cancelEnrollment(row)}
-        >
-          {savingId === row.id ? "..." : t("cancelEnrollment")}
-        </button>
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div>
@@ -338,6 +480,19 @@ export default function AdminEnrollmentsTab({ toast }) {
         )}
       </div>
 
+      <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
+        {HISTORY_FILTERS.map((f) => (
+          <button
+            key={f}
+            type="button"
+            className={`btn btn-sm ${historyFilter === f ? "btn-primary" : "btn-outline"}`}
+            onClick={() => setHistoryFilter(f)}
+          >
+            {t(`enrollmentFilter${f.charAt(0).toUpperCase()}${f.slice(1)}`)}
+          </button>
+        ))}
+      </div>
+
       {!searchMode && (
         <div className="field" style={{ marginTop: 16 }}>
           <label className="label">{t("selectClass")}</label>
@@ -348,7 +503,7 @@ export default function AdminEnrollmentsTab({ toast }) {
           >
             <option value="">{t("selectClassPlaceholder")}</option>
             {products.map((p) => (
-              <option key={p.id} value={p.id}>{formatProductLabel(p, days)}</option>
+              <option key={p.id} value={p.id}>{productLabel(p)}</option>
             ))}
           </select>
         </div>
@@ -368,50 +523,28 @@ export default function AdminEnrollmentsTab({ toast }) {
         <div className="card" style={{ marginBottom: 20 }}>
           <div className="field">
             <label className="label">{t("parentPhone")}</label>
-            <input
-              className="input"
-              type="tel"
-              dir="ltr"
-              value={parentPhone}
-              onChange={(e) => setParentPhone(e.target.value)}
-            />
+            <input className="input" type="tel" dir="ltr" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} />
           </div>
           <div className="field">
             <label className="label">{t("parentNameOptional")}</label>
-            <input
-              className="input"
-              value={parentName}
-              onChange={(e) => setParentName(e.target.value)}
-            />
+            <input className="input" value={parentName} onChange={(e) => setParentName(e.target.value)} />
           </div>
           <div className="field">
             <label className="label">{t("childName")}</label>
-            <input
-              className="input"
-              value={childName}
-              onChange={(e) => setChildName(e.target.value)}
-            />
+            <input className="input" value={childName} onChange={(e) => setChildName(e.target.value)} />
           </div>
           <div className="field">
             <label className="label">{t("selectClass")}</label>
-            <select
-              className="input"
-              value={addProductId}
-              onChange={(e) => setAddProductId(e.target.value)}
-            >
+            <select className="input" value={addProductId} onChange={(e) => setAddProductId(e.target.value)}>
               <option value="">{t("selectClassPlaceholder")}</option>
               {products.map((p) => (
-                <option key={p.id} value={p.id}>{formatProductLabel(p, days)}</option>
+                <option key={p.id} value={p.id}>{productLabel(p)}</option>
               ))}
             </select>
           </div>
           <div className="field">
             <label className="label">{t("paymentStatus")}</label>
-            <select
-              className="input"
-              value={addPaymentStatus}
-              onChange={(e) => setAddPaymentStatus(e.target.value)}
-            >
+            <select className="input" value={addPaymentStatus} onChange={(e) => setAddPaymentStatus(e.target.value)}>
               {PAYMENT_STATUSES.map((s) => (
                 <option key={s} value={s}>{paymentLabel(s)}</option>
               ))}
@@ -433,7 +566,7 @@ export default function AdminEnrollmentsTab({ toast }) {
         <div className="grouped-list" style={{ marginTop: 12 }}>
           {!searchMode && selectedProductId && (
             <div className="grouped-list-header">
-              {t("activeEnrollments")} ({displayRows.length})
+              {historyFilter === "active" ? t("activeEnrollments") : t("enrollmentHistory")} ({displayRows.length})
             </div>
           )}
           {displayRows.map(renderRow)}

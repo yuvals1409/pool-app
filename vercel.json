@@ -1,6 +1,7 @@
 {
   "rewrites": [
     { "source": "/t/:token", "destination": "/index.html" },
-    { "source": "/register/assessment", "destination": "/index.html" }
+    { "source": "/register/assessment", "destination": "/index.html" },
+    { "source": "/register/summer", "destination": "/index.html" }
   ]
 }

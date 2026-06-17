@@ -36,3 +36,10 @@ export async function markLessonNotified(lessonId) {
     .update({ notified_at: new Date().toISOString() })
     .eq("id", lessonId);
 }
+
+export async function ensureCourseSeriesSessions(productId) {
+  const { error } = await supabase.rpc("generate_course_series_sessions", {
+    p_product_id: productId,
+  });
+  if (error) throw error;
+}
