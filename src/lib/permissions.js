@@ -9,6 +9,7 @@ export const canEditSchedule = (p) => canCreateLesson(p);
 export const canViewAllInstructors = (p) => canManage(p) || p?.role === "guard";
 export const canMarkPayment = (p) => isOwner(p) || p?.role === "admin" || p?.role === "office";
 export const canAccessOffice = (p) => canMarkPayment(p);
+export const canManageEnrollments = (p) => canManage(p);
 
 export const ACTIVE_USER_ROLE_ORDER = ["admin", "office", "instructor", "guard"];
 

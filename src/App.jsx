@@ -29,6 +29,7 @@ import TimeScrollPicker from "./components/TimeScrollPicker.jsx";
 import ParentContactPicker from "./components/ParentContactPicker.jsx";
 import ScheduleTab from "./components/schedule/ScheduleTab.jsx";
 import OfficeTab from "./components/OfficeTab.jsx";
+import AdminEnrollmentsTab from "./components/AdminEnrollmentsTab.jsx";
 import {
   lookupAndRedeemPass, fetchPublicPass, parsePublicPathToken, parseAccessLogReason,
 } from "./lib/accessPass.js";
@@ -868,6 +869,7 @@ function GuardTab({ toast }) {
 // ─────────────────────────────────────────────────────────────
 function AdminTab({ profile, toast }) {
   const { t, roleLabel } = useLang();
+  const [adminSection, setAdminSection] = useState("users");
   const [users,    setUsers]    = useState([]);
   const [invites,  setInvites]  = useState([]);
   const [loading,  setLoading]  = useState(true);
@@ -983,7 +985,28 @@ function AdminTab({ profile, toast }) {
 
   return (
     <div>
-      <div className="section-title">{t("manageUsers")}</div>
+      <div className="section-title">{t("tabAdmin")}</div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+        <button
+          type="button"
+          className={`btn btn-sm ${adminSection === "users" ? "btn-primary" : "btn-outline"}`}
+          onClick={() => setAdminSection("users")}
+        >
+          {t("adminSectionUsers")}
+        </button>
+        <button
+          type="button"
+          className={`btn btn-sm ${adminSection === "enrollments" ? "btn-primary" : "btn-outline"}`}
+          onClick={() => setAdminSection("enrollments")}
+        >
+          {t("tabEnrollments")}
+        </button>
+      </div>
+
+      {adminSection === "enrollments" ? (
+        <AdminEnrollmentsTab toast={toast} />
+      ) : (
+        <>
       <div className="section-sub">
         {isOwner(profile) ? t("manageSubOwner") : t("manageSubAdmin")}
       </div>
@@ -1063,6 +1086,8 @@ function AdminTab({ profile, toast }) {
               })}
             </div>
           )}
+        </>
+      )}
         </>
       )}
     </div>
