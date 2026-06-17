@@ -30,6 +30,9 @@ import ParentContactPicker from "./components/ParentContactPicker.jsx";
 import ScheduleTab from "./components/schedule/ScheduleTab.jsx";
 import OfficeTab from "./components/OfficeTab.jsx";
 import AdminEnrollmentsTab from "./components/AdminEnrollmentsTab.jsx";
+import AdminAssessmentTab from "./components/AdminAssessmentTab.jsx";
+import AssessmentRegisterPage from "./components/AssessmentRegisterPage.jsx";
+import { parseAssessmentRegisterPath } from "./lib/assessment.js";
 import {
   lookupAndRedeemPass, fetchPublicPass, parsePublicPathToken, parseAccessLogReason,
 } from "./lib/accessPass.js";
@@ -1001,10 +1004,19 @@ function AdminTab({ profile, toast }) {
         >
           {t("tabEnrollments")}
         </button>
+        <button
+          type="button"
+          className={`btn btn-sm ${adminSection === "assessment" ? "btn-primary" : "btn-outline"}`}
+          onClick={() => setAdminSection("assessment")}
+        >
+          {t("tabAssessment")}
+        </button>
       </div>
 
       {adminSection === "enrollments" ? (
         <AdminEnrollmentsTab toast={toast} />
+      ) : adminSection === "assessment" ? (
+        <AdminAssessmentTab toast={toast} />
       ) : (
         <>
       <div className="section-sub">
@@ -1288,6 +1300,7 @@ export default function App() {
   const urlParams = new URLSearchParams(window.location.search);
   const ticketId = urlParams.get("ticket");
   const calendarId = urlParams.get("calendar");
+  const assessmentRegister = parseAssessmentRegisterPath();
   const pathPassToken = parsePublicPathToken();
 
   const loadProfile = useCallback(async (user) => {
@@ -1372,6 +1385,27 @@ export default function App() {
   }, [profile?.id, profile?.role, profile?.email]);
 
   const logout = async () => { await supabase.auth.signOut(); };
+
+  // ── Assessment registration (public, no auth needed) ─────
+  if (assessmentRegister) return (
+    <>
+      <div className="app" dir={dir}>
+        <div className="header">
+          <div className="header-top">
+            <div className="header-logo"><BrandLogo height={32} /> {t("assessmentTitle")}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <LanguageSwitcher compact />
+            </div>
+          </div>
+          <div className="header-sub">{t("neveOz")}</div>
+        </div>
+        <div className="content" style={{ paddingBottom: "var(--space-5)" }}>
+          <AssessmentRegisterPage toast={toast} />
+        </div>
+      </div>
+      <AnimatedToast msg={toast.msg} visible={toast.visible} standalone />
+    </>
+  );
 
   // ── Calendar add (public, no auth needed) ─────────────────
   if (calendarId) return (
