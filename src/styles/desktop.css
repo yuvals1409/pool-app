@@ -1,13 +1,21 @@
 /* Desktop layout — min-width: 768px */
 
 @media (min-width: 768px) {
+  html, body {
+    width: 100%;
+    overflow: hidden;
+  }
+
   .app.app--desktop {
-    max-width: var(--app-max-w-desktop);
+    max-width: none;
+    width: 100%;
+    margin: 0;
     flex-direction: row;
     align-items: stretch;
     min-height: 100vh;
     height: 100vh;
     overflow: hidden;
+    box-shadow: none;
   }
 
   .app-sidebar {
@@ -113,6 +121,7 @@
   }
 
   .app--desktop .content {
+    padding: var(--space-5) var(--space-6);
     padding-bottom: var(--space-5);
     overflow-y: auto;
     flex: 1;
