@@ -62,6 +62,9 @@
   --tab-bar-h: 49px;
   --tap-target-min: 44px;
   --header-h: auto;
+  --breakpoint-desktop: 768px;
+  --sidebar-w: 220px;
+  --app-max-w-desktop: 1280px;
 
   /* Materials */
   --nav-bg: rgba(255, 255, 255, 0.72);

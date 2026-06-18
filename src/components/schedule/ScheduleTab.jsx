@@ -19,11 +19,13 @@ import InstructorLegend from "./InstructorLegend.jsx";
 import LessonPanel from "./LessonPanel.jsx";
 import SessionSchedulePanel from "./SessionSchedulePanel.jsx";
 import RecurringScopeDialog from "./RecurringScopeDialog.jsx";
+import { useIsDesktop } from "../../lib/useBreakpoint.js";
 import "./schedule.css";
 
 export default function ScheduleTab({ profile, toast }) {
   const i18n = useLang();
   const { t } = i18n;
+  const isDesktop = useIsDesktop();
   const canEdit = canEditSchedule(profile);
   const showLegend = canViewAllInstructors(profile);
   const showInstructorPicker = canManage(profile);
@@ -213,8 +215,12 @@ export default function ScheduleTab({ profile, toast }) {
     canEdit,
   };
 
+  const panelLayout = isDesktop ? "inline" : "sheet";
+  const hasRailPanel = isDesktop && (panel || sessionPanel);
+  const wrapClass = `schedule-wrap${hasRailPanel ? " schedule-wrap--with-rail" : ""}`;
+
   return (
-    <div className="schedule-wrap">
+    <div className={wrapClass}>
       <div className="section-title">{t("schedule")}</div>
       <div className="section-sub">{t("scheduleSub")}</div>
 
@@ -222,58 +228,99 @@ export default function ScheduleTab({ profile, toast }) {
         <div className="schedule-readonly-hint">{t("readOnlySchedule")}</div>
       )}
 
-      <ScheduleToolbar
-        view={view}
-        anchorDate={anchorDate}
-        onViewChange={setView}
-        onNavigate={navigate}
-        onToday={() => setAnchorDate(new Date())}
-      />
+      <div className="schedule-body">
+        <div className="schedule-main">
+          <ScheduleToolbar
+            view={view}
+            anchorDate={anchorDate}
+            onViewChange={setView}
+            onNavigate={navigate}
+            onToday={() => setAnchorDate(new Date())}
+          />
 
-      {showLegend && <InstructorLegend instructors={instructorLegend} />}
+          {showLegend && <InstructorLegend instructors={instructorLegend} />}
 
-      {loading ? (
-        <div style={{ textAlign: "center", padding: 32, color: "var(--ink-soft)" }}>{t("loading")}</div>
-      ) : (
-        <>
-          {view === "month" && <MonthView {...viewProps} />}
-          {view === "week" && <WeekView {...viewProps} />}
-          {view === "day" && <DayView {...viewProps} />}
-          {lessons.length === 0 && (
-            <div className="schedule-empty">{t("noScheduleEvents")}</div>
+          {loading ? (
+            <div style={{ textAlign: "center", padding: 32, color: "var(--ink-soft)" }}>{t("loading")}</div>
+          ) : (
+            <>
+              {view === "month" && <MonthView {...viewProps} />}
+              {view === "week" && <WeekView {...viewProps} />}
+              {view === "day" && <DayView {...viewProps} />}
+              {lessons.length === 0 && (
+                <div className="schedule-empty">{t("noScheduleEvents")}</div>
+              )}
+            </>
           )}
+        </div>
+
+        {hasRailPanel && (
+          <div className="schedule-rail">
+            {sessionPanel && (
+              <SessionSchedulePanel
+                key={sessionPanel.id}
+                event={sessionPanel}
+                onClose={() => setSessionPanel(null)}
+                layout={panelLayout}
+              />
+            )}
+            {panel && (
+              <LessonPanel
+                key={panel.lesson?.id || panel.mode}
+                mode={panel.mode}
+                lesson={panel.lesson}
+                profile={profile}
+                instructors={instructors}
+                showInstructorPicker={showInstructorPicker && panel.mode === "create"}
+                initialForm={panel.initial || {}}
+                onClose={() => setPanel(null)}
+                onSave={handlePanelSave}
+                onCancel={handlePanelCancel}
+                onCreate={handlePanelCreate}
+                acting={acting}
+                toast={toast}
+                layout={panelLayout}
+              />
+            )}
+          </div>
+        )}
+      </div>
+
+      {!isDesktop && (
+        <>
+          <AnimatePresence>
+            {sessionPanel && (
+              <SessionSchedulePanel
+                key={sessionPanel.id}
+                event={sessionPanel}
+                onClose={() => setSessionPanel(null)}
+                layout={panelLayout}
+              />
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {panel && (
+              <LessonPanel
+                key={panel.lesson?.id || panel.mode}
+                mode={panel.mode}
+                lesson={panel.lesson}
+                profile={profile}
+                instructors={instructors}
+                showInstructorPicker={showInstructorPicker && panel.mode === "create"}
+                initialForm={panel.initial || {}}
+                onClose={() => setPanel(null)}
+                onSave={handlePanelSave}
+                onCancel={handlePanelCancel}
+                onCreate={handlePanelCreate}
+                acting={acting}
+                toast={toast}
+                layout={panelLayout}
+              />
+            )}
+          </AnimatePresence>
         </>
       )}
-
-      <AnimatePresence>
-        {sessionPanel && (
-          <SessionSchedulePanel
-            key={sessionPanel.id}
-            event={sessionPanel}
-            onClose={() => setSessionPanel(null)}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {panel && (
-          <LessonPanel
-            key={panel.lesson?.id || panel.mode}
-            mode={panel.mode}
-            lesson={panel.lesson}
-            profile={profile}
-            instructors={instructors}
-            showInstructorPicker={showInstructorPicker && panel.mode === "create"}
-            initialForm={panel.initial || {}}
-            onClose={() => setPanel(null)}
-            onSave={handlePanelSave}
-            onCancel={handlePanelCancel}
-            onCreate={handlePanelCreate}
-            acting={acting}
-            toast={toast}
-          />
-        )}
-      </AnimatePresence>
 
       {pendingAction && (
         <RecurringScopeDialog

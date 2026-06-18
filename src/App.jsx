@@ -45,6 +45,9 @@ import {
 } from "./lib/accessPass.js";
 import { markLessonScanAttendance } from "./lib/attendance.js";
 import { getOAuthRedirectUrl } from "./lib/authRedirect.js";
+import { useIsDesktop } from "./lib/useBreakpoint.js";
+
+const PRIORITY_TABS = new Set(["schedule", "office", "admin"]);
 
 // ─────────────────────────────────────────────────────────────
 //  HELPERS
@@ -883,6 +886,7 @@ function GuardTab({ toast }) {
 // ─────────────────────────────────────────────────────────────
 function AdminTab({ profile, toast }) {
   const { t, roleLabel } = useLang();
+  const isDesktop = useIsDesktop();
   const [adminSection, setAdminSection] = useState("users");
   const [users,    setUsers]    = useState([]);
   const [invites,  setInvites]  = useState([]);
@@ -997,53 +1001,47 @@ function AdminTab({ profile, toast }) {
     </div>
   );
 
+  const adminSections = [
+    { id: "users", label: t("adminSectionUsers") },
+    { id: "enrollments", label: t("tabEnrollments") },
+    { id: "products", label: t("tabProducts") },
+    { id: "seasons", label: t("tabSeasons") },
+    { id: "assessment", label: t("tabAssessment") },
+    { id: "attendance", label: t("tabAttendance") },
+  ];
+
+  const renderAdminNavBtn = (section, className) => (
+    <button
+      key={section.id}
+      type="button"
+      className={className}
+      onClick={() => setAdminSection(section.id)}
+    >
+      {section.label}
+    </button>
+  );
+
   return (
     <div>
       <div className="section-title">{t("tabAdmin")}</div>
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-        <button
-          type="button"
-          className={`btn btn-sm ${adminSection === "users" ? "btn-primary" : "btn-outline"}`}
-          onClick={() => setAdminSection("users")}
-        >
-          {t("adminSectionUsers")}
-        </button>
-        <button
-          type="button"
-          className={`btn btn-sm ${adminSection === "enrollments" ? "btn-primary" : "btn-outline"}`}
-          onClick={() => setAdminSection("enrollments")}
-        >
-          {t("tabEnrollments")}
-        </button>
-        <button
-          type="button"
-          className={`btn btn-sm ${adminSection === "products" ? "btn-primary" : "btn-outline"}`}
-          onClick={() => setAdminSection("products")}
-        >
-          {t("tabProducts")}
-        </button>
-        <button
-          type="button"
-          className={`btn btn-sm ${adminSection === "seasons" ? "btn-primary" : "btn-outline"}`}
-          onClick={() => setAdminSection("seasons")}
-        >
-          {t("tabSeasons")}
-        </button>
-        <button
-          type="button"
-          className={`btn btn-sm ${adminSection === "assessment" ? "btn-primary" : "btn-outline"}`}
-          onClick={() => setAdminSection("assessment")}
-        >
-          {t("tabAssessment")}
-        </button>
-        <button
-          type="button"
-          className={`btn btn-sm ${adminSection === "attendance" ? "btn-primary" : "btn-outline"}`}
-          onClick={() => setAdminSection("attendance")}
-        >
-          {t("tabAttendance")}
-        </button>
-      </div>
+
+      <div className="admin-shell">
+        {isDesktop && (
+          <aside className="admin-sidebar">
+            {adminSections.map((section) =>
+              renderAdminNavBtn(section, `admin-sidebar-btn${adminSection === section.id ? " active" : ""}`),
+            )}
+          </aside>
+        )}
+
+        <div className="admin-content">
+          {!isDesktop && (
+            <div className="admin-nav-mobile" style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+              {adminSections.map((section) =>
+                renderAdminNavBtn(section, `btn btn-sm ${adminSection === section.id ? "btn-primary" : "btn-outline"}`),
+              )}
+            </div>
+          )}
 
       {adminSection === "enrollments" ? (
         <AdminEnrollmentsTab toast={toast} />
@@ -1140,6 +1138,8 @@ function AdminTab({ profile, toast }) {
       )}
         </>
       )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -1333,6 +1333,7 @@ export default function App() {
   const [tab,      setTab]      = useState("instructor");
   const [tabDirection, setTabDirection] = useState(0);
   const reducedMotion = useReducedMotion();
+  const isDesktop = useIsDesktop();
   const toast = useToast();
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -1588,52 +1589,81 @@ export default function App() {
     }
   };
 
+  const useNarrowContent = isDesktop && !PRIORITY_TABS.has(tab);
+
   return (
     <>
-      <div className="app" dir={dir}>
-        <div className="header">
-          <div className="header-top">
-            <div className="header-logo"><BrandLogo height={32} /> {t("neveOz")}</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <LanguageSwitcher compact />
-              <span className="role-badge">{roleLabel(profile.role, isOwner(profile))}</span>
+      <div className={`app${isDesktop ? " app--desktop" : ""}`} dir={dir}>
+        {isDesktop && (
+          <aside className="app-sidebar">
+            <div className="app-sidebar-logo">
+              <BrandLogo height={28} /> {t("neveOz")}
+            </div>
+            <nav className="app-sidebar-nav" role="tablist">
+              {allTabs.map(tabItem => (
+                <button
+                  key={tabItem.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === tabItem.id}
+                  className={`sidebar-btn ${tab === tabItem.id ? "active" : ""}`}
+                  onClick={() => goToTab(tabItem.id)}
+                >
+                  <span className="nav-icon">
+                    <TabIcon id={tabItem.id} active={tab === tabItem.id} />
+                  </span>
+                  {tabItem.label}
+                </button>
+              ))}
+            </nav>
+          </aside>
+        )}
+
+        <div className="app-main">
+          <div className="header">
+            <div className="header-top">
+              <div className="header-logo"><BrandLogo height={32} /> {t("neveOz")}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <LanguageSwitcher compact />
+                <span className="role-badge">{roleLabel(profile.role, isOwner(profile))}</span>
+              </div>
+            </div>
+            <div className="header-user">
+              {profile.avatar_url
+                ? <img className="avatar" src={profile.avatar_url} alt="" />
+                : <div className="avatar-placeholder">{initials(profile.full_name)}</div>
+              }
+              <EditableDisplayName profile={profile} onUpdate={setProfile} toast={toast} />
+              <button className="btn-logout" onClick={logout}>{t("logout")}</button>
             </div>
           </div>
-          <div className="header-user">
-            {profile.avatar_url
-              ? <img className="avatar" src={profile.avatar_url} alt="" />
-              : <div className="avatar-placeholder">{initials(profile.full_name)}</div>
-            }
-            <EditableDisplayName profile={profile} onUpdate={setProfile} toast={toast} />
-            <button className="btn-logout" onClick={logout}>{t("logout")}</button>
-          </div>
-        </div>
 
-        <div className="content tab-stage">
-          <AnimatePresence mode="popLayout" custom={tabDirection} initial={false}>
-            <motion.div
-              key={tab}
-              custom={tabDirection}
-              className="tab-panel"
-              variants={{
-                enter: (motionDir) => ({
-                  opacity: 0,
-                  x: slideOffset(motionDir),
-                }),
-                center: { opacity: 1, x: 0 },
-                exit: (motionDir) => ({
-                  opacity: 0,
-                  x: slideOffset(-motionDir),
-                }),
-              }}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={tabTransition}
-            >
-              {renderActiveTab()}
-            </motion.div>
-          </AnimatePresence>
+          <div className="content tab-stage">
+            <AnimatePresence mode="popLayout" custom={tabDirection} initial={false}>
+              <motion.div
+                key={tab}
+                custom={tabDirection}
+                className={`tab-panel${useNarrowContent ? " content-narrow" : ""}`}
+                variants={{
+                  enter: (motionDir) => ({
+                    opacity: 0,
+                    x: slideOffset(motionDir),
+                  }),
+                  center: { opacity: 1, x: 0 },
+                  exit: (motionDir) => ({
+                    opacity: 0,
+                    x: slideOffset(-motionDir),
+                  }),
+                }}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={tabTransition}
+              >
+                {renderActiveTab()}
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </div>
 
         <nav className="nav" role="tablist">

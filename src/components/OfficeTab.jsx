@@ -3,11 +3,13 @@ import { supabase } from "../lib/supabase.js";
 import { useLang } from "../i18n.jsx";
 import { copyEnrollmentTicketLink } from "../lib/accessPass.js";
 import { formatProductLabel } from "../lib/productLabel.js";
+import { useIsDesktop } from "../lib/useBreakpoint.js";
 
 const PAYMENT_STATUSES = ["paid", "unpaid", "waived"];
 
 export default function OfficeTab({ toast }) {
   const { t, days, fmtDateDay } = useLang();
+  const isDesktop = useIsDesktop();
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
@@ -86,8 +88,27 @@ export default function OfficeTab({ toast }) {
     waived: t("paymentWaived"),
   }[status] || status);
 
+  const renderPaymentActions = (row) => (
+    <div className="actions-cell">
+      {PAYMENT_STATUSES.map((status) => (
+        <button
+          key={status}
+          type="button"
+          className={`btn btn-sm ${row.payment_status === status ? "btn-primary" : "btn-outline"}`}
+          disabled={savingId === row.id}
+          onClick={() => setPayment(row.id, status)}
+        >
+          {paymentLabel(status)}
+        </button>
+      ))}
+      <button type="button" className="btn btn-sm btn-outline" onClick={() => copyTicketLink(row.id)}>
+        {t("copyTicketLink")}
+      </button>
+    </div>
+  );
+
   return (
-    <div>
+    <div className="office-layout">
       <div className="section-title">{t("tabOffice")}</div>
       <div className="section-sub">{t("searchByPhoneOrChild")}</div>
 
@@ -108,34 +129,46 @@ export default function OfficeTab({ toast }) {
         <div style={{ marginTop: 24, color: "var(--ink-soft)", textAlign: "center" }}>{t("noEnrollmentsFound")}</div>
       )}
 
-      <div className="grouped-list" style={{ marginTop: 20 }}>
-        {rows.map((row) => (
-          <div className="log-item" key={row.id} style={{ flexDirection: "column", alignItems: "stretch", gap: 8 }}>
-            <div>
-              <div className="log-name">{row.participant?.full_name}</div>
-              <div className="log-meta">{formatProductLabel(row.product, days, row.product?.product_templates?.code)}</div>
-              <div className="log-meta">{t("paymentStatus")}: {paymentLabel(row.payment_status)}</div>
-              <div className="log-meta">{t("validUntil")}: {fmtDateDay(row.valid_until)}</div>
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {PAYMENT_STATUSES.map((status) => (
-                <button
-                  key={status}
-                  type="button"
-                  className={`btn btn-sm ${row.payment_status === status ? "btn-primary" : "btn-outline"}`}
-                  disabled={savingId === row.id}
-                  onClick={() => setPayment(row.id, status)}
-                >
-                  {paymentLabel(status)}
-                </button>
+      {isDesktop && rows.length > 0 ? (
+        <div className="data-table-wrap office-table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>{t("child")}</th>
+                <th>{t("sectionClass")}</th>
+                <th>{t("paymentStatus")}</th>
+                <th>{t("validUntil")}</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.id}>
+                  <td>{row.participant?.full_name}</td>
+                  <td>{formatProductLabel(row.product, days, row.product?.product_templates?.code)}</td>
+                  <td>{paymentLabel(row.payment_status)}</td>
+                  <td>{fmtDateDay(row.valid_until)}</td>
+                  <td>{renderPaymentActions(row)}</td>
+                </tr>
               ))}
-              <button type="button" className="btn btn-sm btn-outline" onClick={() => copyTicketLink(row.id)}>
-                {t("copyTicketLink")}
-              </button>
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="grouped-list" style={{ marginTop: 20 }}>
+          {rows.map((row) => (
+            <div className="log-item" key={row.id} style={{ flexDirection: "column", alignItems: "stretch", gap: 8 }}>
+              <div>
+                <div className="log-name">{row.participant?.full_name}</div>
+                <div className="log-meta">{formatProductLabel(row.product, days, row.product?.product_templates?.code)}</div>
+                <div className="log-meta">{t("paymentStatus")}: {paymentLabel(row.payment_status)}</div>
+                <div className="log-meta">{t("validUntil")}: {fmtDateDay(row.valid_until)}</div>
+              </div>
+              {renderPaymentActions(row)}
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

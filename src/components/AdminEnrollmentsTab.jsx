@@ -10,6 +10,7 @@ import { regenerateEnrollmentPasses } from "../lib/summerCourse.js";
 import { formatProductLabel } from "../lib/productLabel.js";
 import { useLang } from "../i18n.jsx";
 import { fmt_time } from "../lib/lessonDates.js";
+import { useIsDesktop } from "../lib/useBreakpoint.js";
 
 const PAYMENT_STATUSES = ["unpaid", "paid", "waived"];
 const HISTORY_FILTERS = ["active", "all", "cancelled"];
@@ -20,6 +21,7 @@ function normalizePhone(phone) {
 
 export default function AdminEnrollmentsTab({ toast }) {
   const { t, days, fmtDateDay } = useLang();
+  const isDesktop = useIsDesktop();
   const [products, setProducts] = useState([]);
   const [season, setSeason] = useState(null);
   const [selectedProductId, setSelectedProductId] = useState("");
@@ -376,51 +378,96 @@ export default function AdminEnrollmentsTab({ toast }) {
 
   const productLabel = (p) => formatProductLabel(p, days, p?.product_templates?.code);
 
+  const renderEditFields = (row) => (
+    <>
+      <div className="field">
+        <label className="label">{t("childName")}</label>
+        <input className="input" value={editChildName} onChange={(e) => setEditChildName(e.target.value)} />
+      </div>
+      <div className="field">
+        <label className="label">{t("parentPhone")}</label>
+        <input className="input" type="tel" dir="ltr" value={editParentPhone} onChange={(e) => setEditParentPhone(e.target.value)} />
+      </div>
+      <div className="field">
+        <label className="label">{t("selectClass")}</label>
+        <select className="input" value={editProductId} onChange={(e) => setEditProductId(e.target.value)}>
+          {products.map((p) => (
+            <option key={p.id} value={p.id}>{productLabel(p)}</option>
+          ))}
+        </select>
+      </div>
+      <div className="field">
+        <label className="label">{t("paymentStatus")}</label>
+        <select className="input" value={editPaymentStatus} onChange={(e) => setEditPaymentStatus(e.target.value)}>
+          {PAYMENT_STATUSES.map((s) => (
+            <option key={s} value={s}>{paymentLabel(s)}</option>
+          ))}
+        </select>
+      </div>
+      <div className="field">
+        <label className="label">{t("validFrom")} / {t("validUntil")}</label>
+        <div style={{ display: "flex", gap: 8 }}>
+          <input className="input" type="date" dir="ltr" value={editValidFrom} onChange={(e) => setEditValidFrom(e.target.value)} />
+          <input className="input" type="date" dir="ltr" value={editValidUntil} onChange={(e) => setEditValidUntil(e.target.value)} />
+        </div>
+      </div>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+        <button type="button" className="btn btn-primary btn-sm" disabled={savingId === row.id} onClick={() => saveEdit(row)}>
+          {savingId === row.id ? "..." : t("saveChanges")}
+        </button>
+        <button type="button" className="btn btn-outline btn-sm" onClick={cancelEdit}>{t("cancel")}</button>
+      </div>
+    </>
+  );
+
+  const renderRowActions = (row) => (
+    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+      {row.active && (
+        <>
+          <button type="button" className="btn btn-sm btn-outline" onClick={() => startEdit(row)}>{t("editEnrollment")}</button>
+          <button type="button" className="btn btn-sm btn-outline" onClick={() => copyEnrollmentTicketLink(row.id, { toast, t })}>
+            {t("copyTicketLink")}
+          </button>
+          <button type="button" className="btn btn-sm btn-outline" disabled={savingId === row.id} onClick={() => handleRegeneratePasses(row)}>
+            {t("regeneratePasses")}
+          </button>
+          <button type="button" className="btn btn-sm btn-danger" disabled={savingId === row.id} onClick={() => cancelEnrollment(row)}>
+            {savingId === row.id ? "..." : t("cancelEnrollment")}
+          </button>
+        </>
+      )}
+    </div>
+  );
+
+  const renderTableRow = (row) => {
+    const isEditing = editingId === row.id;
+    if (isEditing) {
+      return (
+        <tr key={row.id} className="data-table-edit-row">
+          <td colSpan={6}>{renderEditFields(row)}</td>
+        </tr>
+      );
+    }
+    return (
+      <tr key={row.id}>
+        <td>
+          {row.participant?.full_name}
+          {!row.active && <span className="badge badge-used" style={{ marginInlineStart: 8 }}>{t("cancelled")}</span>}
+        </td>
+        <td dir="ltr">{row.participant?.family?.phone || "—"}</td>
+        <td>{productLabel(row.product)}</td>
+        <td>{paymentLabel(row.payment_status)}</td>
+        <td>{fmtDateDay(row.valid_until)}</td>
+        <td><div className="actions-cell">{renderRowActions(row)}</div></td>
+      </tr>
+    );
+  };
+
   const renderRow = (row) => {
     const isEditing = editingId === row.id;
     return (
       <div className="log-item" key={row.id} style={{ flexDirection: "column", alignItems: "stretch", gap: 8 }}>
-        {isEditing ? (
-          <>
-            <div className="field">
-              <label className="label">{t("childName")}</label>
-              <input className="input" value={editChildName} onChange={(e) => setEditChildName(e.target.value)} />
-            </div>
-            <div className="field">
-              <label className="label">{t("parentPhone")}</label>
-              <input className="input" type="tel" dir="ltr" value={editParentPhone} onChange={(e) => setEditParentPhone(e.target.value)} />
-            </div>
-            <div className="field">
-              <label className="label">{t("selectClass")}</label>
-              <select className="input" value={editProductId} onChange={(e) => setEditProductId(e.target.value)}>
-                {products.map((p) => (
-                  <option key={p.id} value={p.id}>{productLabel(p)}</option>
-                ))}
-              </select>
-            </div>
-            <div className="field">
-              <label className="label">{t("paymentStatus")}</label>
-              <select className="input" value={editPaymentStatus} onChange={(e) => setEditPaymentStatus(e.target.value)}>
-                {PAYMENT_STATUSES.map((s) => (
-                  <option key={s} value={s}>{paymentLabel(s)}</option>
-                ))}
-              </select>
-            </div>
-            <div className="field">
-              <label className="label">{t("validFrom")} / {t("validUntil")}</label>
-              <div style={{ display: "flex", gap: 8 }}>
-                <input className="input" type="date" dir="ltr" value={editValidFrom} onChange={(e) => setEditValidFrom(e.target.value)} />
-                <input className="input" type="date" dir="ltr" value={editValidUntil} onChange={(e) => setEditValidUntil(e.target.value)} />
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              <button type="button" className="btn btn-primary btn-sm" disabled={savingId === row.id} onClick={() => saveEdit(row)}>
-                {savingId === row.id ? "..." : t("saveChanges")}
-              </button>
-              <button type="button" className="btn btn-outline btn-sm" onClick={cancelEdit}>{t("cancel")}</button>
-            </div>
-          </>
-        ) : (
+        {isEditing ? renderEditFields(row) : (
           <>
             <div>
               <div className="log-name">
@@ -438,22 +485,7 @@ export default function AdminEnrollmentsTab({ toast }) {
                 {t("validFrom")}: {fmtDateDay(row.valid_from)} · {t("validUntil")}: {fmtDateDay(row.valid_until)}
               </div>
             </div>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {row.active && (
-                <>
-                  <button type="button" className="btn btn-sm btn-outline" onClick={() => startEdit(row)}>{t("editEnrollment")}</button>
-                  <button type="button" className="btn btn-sm btn-outline" onClick={() => copyEnrollmentTicketLink(row.id, { toast, t })}>
-                    {t("copyTicketLink")}
-                  </button>
-                  <button type="button" className="btn btn-sm btn-outline" disabled={savingId === row.id} onClick={() => handleRegeneratePasses(row)}>
-                    {t("regeneratePasses")}
-                  </button>
-                  <button type="button" className="btn btn-sm btn-danger" disabled={savingId === row.id} onClick={() => cancelEnrollment(row)}>
-                    {savingId === row.id ? "..." : t("cancelEnrollment")}
-                  </button>
-                </>
-              )}
-            </div>
+            {renderRowActions(row)}
           </>
         )}
       </div>
@@ -561,6 +593,29 @@ export default function AdminEnrollmentsTab({ toast }) {
       ) : displayRows.length === 0 ? (
         <div style={{ marginTop: 24, color: "var(--ink-soft)", textAlign: "center" }}>
           {searchMode && searchQuery.trim() ? t("noEnrollmentsFound") : t("noEnrollmentsInClass")}
+        </div>
+      ) : isDesktop ? (
+        <div className="data-table-wrap" style={{ marginTop: 12 }}>
+          {!searchMode && selectedProductId && (
+            <div className="grouped-list-header" style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)" }}>
+              {historyFilter === "active" ? t("activeEnrollments") : t("enrollmentHistory")} ({displayRows.length})
+            </div>
+          )}
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>{t("child")}</th>
+                <th>{t("parentPhone")}</th>
+                <th>{t("sectionClass")}</th>
+                <th>{t("paymentStatus")}</th>
+                <th>{t("validUntil")}</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {displayRows.map(renderTableRow)}
+            </tbody>
+          </table>
         </div>
       ) : (
         <div className="grouped-list" style={{ marginTop: 12 }}>

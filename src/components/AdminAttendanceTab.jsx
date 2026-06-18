@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabase.js";
 import { listAttendanceHistory, templateLabel } from "../lib/attendance.js";
 import { useLang } from "../i18n.jsx";
 import { fmt_time } from "../lib/lessonDates.js";
+import { useIsDesktop } from "../lib/useBreakpoint.js";
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
@@ -47,6 +48,7 @@ function exportCsv(rows, t) {
 
 export default function AdminAttendanceTab({ toast }) {
   const { t, fmtDateDay } = useLang();
+  const isDesktop = useIsDesktop();
   const [from, setFrom] = useState(monthAgoStr());
   const [to, setTo] = useState(todayStr());
   const [productId, setProductId] = useState("");
@@ -109,23 +111,38 @@ export default function AdminAttendanceTab({ toast }) {
     system: t("attendanceSourceSystem"),
   }[s] || s);
 
+  const filtersClass = isDesktop ? "attendance-filters--desktop" : "";
+  const filtersStyle = isDesktop ? undefined : { display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" };
+
   return (
     <div>
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-        <input className="input" type="date" value={from} onChange={(e) => setFrom(e.target.value)} dir="ltr" />
-        <input className="input" type="date" value={to} onChange={(e) => setTo(e.target.value)} dir="ltr" />
-        <select className="input" value={productId} onChange={(e) => setProductId(e.target.value)} style={{ minWidth: 140 }}>
-          <option value="">{t("allProducts")}</option>
-          {products.map((p) => (
-            <option key={p.id} value={p.id}>{p.name}</option>
-          ))}
-        </select>
-        <input
-          className="input"
-          value={searchChild}
-          onChange={(e) => setSearchChild(e.target.value)}
-          placeholder={t("searchByChild")}
-        />
+      <div className={filtersClass} style={filtersStyle}>
+        <div className="field">
+          <label className="label">{t("validFrom")}</label>
+          <input className="input" type="date" value={from} onChange={(e) => setFrom(e.target.value)} dir="ltr" />
+        </div>
+        <div className="field">
+          <label className="label">{t("validUntil")}</label>
+          <input className="input" type="date" value={to} onChange={(e) => setTo(e.target.value)} dir="ltr" />
+        </div>
+        <div className="field">
+          <label className="label">{t("sectionClass")}</label>
+          <select className="input" value={productId} onChange={(e) => setProductId(e.target.value)} style={{ minWidth: 140 }}>
+            <option value="">{t("allProducts")}</option>
+            {products.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+        </div>
+        <div className="field">
+          <label className="label">{t("child")}</label>
+          <input
+            className="input"
+            value={searchChild}
+            onChange={(e) => setSearchChild(e.target.value)}
+            placeholder={t("searchByChild")}
+          />
+        </div>
         <button type="button" className="btn btn-outline btn-sm" onClick={() => exportCsv(rows, t)} disabled={!rows.length}>
           {t("exportCsv")}
         </button>
@@ -135,6 +152,35 @@ export default function AdminAttendanceTab({ toast }) {
         <div style={{ textAlign: "center", padding: 32, color: "var(--ink-soft)" }}>{t("loading")}</div>
       ) : rows.length === 0 ? (
         <div className="empty"><div className="empty-icon">📊</div><div className="empty-text">{t("noAttendanceHistory")}</div></div>
+      ) : isDesktop ? (
+        <div className="data-table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>{t("date")}</th>
+                <th>{t("startTime")}</th>
+                <th>{t("child")}</th>
+                <th>{t("sectionClass")}</th>
+                <th>{t("attendanceStatus")}</th>
+                <th>{t("attendanceSource")}</th>
+                <th>{t("notes")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.id}>
+                  <td>{fmtDateDay(row.session_date)}</td>
+                  <td dir="ltr">{fmt_time(row.start_time)}</td>
+                  <td>{row.participant_name || row.child_name}</td>
+                  <td>{row.product_name || templateLabel(t, row.template_code) || "—"}</td>
+                  <td>{statusLabel(row.status)}</td>
+                  <td>{sourceLabel(row.source)}</td>
+                  <td>{row.notes || "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : (
         <div className="grouped-list">
           {rows.map((row) => (

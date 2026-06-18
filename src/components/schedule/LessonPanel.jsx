@@ -39,6 +39,7 @@ export default function LessonPanel({
   onCreate,
   acting,
   toast,
+  layout = "sheet",
 }) {
   const { t, fmtDateDay, dir } = useLang();
   const [form, setForm] = useState(() => {
@@ -93,167 +94,201 @@ export default function LessonPanel({
     onCancel?.({ lesson, phone: form.parent_phone });
   };
 
-  return (
-      <AnimatedSheetOverlay onClose={onClose}>
-        <AnimatedSheetPanel onClick={e => e.stopPropagation()}>
-        <div className="schedule-panel-handle" />
+  const content = (
+    <>
+      {layout === "sheet" && <div className="schedule-panel-handle" />}
+      {layout === "inline" && (
+        <div className="schedule-rail-header">
+          <div className="section-title" style={{ fontSize: 17, margin: 0 }}>
+            {mode === "create" ? t("newLesson") : mode === "view" && editMode ? t("editLesson") : t("lessonDetails")}
+          </div>
+          <button type="button" className="schedule-rail-close" onClick={onClose} aria-label={t("cancel")}>✕</button>
+        </div>
+      )}
 
-        {mode === "create" && (
-          <>
-            <div className="section-title" style={{ fontSize: 17 }}>{t("newLesson")}</div>
-            <div className="section-sub" style={{ marginBottom: 16 }}>{t("createLessonHere")}</div>
-            {showInstructorPicker && (
-              <div className="field">
-                <label className="label">{t("selectInstructor")}</label>
-                <select
-                  className="input"
-                  value={form.instructor_id}
-                  onChange={e => setForm(f => ({ ...f, instructor_id: e.target.value }))}
-                >
-                  <option value="">{t("selectInstructor")}</option>
-                  {instructors.map(inst => (
-                    <option key={inst.id} value={inst.id}>{inst.full_name}</option>
-                  ))}
-                </select>
-              </div>
-            )}
+      {mode === "create" && (
+        <>
+          {layout === "sheet" && (
+            <>
+              <div className="section-title" style={{ fontSize: 17 }}>{t("newLesson")}</div>
+              <div className="section-sub" style={{ marginBottom: 16 }}>{t("createLessonHere")}</div>
+            </>
+          )}
+          {showInstructorPicker && (
             <div className="field">
-              <label className="label">{t("childName")}</label>
-              <input className="input" value={form.child_name}
-                onChange={e => setForm(f => ({ ...f, child_name: e.target.value }))} dir={dir} />
+              <label className="label">{t("selectInstructor")}</label>
+              <select
+                className="input"
+                value={form.instructor_id}
+                onChange={e => setForm(f => ({ ...f, instructor_id: e.target.value }))}
+              >
+                <option value="">{t("selectInstructor")}</option>
+                {instructors.map(inst => (
+                  <option key={inst.id} value={inst.id}>{inst.full_name}</option>
+                ))}
+              </select>
             </div>
-            <div className="field">
-              <label className="label">{t("lessonDate")}</label>
-              <div className="date-input-wrap">
-                <input className="input" type="date" dir="ltr" value={form.lesson_date}
-                  onChange={e => setForm(f => ({ ...f, lesson_date: e.target.value }))} />
-              </div>
+          )}
+          <div className="field">
+            <label className="label">{t("childName")}</label>
+            <input className="input" value={form.child_name}
+              onChange={e => setForm(f => ({ ...f, child_name: e.target.value }))} dir={dir} />
+          </div>
+          <div className="field">
+            <label className="label">{t("lessonDate")}</label>
+            <div className="date-input-wrap">
+              <input className="input" type="date" dir="ltr" value={form.lesson_date}
+                onChange={e => setForm(f => ({ ...f, lesson_date: e.target.value }))} />
             </div>
-            <div className="field">
-              <label className="label">{t("lessonStartTime")}</label>
-              <TimeScrollPicker value={form.start_time}
-                onChange={v => setForm(f => ({ ...f, start_time: v }))} />
+          </div>
+          <div className="field">
+            <label className="label">{t("lessonStartTime")}</label>
+            <TimeScrollPicker value={form.start_time}
+              onChange={v => setForm(f => ({ ...f, start_time: v }))} />
+          </div>
+          <div className="field">
+            <label className="label">{t("parentPhone")}</label>
+            <ParentContactPicker
+              value={form.parent_phone}
+              onChange={phone => setForm(f => ({ ...f, parent_phone: phone }))}
+              onError={msg => toast?.show(msg)}
+            />
+          </div>
+          <div className="field">
+            <label className="label">{t("lessonType")}</label>
+            <div className="mode-switch">
+              <button type="button" className={`mode-btn ${form.lesson_type === "once" ? "active" : ""}`}
+                onClick={() => setForm(f => ({ ...f, lesson_type: "once" }))}>{t("lessonOnce")}</button>
+              <button type="button" className={`mode-btn ${form.lesson_type === "recurring" ? "active" : ""}`}
+                onClick={() => setForm(f => ({ ...f, lesson_type: "recurring" }))}>{t("lessonRecurring")}</button>
             </div>
-            <div className="field">
-              <label className="label">{t("parentPhone")}</label>
-              <ParentContactPicker
-                value={form.parent_phone}
-                onChange={phone => setForm(f => ({ ...f, parent_phone: phone }))}
-                onError={msg => toast?.show(msg)}
-              />
-            </div>
-            <div className="field">
-              <label className="label">{t("lessonType")}</label>
-              <div className="mode-switch">
-                <button type="button" className={`mode-btn ${form.lesson_type === "once" ? "active" : ""}`}
-                  onClick={() => setForm(f => ({ ...f, lesson_type: "once" }))}>{t("lessonOnce")}</button>
-                <button type="button" className={`mode-btn ${form.lesson_type === "recurring" ? "active" : ""}`}
-                  onClick={() => setForm(f => ({ ...f, lesson_type: "recurring" }))}>{t("lessonRecurring")}</button>
-              </div>
-            </div>
-            <div className="gap-8">
-              <button type="button" className="btn btn-primary" onClick={handleCreate} disabled={acting}>
-                {acting ? <><div className="spinner" /> {t("creating")}</> : t("createBarcode")}
-              </button>
-              <button type="button" className="btn btn-outline" onClick={onClose} disabled={acting}>{t("cancel")}</button>
-            </div>
-          </>
-        )}
+          </div>
+          <div className="gap-8">
+            <button type="button" className="btn btn-primary" onClick={handleCreate} disabled={acting}>
+              {acting ? <><div className="spinner" /> {t("creating")}</> : t("createBarcode")}
+            </button>
+            <button type="button" className="btn btn-outline" onClick={onClose} disabled={acting}>{t("cancel")}</button>
+          </div>
+        </>
+      )}
 
-        {mode === "view" && lesson && !editMode && (
-          <>
+      {mode === "view" && lesson && !editMode && (
+        <>
+          {layout === "sheet" && (
             <div className="section-title" style={{ fontSize: 17 }}>{t("lessonDetails")}</div>
-            {past && <div className="schedule-readonly-hint" style={{ marginBottom: 12 }}>{t("pastLesson")}</div>}
-            <div className="lesson-info">
-              <div className="lesson-info-row"><span className="li-key">{t("child")}</span><span className="li-val">{lesson.child_name}</span></div>
-              <div className="lesson-info-row"><span className="li-key">{t("date")}</span><span className="li-val">{fmtDateDay(lesson.lesson_date)}</span></div>
-              <div className="lesson-info-row"><span className="li-key">{t("startTime")}</span><span className="li-val">{fmt_time(lesson.start_time)}</span></div>
-              <div className="lesson-info-row"><span className="li-key">{t("instructor")}</span><span className="li-val">{lesson.instructor_name}</span></div>
-              <div className="lesson-info-row">
-                <span className="li-key">{t("statusLabel")}</span>
-                <span className="li-val">
-                  {status === "used" ? t("used") : status === "cancelled" ? t("cancelled") : t("waiting")}
-                </span>
-              </div>
+          )}
+          {past && <div className="schedule-readonly-hint" style={{ marginBottom: 12 }}>{t("pastLesson")}</div>}
+          <div className="lesson-info">
+            <div className="lesson-info-row"><span className="li-key">{t("child")}</span><span className="li-val">{lesson.child_name}</span></div>
+            <div className="lesson-info-row"><span className="li-key">{t("date")}</span><span className="li-val">{fmtDateDay(lesson.lesson_date)}</span></div>
+            <div className="lesson-info-row"><span className="li-key">{t("startTime")}</span><span className="li-val">{fmt_time(lesson.start_time)}</span></div>
+            <div className="lesson-info-row"><span className="li-key">{t("instructor")}</span><span className="li-val">{lesson.instructor_name}</span></div>
+            <div className="lesson-info-row">
+              <span className="li-key">{t("statusLabel")}</span>
+              <span className="li-val">
+                {status === "used" ? t("used") : status === "cancelled" ? t("cancelled") : t("waiting")}
+              </span>
             </div>
-            {editable && (
-              <div className="gap-8" style={{ marginTop: 16 }}>
-                <button type="button" className="btn btn-outline" onClick={enterEditMode} disabled={acting}>
-                  ✎ {t("editLesson")}
-                </button>
-                <button type="button" className="btn btn-danger" onClick={requestCancel} disabled={acting}>
-                  ✕ {t("cancelLesson")}
-                </button>
-              </div>
-            )}
+          </div>
+          {editable && (
+            <div className="gap-8" style={{ marginTop: 16 }}>
+              <button type="button" className="btn btn-outline" onClick={enterEditMode} disabled={acting}>
+                ✎ {t("editLesson")}
+              </button>
+              <button type="button" className="btn btn-danger" onClick={requestCancel} disabled={acting}>
+                ✕ {t("cancelLesson")}
+              </button>
+            </div>
+          )}
+          {layout === "sheet" && (
             <button type="button" className="btn btn-outline mt-16" onClick={onClose}>{t("cancel")}</button>
-          </>
-        )}
+          )}
+        </>
+      )}
 
-        {mode === "view" && lesson && editMode && (
-          <>
-            <div className="section-title" style={{ fontSize: 17 }}>{t("editLesson")}</div>
-            <div className="section-sub" style={{ marginBottom: 16 }}>{t("editLessonSub")}</div>
-            <div className="field">
-              <label className="label">{t("childName")}</label>
-              <input className="input" value={form.child_name}
-                onChange={e => setForm(f => ({ ...f, child_name: e.target.value }))} dir={dir} />
+      {mode === "view" && lesson && editMode && (
+        <>
+          {layout === "sheet" && (
+            <>
+              <div className="section-title" style={{ fontSize: 17 }}>{t("editLesson")}</div>
+              <div className="section-sub" style={{ marginBottom: 16 }}>{t("editLessonSub")}</div>
+            </>
+          )}
+          <div className="field">
+            <label className="label">{t("childName")}</label>
+            <input className="input" value={form.child_name}
+              onChange={e => setForm(f => ({ ...f, child_name: e.target.value }))} dir={dir} />
+          </div>
+          <div className="field">
+            <label className="label">{t("lessonDate")}</label>
+            <div className="date-input-wrap">
+              <input className="input" type="date" dir="ltr" value={form.lesson_date}
+                onChange={e => setForm(f => ({ ...f, lesson_date: e.target.value }))} />
             </div>
-            <div className="field">
-              <label className="label">{t("lessonDate")}</label>
-              <div className="date-input-wrap">
-                <input className="input" type="date" dir="ltr" value={form.lesson_date}
-                  onChange={e => setForm(f => ({ ...f, lesson_date: e.target.value }))} />
-              </div>
-              {isRecurring && (
-                <div className="schedule-readonly-hint" style={{ marginTop: 6 }}>{t("recurringDateHint")}</div>
-              )}
-            </div>
-            <div className="field">
-              <label className="label">{t("lessonStartTime")}</label>
-              <TimeScrollPicker value={form.start_time}
-                onChange={v => setForm(f => ({ ...f, start_time: v }))} />
-            </div>
-            <div className="field">
-              <label className="label">{t("parentPhone")}</label>
-              <ParentContactPicker
-                value={form.parent_phone}
-                onChange={phone => setForm(f => ({ ...f, parent_phone: phone }))}
-                onError={msg => toast?.show(msg)}
-              />
-            </div>
-            <div className="gap-8">
-              <button type="button" className="btn btn-primary" onClick={handleSave} disabled={acting}>
-                {acting ? <><div className="spinner" /> {t("preparingImage")}</> : t("saveAndNotify")}
-              </button>
-              <button type="button" className="btn btn-outline" onClick={() => { if (lesson) setForm(lessonToForm(lesson)); setEditMode(false); }} disabled={acting}>{t("cancel")}</button>
-            </div>
-          </>
-        )}
+            {isRecurring && (
+              <div className="schedule-readonly-hint" style={{ marginTop: 6 }}>{t("recurringDateHint")}</div>
+            )}
+          </div>
+          <div className="field">
+            <label className="label">{t("lessonStartTime")}</label>
+            <TimeScrollPicker value={form.start_time}
+              onChange={v => setForm(f => ({ ...f, start_time: v }))} />
+          </div>
+          <div className="field">
+            <label className="label">{t("parentPhone")}</label>
+            <ParentContactPicker
+              value={form.parent_phone}
+              onChange={phone => setForm(f => ({ ...f, parent_phone: phone }))}
+              onError={msg => toast?.show(msg)}
+            />
+          </div>
+          <div className="gap-8">
+            <button type="button" className="btn btn-primary" onClick={handleSave} disabled={acting}>
+              {acting ? <><div className="spinner" /> {t("preparingImage")}</> : t("saveAndNotify")}
+            </button>
+            <button type="button" className="btn btn-outline" onClick={() => { if (lesson) setForm(lessonToForm(lesson)); setEditMode(false); }} disabled={acting}>{t("cancel")}</button>
+          </div>
+        </>
+      )}
 
-        {phonePrompt && (
-          <>
-            <div className="section-title" style={{ fontSize: 17 }}>{t("cancelLesson")}</div>
-            <div className="section-sub" style={{ marginBottom: 16 }}>
-              {t("cancelConfirm", { name: lesson.child_name })}
-            </div>
-            <div className="field">
-              <label className="label">{t("parentPhone")}</label>
-              <ParentContactPicker
-                value={form.parent_phone}
-                onChange={phone => setForm(f => ({ ...f, parent_phone: phone }))}
-                onError={msg => toast?.show(msg)}
-              />
-            </div>
-            <div className="gap-8">
-              <button type="button" className="btn btn-danger" onClick={confirmCancelWithPhone} disabled={acting}>
-                {acting ? <><div className="spinner" /> {t("saving")}</> : t("sendCancelWhatsApp")}
-              </button>
-              <button type="button" className="btn btn-outline" onClick={() => setPhonePrompt(false)} disabled={acting}>{t("cancel")}</button>
-            </div>
-          </>
-        )}
-        </AnimatedSheetPanel>
-      </AnimatedSheetOverlay>
+      {phonePrompt && (
+        <>
+          <div className="section-title" style={{ fontSize: 17 }}>{t("cancelLesson")}</div>
+          <div className="section-sub" style={{ marginBottom: 16 }}>
+            {t("cancelConfirm", { name: lesson.child_name })}
+          </div>
+          <div className="field">
+            <label className="label">{t("parentPhone")}</label>
+            <ParentContactPicker
+              value={form.parent_phone}
+              onChange={phone => setForm(f => ({ ...f, parent_phone: phone }))}
+              onError={msg => toast?.show(msg)}
+            />
+          </div>
+          <div className="gap-8">
+            <button type="button" className="btn btn-danger" onClick={confirmCancelWithPhone} disabled={acting}>
+              {acting ? <><div className="spinner" /> {t("saving")}</> : t("sendCancelWhatsApp")}
+            </button>
+            <button type="button" className="btn btn-outline" onClick={() => setPhonePrompt(false)} disabled={acting}>{t("cancel")}</button>
+          </div>
+        </>
+      )}
+    </>
+  );
+
+  if (layout === "inline") {
+    return (
+      <div className="schedule-rail-panel">
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <AnimatedSheetOverlay onClose={onClose}>
+      <AnimatedSheetPanel onClick={e => e.stopPropagation()}>
+        {content}
+      </AnimatedSheetPanel>
+    </AnimatedSheetOverlay>
   );
 }

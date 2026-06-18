@@ -1,0 +1,273 @@
+/* Desktop layout — min-width: 768px */
+
+@media (min-width: 768px) {
+  .app.app--desktop {
+    max-width: var(--app-max-w-desktop);
+    flex-direction: row;
+    align-items: stretch;
+    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .app-sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-secondary);
+    border-inline-start: 1px solid var(--separator);
+    overflow-y: auto;
+    padding: var(--space-4) var(--space-2);
+    gap: var(--space-2);
+  }
+
+  .app-sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3) var(--space-4);
+    font-size: var(--text-headline);
+    font-weight: 700;
+    color: var(--ink);
+    border-bottom: 1px solid var(--separator);
+    margin-bottom: var(--space-2);
+  }
+
+  .app-sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    flex: 1;
+  }
+
+  .sidebar-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+    padding: var(--space-3) var(--space-3);
+    border: none;
+    border-radius: var(--radius-control);
+    background: transparent;
+    font-family: inherit;
+    font-size: var(--text-subhead);
+    font-weight: 500;
+    color: var(--nav-inactive);
+    cursor: pointer;
+    text-align: start;
+    transition: background 0.15s, color 0.15s;
+    min-height: var(--tap-target-min);
+  }
+
+  .sidebar-btn .nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+
+  .sidebar-btn .nav-icon svg {
+    width: 22px;
+    height: 22px;
+    stroke-width: 2;
+  }
+
+  .sidebar-btn.active {
+    background: var(--pool-pale);
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .sidebar-btn:hover:not(.active) {
+    background: var(--surface);
+    color: var(--accent);
+  }
+
+  .app-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .app--desktop .header {
+    flex-shrink: 0;
+    padding: var(--space-3) var(--space-5);
+  }
+
+  .app--desktop .header-top {
+    margin-bottom: 0;
+  }
+
+  .app--desktop .header-logo {
+    display: none;
+  }
+
+  .app--desktop .header-user {
+    margin-top: 0;
+    justify-content: flex-end;
+  }
+
+  .app--desktop .content {
+    padding-bottom: var(--space-5);
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .app--desktop .nav {
+    display: none;
+  }
+
+  .content-narrow {
+    max-width: 440px;
+    margin-inline: auto;
+    width: 100%;
+  }
+
+  /* Admin shell */
+  .admin-shell {
+    display: flex;
+    gap: var(--space-5);
+    min-height: 0;
+  }
+
+  .admin-sidebar {
+    width: 180px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .admin-sidebar-btn {
+    display: block;
+    width: 100%;
+    padding: var(--space-3) var(--space-3);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-control);
+    background: var(--white);
+    font-family: inherit;
+    font-size: var(--text-footnote);
+    font-weight: 600;
+    color: var(--ink-mid);
+    cursor: pointer;
+    text-align: start;
+    transition: all 0.15s;
+  }
+
+  .admin-sidebar-btn.active {
+    background: var(--pool);
+    border-color: var(--pool);
+    color: #fff;
+  }
+
+  .admin-sidebar-btn:hover:not(.active) {
+    border-color: var(--pool-light);
+    color: var(--pool);
+  }
+
+  .admin-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .admin-nav-mobile {
+    display: none;
+  }
+
+  /* Data tables */
+  .data-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--white);
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-footnote);
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: var(--space-3) var(--space-3);
+    text-align: start;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  .data-table th {
+    background: var(--surface);
+    font-weight: 700;
+    color: var(--ink-mid);
+    white-space: nowrap;
+  }
+
+  .data-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .data-table tr:hover td {
+    background: rgba(0, 119, 182, 0.03);
+  }
+
+  .data-table .actions-cell {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    white-space: nowrap;
+  }
+
+  .data-table-edit-row td {
+    background: var(--surface);
+    padding: var(--space-4);
+  }
+
+  .enrollments-filters--desktop {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: var(--space-3);
+    align-items: flex-end;
+    margin-bottom: var(--space-4);
+  }
+
+  .enrollments-filters--desktop .field {
+    margin-bottom: 0;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .office-table-wrap {
+    margin-top: var(--space-4);
+  }
+
+  .attendance-filters--desktop {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: var(--space-3);
+    align-items: flex-end;
+    margin-bottom: var(--space-4);
+  }
+
+  .attendance-filters--desktop .field {
+    margin-bottom: 0;
+    flex: 1;
+    min-width: 120px;
+  }
+}
+
+/* Mobile: hide desktop-only admin sidebar */
+@media (max-width: 767px) {
+  .admin-sidebar {
+    display: none;
+  }
+
+  .admin-shell {
+    display: block;
+  }
+}
