@@ -149,7 +149,16 @@
   box-shadow: 0 1px 3px rgba(0,0,0,.1); border: 1px solid rgba(255,255,255,.25);
   box-sizing: border-box;
 }
-.lesson-block.past { opacity: .75; }
+.lesson-block.group-session {
+  border: 2px dashed rgba(255, 255, 255, 0.45);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+.schedule-session-hint {
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
 .lesson-block.cancelled { opacity: .55; text-decoration: line-through; }
 .lesson-block.used { opacity: .7; }
 .lesson-block-time { font-size: 10px; opacity: .9; font-family: 'IBM Plex Mono', monospace; }

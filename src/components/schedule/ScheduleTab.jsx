@@ -1,21 +1,23 @@
 import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { useLang } from "../../i18n.jsx";
-import { supabase, ensureWeeklyLessonsGenerated } from "../../lib/supabase.js";
+import { supabase } from "../../lib/supabase.js";
 import {
   canEditSchedule, canManage, canViewAllInstructors,
 } from "../../lib/permissions.js";
-import { getViewDateRange, toLocalDateStr, parseDateStr } from "../../lib/lessonDates.js";
+import { parseDateStr } from "../../lib/lessonDates.js";
 import { buildInstructorMap } from "../../lib/instructorColors.js";
 import {
   updateLesson, cancelLesson, createAndNotify, RECURRING_SCOPE,
 } from "../../lib/lessonMutations.js";
+import { loadScheduleEvents, isGroupScheduleEvent } from "../../lib/scheduleEvents.js";
 import ScheduleToolbar from "./ScheduleToolbar.jsx";
 import MonthView from "./MonthView.jsx";
 import WeekView from "./WeekView.jsx";
 import DayView from "./DayView.jsx";
 import InstructorLegend from "./InstructorLegend.jsx";
 import LessonPanel from "./LessonPanel.jsx";
+import SessionSchedulePanel from "./SessionSchedulePanel.jsx";
 import RecurringScopeDialog from "./RecurringScopeDialog.jsx";
 import "./schedule.css";
 
@@ -34,22 +36,25 @@ export default function ScheduleTab({ profile, toast }) {
   const [instructors, setInstructors] = useState([]);
 
   const [panel, setPanel] = useState(null);
+  const [sessionPanel, setSessionPanel] = useState(null);
   const [pendingAction, setPendingAction] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
-    await ensureWeeklyLessonsGenerated();
-    const { start, end } = getViewDateRange(view, anchorDate);
-    let q = supabase.from("lessons").select("*")
-      .gte("lesson_date", toLocalDateStr(start))
-      .lte("lesson_date", toLocalDateStr(end))
-      .order("lesson_date")
-      .order("start_time");
-    if (!canViewAllInstructors(profile)) q = q.eq("instructor_id", profile.id);
-    const { data } = await q;
-    setLessons(data || []);
+    try {
+      const events = await loadScheduleEvents({
+        profile,
+        view,
+        anchorDate,
+        canViewAllInstructors: showLegend,
+      });
+      setLessons(events);
+    } catch {
+      toast.show(t("systemError"));
+      setLessons([]);
+    }
     setLoading(false);
-  }, [view, anchorDate, profile.id, profile.role]);
+  }, [view, anchorDate, profile, showLegend, toast, t]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -132,7 +137,13 @@ export default function ScheduleTab({ profile, toast }) {
     performUpdate(lesson, action.form, scope);
   };
 
-  const onLessonClick = (lesson) => setPanel({ mode: "view", lesson });
+  const onLessonClick = (lesson) => {
+    if (isGroupScheduleEvent(lesson)) {
+      setSessionPanel(lesson);
+      return;
+    }
+    setPanel({ mode: "view", lesson });
+  };
 
   const onSlotClick = (date, time) => {
     if (!canEdit) return;
@@ -229,10 +240,20 @@ export default function ScheduleTab({ profile, toast }) {
           {view === "week" && <WeekView {...viewProps} />}
           {view === "day" && <DayView {...viewProps} />}
           {lessons.length === 0 && (
-            <div className="schedule-empty">{t("noLessons")}</div>
+            <div className="schedule-empty">{t("noScheduleEvents")}</div>
           )}
         </>
       )}
+
+      <AnimatePresence>
+        {sessionPanel && (
+          <SessionSchedulePanel
+            key={sessionPanel.id}
+            event={sessionPanel}
+            onClose={() => setSessionPanel(null)}
+          />
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {panel && (

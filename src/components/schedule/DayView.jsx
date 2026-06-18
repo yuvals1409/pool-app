@@ -2,7 +2,7 @@ import { useLang } from "../../i18n.jsx";
 import {
   SCHEDULE_HOURS, isToday, toLocalDateStr, timeToMinutes,
 } from "../../lib/lessonDates.js";
-import { LESSON_DURATION_MINUTES } from "../../lib/config.js";
+import { eventDurationMinutes } from "../../lib/scheduleEvents.js";
 import LessonBlock from "./LessonBlock.jsx";
 
 const SLOT_H = 24;
@@ -83,7 +83,7 @@ export default function DayView({
                     left: 3,
                     right: 3,
                     top: slotTop(startSlot),
-                    height: Math.max(lessonHeight(LESSON_DURATION_MINUTES), SLOT_H),
+                    height: Math.max(lessonHeight(eventDurationMinutes(lesson)), SLOT_H),
                     zIndex: 2,
                   }}
                 />
