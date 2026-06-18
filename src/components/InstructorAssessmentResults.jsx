@@ -33,6 +33,15 @@ export default function InstructorAssessmentResults({ toast }) {
     failed: t("assessmentResultFailed"),
   }[r] || r);
 
+  const leadStatusLabel = (status) => ({
+    new: t("leadStatusNew"),
+    call: t("leadStatusCall"),
+    registered_assessment: t("leadStatusRegisteredAssessment"),
+    passed: t("leadStatusPassed"),
+    registered_class: t("leadStatusRegisteredClass"),
+    abandoned: t("leadStatusAbandoned"),
+  }[status] || status);
+
   const handleResult = async (row, result) => {
     setSavingId(row.lead_id);
     try {
@@ -98,6 +107,7 @@ export default function InstructorAssessmentResults({ toast }) {
                 {fmt_time(row.start_time)}
                 {row.child_age != null ? ` · ${t("childAge")}: ${row.child_age}` : ""}
                 {row.parent_phone ? ` · ${row.parent_phone}` : ""}
+                {row.lead_status ? ` · ${leadStatusLabel(row.lead_status)}` : ""}
               </div>
             </div>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>

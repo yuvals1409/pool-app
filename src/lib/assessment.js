@@ -14,13 +14,14 @@ export async function listAssessmentSlots() {
   return Array.isArray(data) ? data : [];
 }
 
-export async function registerForAssessment({ slotId, childName, childAge, parentName, phone }) {
+export async function registerForAssessment({ slotId, childName, childAge, parentName, phone, source }) {
   const { data, error } = await supabase.rpc("register_assessment", {
     p_slot_id: slotId,
     p_child_name: childName,
     p_child_age: childAge ?? null,
     p_parent_name: parentName ?? null,
     p_phone: phone,
+    p_source: source ?? "website",
   });
   if (error) throw error;
   return data;

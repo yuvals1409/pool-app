@@ -1,10 +1,24 @@
 import { useState, useEffect, useCallback } from "react";
+import { AnimatePresence } from "framer-motion";
 import { supabase } from "../lib/supabase.js";
 import { syncAssessmentSlotSession } from "../lib/assessment.js";
+import {
+  LEAD_FUNNEL_STATUSES,
+  LEAD_SOURCES,
+  leadStatusBadgeClass,
+  createAssessmentLead,
+  updateLeadCrm,
+  createLeadTask,
+  completeLeadTask,
+  listLeadTasks,
+  loadLeadFunnelCounts,
+  addDays,
+  todayDateStr,
+} from "../lib/leadsCrm.js";
+import { AnimatedSheetOverlay, AnimatedSheetPanel } from "./ui/AnimatedSheet.jsx";
 import { useLang } from "../i18n.jsx";
 import { fmt_time } from "../lib/lessonDates.js";
 
-const LEAD_STATUSES = ["new", "converted", "cancelled"];
 const ASSESSMENT_RESULTS = ["pending", "passed", "failed"];
 const DEFAULT_TIME = "16:00";
 const DEFAULT_CAPACITY = 10;
@@ -14,11 +28,26 @@ export default function AdminAssessmentTab({ toast }) {
   const [view, setView] = useState("slots");
   const [slots, setSlots] = useState([]);
   const [leads, setLeads] = useState([]);
+  const [funnelCounts, setFunnelCounts] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [leadFilterSlot, setLeadFilterSlot] = useState("");
   const [leadFilterStatus, setLeadFilterStatus] = useState("");
+  const [leadFilterSource, setLeadFilterSource] = useState("");
   const [leadFilterResult, setLeadFilterResult] = useState("");
+
+  const [newPhone, setNewPhone] = useState("");
+  const [newParentName, setNewParentName] = useState("");
+  const [newChildName, setNewChildName] = useState("");
+  const [newChildAge, setNewChildAge] = useState("");
+  const [newSource, setNewSource] = useState("website");
+  const [newNotes, setNewNotes] = useState("");
+
+  const [taskLead, setTaskLead] = useState(null);
+  const [tasks, setTasks] = useState([]);
+  const [taskTitle, setTaskTitle] = useState("");
+  const [taskDueDate, setTaskDueDate] = useState("");
+  const [assignSlotByLead, setAssignSlotByLead] = useState({});
 
   const [slotDate, setSlotDate] = useState("");
   const [slotTime, setSlotTime] = useState(DEFAULT_TIME);
@@ -29,9 +58,9 @@ export default function AdminAssessmentTab({ toast }) {
   const [editSlotCapacity, setEditSlotCapacity] = useState(String(DEFAULT_CAPACITY));
 
   const leadSelect = `
-    id, slot_id, child_age, status, source, created_at, assessment_result,
+    id, slot_id, child_age, status, source, notes, created_at, assessment_result,
     slot:assessment_slots(id, slot_date, start_time),
-    participant:participants(full_name),
+    participant:participants(full_name, family:families(phone, parent_name)),
     enrollment:enrollments(id, payment_status, active)
   `;
 
@@ -52,11 +81,21 @@ export default function AdminAssessmentTab({ toast }) {
       .order("created_at", { ascending: false });
     if (leadFilterSlot) q = q.eq("slot_id", leadFilterSlot);
     if (leadFilterStatus) q = q.eq("status", leadFilterStatus);
+    if (leadFilterSource) q = q.eq("source", leadFilterSource);
     if (leadFilterResult) q = q.eq("assessment_result", leadFilterResult);
     const { data, error } = await q;
     if (error) toast.show(error.message);
     else setLeads(data || []);
-  }, [leadFilterSlot, leadFilterStatus, leadFilterResult, toast]);
+  }, [leadFilterSlot, leadFilterStatus, leadFilterSource, leadFilterResult, toast]);
+
+  const loadFunnel = useCallback(async () => {
+    try {
+      const counts = await loadLeadFunnelCounts();
+      setFunnelCounts(counts);
+    } catch (e) {
+      toast.show(e.message);
+    }
+  }, [toast]);
 
   useEffect(() => {
     (async () => {
@@ -69,7 +108,37 @@ export default function AdminAssessmentTab({ toast }) {
   useEffect(() => {
     if (view !== "leads") return;
     loadLeads();
-  }, [view, loadLeads]);
+    loadFunnel();
+  }, [view, loadLeads, loadFunnel]);
+
+  const leadStatusLabel = (status) => ({
+    new: t("leadStatusNew"),
+    call: t("leadStatusCall"),
+    registered_assessment: t("leadStatusRegisteredAssessment"),
+    passed: t("leadStatusPassed"),
+    registered_class: t("leadStatusRegisteredClass"),
+    abandoned: t("leadStatusAbandoned"),
+    converted: t("leadStatusConverted"),
+    cancelled: t("leadStatusCancelled"),
+  }[status] || status);
+
+  const leadSourceLabel = (source) => ({
+    recommendation: t("leadSourceRecommendation"),
+    facebook: t("leadSourceFacebook"),
+    website: t("leadSourceWebsite"),
+    import: t("leadSourceImport"),
+    web: t("leadSourceWebsite"),
+  }[source] || source);
+
+  const assessmentResultLabel = (result) => ({
+    pending: t("assessmentResultPending"),
+    passed: t("assessmentResultPassed"),
+    failed: t("assessmentResultFailed"),
+  }[result] || result);
+
+  const futureSlots = slots.filter(
+    (s) => s.active && s.slot_date >= todayDateStr() && s.enrolled_count < s.capacity,
+  );
 
   const addSlot = async () => {
     if (!slotDate) return toast.show(t("assessmentDateRequired"));
@@ -176,66 +245,151 @@ export default function AdminAssessmentTab({ toast }) {
     setSaving(false);
   };
 
-  const updateLeadStatus = async (lead, status) => {
-    if (status === "cancelled" && !confirm(t("cancelLeadConfirm"))) return;
-
+  const handleCreateLead = async () => {
+    if (!newPhone.trim() || !newChildName.trim()) {
+      return toast.show(t("phoneRequired"));
+    }
     setSaving(true);
-    const { error } = await supabase
-      .from("assessment_leads")
-      .update({ status })
-      .eq("id", lead.id);
-
-    if (error) {
-      toast.show(error.message);
-      setSaving(false);
-      return;
-    }
-
-    if (status === "cancelled" && lead.enrollment?.id) {
-      await supabase
-        .from("enrollments")
-        .update({ active: false })
-        .eq("id", lead.enrollment.id);
-
-      const { data: passes } = await supabase
-        .from("access_passes")
-        .select("id")
-        .eq("enrollment_id", lead.enrollment.id)
-        .eq("status", "active");
-
-      if (passes?.length) {
-        await supabase
-          .from("access_passes")
-          .update({ status: "cancelled" })
-          .in("id", passes.map((p) => p.id));
+    try {
+      const data = await createAssessmentLead({
+        phone: newPhone.trim(),
+        childName: newChildName.trim(),
+        parentName: newParentName.trim() || null,
+        source: newSource,
+        notes: newNotes.trim() || null,
+        childAge: newChildAge ? Number(newChildAge) : null,
+      });
+      if (data?.result !== "ok") {
+        toast.show(t("systemError"));
+      } else {
+        toast.show(t("leadCreated"));
+        setNewPhone("");
+        setNewParentName("");
+        setNewChildName("");
+        setNewChildAge("");
+        setNewNotes("");
+        setNewSource("website");
+        await loadLeads();
+        await loadFunnel();
       }
-
-      const slot = slots.find((s) => s.id === lead.slot_id);
-      if (slot && slot.enrolled_count > 0) {
-        await supabase
-          .from("assessment_slots")
-          .update({ enrolled_count: slot.enrolled_count - 1 })
-          .eq("id", slot.id);
-        await loadSlots();
-      }
+    } catch (e) {
+      toast.show(e.message);
     }
-
-    toast.show(status === "converted" ? t("leadMarkedConverted") : t("leadCancelled"));
-    await loadLeads();
     setSaving(false);
   };
 
-  const leadStatusLabel = (status) => ({
-    new: t("leadStatusNew"),
-    converted: t("leadStatusConverted"),
-    cancelled: t("leadStatusCancelled"),
-  }[status] || status);
+  const handleLeadFieldChange = async (lead, { status, source }) => {
+    setSaving(true);
+    try {
+      const data = await updateLeadCrm({
+        leadId: lead.id,
+        status: status ?? undefined,
+        source: source ?? undefined,
+      });
+      if (data?.result !== "ok") {
+        toast.show(t("systemError"));
+      } else {
+        toast.show(t("leadUpdated"));
+        await loadLeads();
+        await loadFunnel();
+      }
+    } catch (e) {
+      toast.show(e.message);
+    }
+    setSaving(false);
+  };
 
-  const assessmentResultLabel = (result) => ({
-    pending: t("assessmentResultPending"),
-    passed: t("assessmentResultPassed"),
-    failed: t("assessmentResultFailed"),
-  }[result] || result);
+  const handleAbandonLead = async (lead) => {
+    if (!confirm(t("abandonLeadConfirm"))) return;
+    setSaving(true);
+    try {
+      const data = await updateLeadCrm({ leadId: lead.id, status: "abandoned" });
+      if (data?.result !== "ok") toast.show(t("systemError"));
+      else {
+        toast.show(t("leadMarkedAbandoned"));
+        await loadLeads();
+        await loadFunnel();
+        await loadSlots();
+      }
+    } catch (e) {
+      toast.show(e.message);
+    }
+    setSaving(false);
+  };
+
+  const handleAssignSlot = async (lead) => {
+    const slotId = assignSlotByLead[lead.id];
+    if (!slotId) return;
+    setSaving(true);
+    try {
+      const data = await updateLeadCrm({ leadId: lead.id, slotId });
+      if (data?.result !== "ok") {
+        toast.show(data?.result === "slot_full" ? t("assessmentCapacityInvalid") : t("systemError"));
+      } else {
+        toast.show(t("leadAssignedSlot"));
+        setAssignSlotByLead((prev) => ({ ...prev, [lead.id]: "" }));
+        await loadLeads();
+        await loadFunnel();
+        await loadSlots();
+      }
+    } catch (e) {
+      toast.show(e.message);
+    }
+    setSaving(false);
+  };
+
+  const openTasks = async (lead) => {
+    setTaskLead(lead);
+    setTaskTitle("");
+    setTaskDueDate(addDays(todayDateStr(), 1));
+    try {
+      const rows = await listLeadTasks(lead.id);
+      setTasks(rows);
+    } catch (e) {
+      toast.show(e.message);
+      setTasks([]);
+    }
+  };
+
+  const closeTasks = () => {
+    setTaskLead(null);
+    setTasks([]);
+  };
+
+  const handleAddTask = async () => {
+    if (!taskLead || !taskTitle.trim() || !taskDueDate) return;
+    setSaving(true);
+    try {
+      const data = await createLeadTask({
+        leadId: taskLead.id,
+        title: taskTitle.trim(),
+        dueDate: taskDueDate,
+      });
+      if (data?.result !== "ok") toast.show(t("systemError"));
+      else {
+        setTaskTitle("");
+        setTasks(await listLeadTasks(taskLead.id));
+      }
+    } catch (e) {
+      toast.show(e.message);
+    }
+    setSaving(false);
+  };
+
+  const handleCompleteTask = async (taskId) => {
+    setSaving(true);
+    try {
+      const data = await completeLeadTask(taskId);
+      if (data?.result !== "ok") toast.show(t("systemError"));
+      else {
+        toast.show(t("taskCompleted"));
+        if (taskLead) setTasks(await listLeadTasks(taskLead.id));
+      }
+    } catch (e) {
+      toast.show(e.message);
+    }
+    setSaving(false);
+  };
 
   if (loading && view === "slots") {
     return <div style={{ textAlign: "center", padding: 32, color: "var(--ink-soft)" }}>{t("loading")}</div>;
@@ -321,7 +475,7 @@ export default function AdminAssessmentTab({ toast }) {
                           {t("assessmentEnrolled", { n: slot.enrolled_count, cap: slot.capacity })}
                         </div>
                       </div>
-                      {slot.active && slot.slot_date >= new Date().toISOString().slice(0, 10) && (
+                      {slot.active && slot.slot_date >= todayDateStr() && (
                         <div style={{ display: "flex", gap: 6 }}>
                           <button className="btn btn-outline btn-sm" onClick={() => startEditSlot(slot)} disabled={saving}>
                             {t("editAssessmentSlot")}
@@ -340,6 +494,36 @@ export default function AdminAssessmentTab({ toast }) {
         </>
       ) : (
         <>
+          <div className="card" style={{ marginBottom: 16 }}>
+            <div className="section-sub" style={{ marginBottom: 8 }}>{t("leadFunnelTitle")}</div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {LEAD_FUNNEL_STATUSES.map((st) => (
+                <span key={st} className={`badge ${leadStatusBadgeClass(st)}`} style={{ fontSize: 13 }}>
+                  {leadStatusLabel(st)}: {funnelCounts[st] ?? 0}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="card" style={{ marginBottom: 16 }}>
+            <div className="section-sub" style={{ marginBottom: 12 }}>{t("createLead")}</div>
+            <div style={{ display: "grid", gap: 8, gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))" }}>
+              <input className="input" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} placeholder={t("parentPhone")} dir="ltr" />
+              <input className="input" value={newParentName} onChange={(e) => setNewParentName(e.target.value)} placeholder={t("parentName")} />
+              <input className="input" value={newChildName} onChange={(e) => setNewChildName(e.target.value)} placeholder={t("childName")} />
+              <input className="input" type="number" min={1} max={120} value={newChildAge} onChange={(e) => setNewChildAge(e.target.value)} placeholder={t("childAge")} dir="ltr" />
+              <select className="input" value={newSource} onChange={(e) => setNewSource(e.target.value)}>
+                {LEAD_SOURCES.filter((s) => s !== "import").map((src) => (
+                  <option key={src} value={src}>{leadSourceLabel(src)}</option>
+                ))}
+              </select>
+              <input className="input" value={newNotes} onChange={(e) => setNewNotes(e.target.value)} placeholder={t("leadNotes")} />
+            </div>
+            <button className="btn btn-primary btn-sm" style={{ marginTop: 10 }} onClick={handleCreateLead} disabled={saving}>
+              {t("createLeadSave")}
+            </button>
+          </div>
+
           <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
             <select className="input" value={leadFilterSlot} onChange={(e) => setLeadFilterSlot(e.target.value)} style={{ flex: 1, minWidth: 140 }}>
               <option value="">{t("allSlots")}</option>
@@ -351,8 +535,14 @@ export default function AdminAssessmentTab({ toast }) {
             </select>
             <select className="input" value={leadFilterStatus} onChange={(e) => setLeadFilterStatus(e.target.value)} style={{ flex: 1, minWidth: 120 }}>
               <option value="">{t("allStatuses")}</option>
-              {LEAD_STATUSES.map((st) => (
+              {LEAD_FUNNEL_STATUSES.map((st) => (
                 <option key={st} value={st}>{leadStatusLabel(st)}</option>
+              ))}
+            </select>
+            <select className="input" value={leadFilterSource} onChange={(e) => setLeadFilterSource(e.target.value)} style={{ flex: 1, minWidth: 120 }}>
+              <option value="">{t("allSources")}</option>
+              {LEAD_SOURCES.map((src) => (
+                <option key={src} value={src}>{leadSourceLabel(src)}</option>
               ))}
             </select>
             <select className="input" value={leadFilterResult} onChange={(e) => setLeadFilterResult(e.target.value)} style={{ flex: 1, minWidth: 120 }}>
@@ -369,36 +559,141 @@ export default function AdminAssessmentTab({ toast }) {
             <div className="grouped-list">
               {leads.map((lead) => (
                 <div className="user-row" key={lead.id} style={{ flexWrap: "wrap", gap: 8 }}>
-                  <div className="user-info" style={{ flex: 1 }}>
+                  <div className="user-info" style={{ flex: 1, minWidth: 200 }}>
                     <div className="user-display">
                       {lead.participant?.full_name || "—"}
-                      <span className={`badge ${lead.status === "new" ? "badge-pending" : lead.status === "converted" ? "badge-active" : "badge-used"}`} style={{ marginInlineStart: 8 }}>
+                      <span className={`badge ${leadStatusBadgeClass(lead.status)}`} style={{ marginInlineStart: 8 }}>
                         {leadStatusLabel(lead.status)}
                       </span>
                     </div>
                     <div className="user-email">
+                      {lead.participant?.family?.phone ? `${lead.participant.family.phone}` : ""}
+                      {lead.participant?.family?.parent_name ? ` · ${lead.participant.family.parent_name}` : ""}
+                    </div>
+                    <div className="user-email">
                       {lead.slot ? `${fmtDateDay(lead.slot.slot_date)} ${fmt_time(lead.slot.start_time)}` : "—"}
                       {lead.child_age != null ? ` · ${t("childAge")}: ${lead.child_age}` : ""}
-                      {lead.source ? ` · ${lead.source}` : ""}
                       {lead.assessment_result ? ` · ${assessmentResultLabel(lead.assessment_result)}` : ""}
                     </div>
+                    {lead.notes ? <div className="user-email">{lead.notes}</div> : null}
                   </div>
-                  {lead.status === "new" && (
-                    <div style={{ display: "flex", gap: 6 }}>
-                      <button className="btn btn-primary btn-sm" onClick={() => updateLeadStatus(lead, "converted")} disabled={saving}>
-                        {t("markLeadConverted")}
+
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                    <select
+                      className="input"
+                      style={{ minWidth: 130 }}
+                      value={lead.status}
+                      disabled={saving || lead.status === "abandoned"}
+                      onChange={(e) => handleLeadFieldChange(lead, { status: e.target.value })}
+                    >
+                      {LEAD_FUNNEL_STATUSES.map((st) => (
+                        <option key={st} value={st}>{leadStatusLabel(st)}</option>
+                      ))}
+                    </select>
+                    <select
+                      className="input"
+                      style={{ minWidth: 110 }}
+                      value={lead.source || "website"}
+                      disabled={saving}
+                      onChange={(e) => handleLeadFieldChange(lead, { source: e.target.value })}
+                    >
+                      {LEAD_SOURCES.map((src) => (
+                        <option key={src} value={src}>{leadSourceLabel(src)}</option>
+                      ))}
+                    </select>
+                    <button type="button" className="btn btn-outline btn-sm" onClick={() => openTasks(lead)} disabled={saving}>
+                      {t("followUpTasks")}
+                    </button>
+                    {!lead.slot_id && ["new", "call"].includes(lead.status) && (
+                      <>
+                        <select
+                          className="input"
+                          style={{ minWidth: 140 }}
+                          value={assignSlotByLead[lead.id] || ""}
+                          onChange={(e) => setAssignSlotByLead((prev) => ({ ...prev, [lead.id]: e.target.value }))}
+                        >
+                          <option value="">{t("assignSlot")}</option>
+                          {futureSlots.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {fmtDateDay(s.slot_date)} {fmt_time(s.start_time)}
+                            </option>
+                          ))}
+                        </select>
+                        <button type="button" className="btn btn-primary btn-sm" disabled={saving || !assignSlotByLead[lead.id]} onClick={() => handleAssignSlot(lead)}>
+                          {t("assignSlotSave")}
+                        </button>
+                      </>
+                    )}
+                    {lead.status !== "abandoned" && lead.status !== "registered_class" && (
+                      <button type="button" className="btn btn-danger btn-sm" onClick={() => handleAbandonLead(lead)} disabled={saving}>
+                        {t("markLeadAbandoned")}
                       </button>
-                      <button className="btn btn-danger btn-sm" onClick={() => updateLeadStatus(lead, "cancelled")} disabled={saving}>
-                        {t("cancelLead")}
-                      </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </>
       )}
+
+      <AnimatePresence>
+        {taskLead && (
+          <AnimatedSheetOverlay onClose={closeTasks}>
+            <AnimatedSheetPanel onClick={(e) => e.stopPropagation()}>
+              <div className="section-title">{t("followUpTasks")}</div>
+              <div className="section-sub" style={{ marginBottom: 12 }}>
+                {taskLead.participant?.full_name || "—"}
+              </div>
+              <div className="field">
+                <label className="label">{t("followUpTaskTitle")}</label>
+                <input className="input" value={taskTitle} onChange={(e) => setTaskTitle(e.target.value)} placeholder={t("followUpTomorrow")} />
+              </div>
+              <div className="field">
+                <label className="label">{t("followUpDueDate")}</label>
+                <input className="input" type="date" value={taskDueDate} onChange={(e) => setTaskDueDate(e.target.value)} dir="ltr" />
+              </div>
+              <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+                <button type="button" className="btn btn-outline btn-sm" onClick={() => setTaskDueDate(addDays(todayDateStr(), 1))}>
+                  {t("followUpTomorrow")}
+                </button>
+                <button type="button" className="btn btn-outline btn-sm" onClick={() => setTaskDueDate(addDays(todayDateStr(), 7))}>
+                  {t("followUpNextWeek")}
+                </button>
+              </div>
+              <button type="button" className="btn btn-primary btn-sm" onClick={handleAddTask} disabled={saving || !taskTitle.trim()}>
+                {t("addFollowUpTask")}
+              </button>
+              <div style={{ marginTop: 16 }}>
+                {tasks.length === 0 ? (
+                  <div className="empty-text">{t("noFollowUpTasks")}</div>
+                ) : (
+                  <div className="grouped-list">
+                    {tasks.map((task) => (
+                      <div className="user-row" key={task.id} style={{ gap: 8 }}>
+                        <div className="user-info" style={{ flex: 1 }}>
+                          <div className="user-display">{task.title}</div>
+                          <div className="user-email">{fmtDateDay(task.due_date)}</div>
+                        </div>
+                        {!task.completed_at ? (
+                          <button type="button" className="btn btn-primary btn-sm" onClick={() => handleCompleteTask(task.id)} disabled={saving}>
+                            {t("taskComplete")}
+                          </button>
+                        ) : (
+                          <span className="badge badge-active">{t("taskComplete")}</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button type="button" className="btn btn-outline" style={{ marginTop: 16, width: "100%" }} onClick={closeTasks}>
+                {t("cancel")}
+              </button>
+            </AnimatedSheetPanel>
+          </AnimatedSheetOverlay>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

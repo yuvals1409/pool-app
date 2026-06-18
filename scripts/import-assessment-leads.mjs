@@ -225,7 +225,7 @@ async function main() {
   }
 
   if (reset) {
-    console.warn("--reset: deleting assessment_leads with source import/web from this import only is not implemented; skipping destructive reset");
+    console.warn("--reset: deleting assessment_leads with source import/website from this import only is not implemented; skipping destructive reset");
   }
 
   const slotCache = new Map();

@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase.js";
 import { useLang } from "../i18n.jsx";
 import { copyEnrollmentTicketLink } from "../lib/accessPass.js";
 import { formatProductLabel } from "../lib/productLabel.js";
 import { useIsDesktop } from "../lib/useBreakpoint.js";
+import { listDueLeadTasks, completeLeadTask, updateLeadCrm } from "../lib/leadsCrm.js";
 
 const PAYMENT_STATUSES = ["paid", "unpaid", "waived"];
 
@@ -14,6 +15,23 @@ export default function OfficeTab({ toast }) {
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
   const [savingId, setSavingId] = useState(null);
+  const [dueTasks, setDueTasks] = useState([]);
+  const [tasksLoading, setTasksLoading] = useState(true);
+
+  const loadDueTasks = useCallback(async () => {
+    setTasksLoading(true);
+    try {
+      const data = await listDueLeadTasks();
+      setDueTasks(data);
+    } catch (e) {
+      toast.show(e.message || t("systemError"));
+    }
+    setTasksLoading(false);
+  }, [toast, t]);
+
+  useEffect(() => {
+    loadDueTasks();
+  }, [loadDueTasks]);
 
   const search = async () => {
     const q = query.trim();
@@ -80,6 +98,33 @@ export default function OfficeTab({ toast }) {
     setSavingId(null);
   };
 
+  const handleCompleteTask = async (task) => {
+    setSavingId(task.task_id);
+    try {
+      const data = await completeLeadTask(task.task_id);
+      if (data?.result !== "ok") toast.show(t("systemError"));
+      else {
+        toast.show(t("taskCompleted"));
+        await loadDueTasks();
+      }
+    } catch (e) {
+      toast.show(e.message || t("systemError"));
+    }
+    setSavingId(null);
+  };
+
+  const handleMarkCalled = async (task) => {
+    setSavingId(task.task_id);
+    try {
+      const data = await updateLeadCrm({ leadId: task.lead_id, status: "call" });
+      if (data?.result !== "ok") toast.show(t("systemError"));
+      else toast.show(t("leadMarkedCalled"));
+    } catch (e) {
+      toast.show(e.message || t("systemError"));
+    }
+    setSavingId(null);
+  };
+
   const copyTicketLink = (enrollmentId) => copyEnrollmentTicketLink(enrollmentId, { toast, t });
 
   const paymentLabel = (status) => ({
@@ -110,6 +155,49 @@ export default function OfficeTab({ toast }) {
   return (
     <div className="office-layout">
       <div className="section-title">{t("tabOffice")}</div>
+
+      <div className="card" style={{ marginTop: 12, marginBottom: 20 }}>
+        <div className="section-sub" style={{ marginBottom: 12 }}>{t("dueToday")}</div>
+        {tasksLoading ? (
+          <div style={{ color: "var(--ink-soft)" }}>{t("loading")}</div>
+        ) : dueTasks.length === 0 ? (
+          <div style={{ color: "var(--ink-soft)" }}>{t("noDueTasks")}</div>
+        ) : (
+          <div className="grouped-list">
+            {dueTasks.map((task) => (
+              <div className="user-row" key={task.task_id} style={{ flexWrap: "wrap", gap: 8 }}>
+                <div className="user-info" style={{ flex: 1 }}>
+                  <div className="user-display">{task.title}</div>
+                  <div className="user-email">
+                    {task.child_name || "—"}
+                    {task.parent_phone ? ` · ${task.parent_phone}` : ""}
+                    {task.due_date ? ` · ${fmtDateDay(task.due_date)}` : ""}
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    disabled={savingId === task.task_id}
+                    onClick={() => handleMarkCalled(task)}
+                  >
+                    {t("markLeadCalled")}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm"
+                    disabled={savingId === task.task_id}
+                    onClick={() => handleCompleteTask(task)}
+                  >
+                    {t("taskComplete")}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className="section-sub">{t("searchByPhoneOrChild")}</div>
 
       <div className="name-edit" style={{ marginTop: 12 }}>
