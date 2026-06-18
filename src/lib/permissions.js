@@ -14,6 +14,8 @@ export const canAssessResults = (p) => canCreateLesson(p);
 export const canManageProducts = (p) => canManage(p);
 export const canManageSeasons = (p) => canManage(p);
 export const canMarkAttendance = (p) => canCreateLesson(p);
+export const canManagePayroll = (p) => canManage(p);
+export const canViewOwnPayroll = (p) => canCreateLesson(p);
 
 export const ACTIVE_USER_ROLE_ORDER = ["admin", "office", "instructor", "guard"];
 

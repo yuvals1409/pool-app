@@ -37,10 +37,12 @@ import AdminAttendanceTab from "./components/AdminAttendanceTab.jsx";
 import AdminDashboardTab from "./components/AdminDashboardTab.jsx";
 import AdminSheetSyncTab from "./components/AdminSheetSyncTab.jsx";
 import AdminWaitlistTab from "./components/AdminWaitlistTab.jsx";
+import AdminInstructorPayrollTab from "./components/AdminInstructorPayrollTab.jsx";
 import InstructorAttendanceTab from "./components/InstructorAttendanceTab.jsx";
 import AssessmentRegisterPage from "./components/AssessmentRegisterPage.jsx";
 import SummerRegisterPage from "./components/SummerRegisterPage.jsx";
 import InstructorAssessmentResults from "./components/InstructorAssessmentResults.jsx";
+import InstructorPayrollSummary from "./components/InstructorPayrollSummary.jsx";
 import { parseAssessmentRegisterPath } from "./lib/assessment.js";
 import { parseSummerRegisterPath } from "./lib/summerCourse.js";
 import {
@@ -564,6 +566,8 @@ function InstructorTab({ profile, toast }) {
 
   return (
     <div>
+      <InstructorPayrollSummary profile={profile} toast={toast} />
+
       <InstructorAssessmentResults toast={toast} />
 
       <PendingWeeklyBarcodes
@@ -1013,6 +1017,7 @@ function AdminTab({ profile, toast }) {
     { id: "attendance", label: t("tabAttendance") },
     { id: "waitlist", label: t("tabWaitlist") },
     { id: "dashboard", label: t("tabDashboard") },
+    { id: "payroll", label: t("tabPayroll") },
     { id: "sheets", label: t("tabSheetSync") },
   ];
 
@@ -1061,6 +1066,8 @@ function AdminTab({ profile, toast }) {
         <AdminAttendanceTab toast={toast} />
       ) : adminSection === "dashboard" ? (
         <AdminDashboardTab toast={toast} />
+      ) : adminSection === "payroll" ? (
+        <AdminInstructorPayrollTab toast={toast} />
       ) : adminSection === "waitlist" ? (
         <AdminWaitlistTab toast={toast} />
       ) : adminSection === "sheets" ? (
@@ -1460,23 +1467,10 @@ export default function App() {
     </>
   );
 
-  // ── Assessment registration (public, no auth needed) ─────
+  // ── Assessment registration (public landing page, no auth) ─
   if (assessmentRegister) return (
     <>
-      <div className="app" dir={dir}>
-        <div className="header">
-          <div className="header-top">
-            <div className="header-logo"><BrandLogo height={32} /> {t("assessmentTitle")}</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <LanguageSwitcher compact />
-            </div>
-          </div>
-          <div className="header-sub">{t("neveOz")}</div>
-        </div>
-        <div className="content" style={{ paddingBottom: "var(--space-5)" }}>
-          <AssessmentRegisterPage toast={toast} />
-        </div>
-      </div>
+      <AssessmentRegisterPage toast={toast} />
       <AnimatedToast msg={toast.msg} visible={toast.visible} standalone />
     </>
   );

@@ -4,6 +4,9 @@ export function parseAssessmentRegisterPath() {
   if (window.location.pathname.match(/\/register\/assessment\/?$/i)) {
     return true;
   }
+  if (window.location.pathname.match(/\/assessment\/?$/i)) {
+    return true;
+  }
   const params = new URLSearchParams(window.location.search);
   return params.get("register") === "assessment" || !!params.get("offer");
 }

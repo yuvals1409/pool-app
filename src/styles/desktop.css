@@ -1,7 +1,8 @@
 /* Desktop layout — min-width: 768px */
 
 @media (min-width: 768px) {
-  html, body {
+  html:has(.app.app--desktop),
+  body:has(.app.app--desktop) {
     width: 100%;
     overflow: hidden;
   }
