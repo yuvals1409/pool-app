@@ -11,6 +11,7 @@ import { formatProductLabel } from "../lib/productLabel.js";
 import { useLang } from "../i18n.jsx";
 import { fmt_time } from "../lib/lessonDates.js";
 import { cancelEnrollment as cancelEnrollmentRpc } from "../lib/waitlist.js";
+import { useIsDesktop } from "../lib/useBreakpoint.js";
 
 const PAYMENT_STATUSES = ["unpaid", "paid", "waived"];
 const HISTORY_FILTERS = ["active", "all", "cancelled"];
