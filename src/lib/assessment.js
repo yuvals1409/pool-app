@@ -5,7 +5,7 @@ export function parseAssessmentRegisterPath() {
     return true;
   }
   const params = new URLSearchParams(window.location.search);
-  return params.get("register") === "assessment";
+  return params.get("register") === "assessment" || !!params.get("offer");
 }
 
 export async function listAssessmentSlots() {

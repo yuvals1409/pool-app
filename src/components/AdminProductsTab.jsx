@@ -26,6 +26,7 @@ export default function AdminProductsTab({ toast }) {
   const [instructorId, setInstructorId] = useState("");
   const [instructors, setInstructors] = useState([]);
   const [capacity, setCapacity] = useState("");
+  const [price, setPrice] = useState("");
   const [weekdays, setWeekdays] = useState([2, 4]);
   const [courseStart, setCourseStart] = useState("");
   const [courseEnd, setCourseEnd] = useState("");
@@ -50,7 +51,7 @@ export default function AdminProductsTab({ toast }) {
     setLoading(true);
     const { data, error } = await supabase
       .from("products")
-      .select("id, name, day_of_week, start_time, end_time, instructor_name, instructor_id, capacity, schedule_pattern, template_id, product_templates(code)")
+      .select("id, name, day_of_week, start_time, end_time, instructor_name, instructor_id, capacity, price, schedule_pattern, template_id, product_templates(code)")
       .eq("season_id", sid)
       .order("name");
     if (error) toast.show(error.message);
@@ -71,6 +72,7 @@ export default function AdminProductsTab({ toast }) {
     setInstructorName("");
     setInstructorId("");
     setCapacity("");
+    setPrice("");
     setWeekdays([2, 4]);
     setCourseStart("");
     setCourseEnd("");
@@ -88,6 +90,7 @@ export default function AdminProductsTab({ toast }) {
     setInstructorName(p.instructor_name || "");
     setInstructorId(p.instructor_id || "");
     setCapacity(p.capacity != null ? String(p.capacity) : "");
+    setPrice(p.price != null ? String(p.price) : "");
     const sp = p.schedule_pattern || {};
     setWeekdays(Array.isArray(sp.weekdays) ? sp.weekdays : [2, 4]);
     setCourseStart(sp.course_start || "");
@@ -113,6 +116,7 @@ export default function AdminProductsTab({ toast }) {
     if (!template) return toast.show(t("systemError"));
 
     const cap = capacity.trim() ? Number(capacity) : null;
+    const priceVal = price.trim() ? Number(price) : null;
     const payload = {
       season_id: seasonId,
       template_id: template.id,
@@ -120,6 +124,7 @@ export default function AdminProductsTab({ toast }) {
       instructor_id: instructorId,
       instructor_name: instructorName.trim(),
       capacity: Number.isInteger(cap) ? cap : null,
+      price: priceVal != null && priceVal >= 0 ? priceVal : null,
     };
 
     if (templateCode === "summer_course") {
@@ -239,6 +244,10 @@ export default function AdminProductsTab({ toast }) {
             <label className="label">{t("assessmentCapacity")}</label>
             <input className="input" type="number" min={1} value={capacity} onChange={(e) => setCapacity(e.target.value)} dir="ltr" />
           </div>
+          <div className="field">
+            <label className="label">{t("productPrice")}</label>
+            <input className="input" type="number" min={0} step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} dir="ltr" placeholder={t("productPriceOptional")} />
+          </div>
           <div style={{ display: "flex", gap: 8 }}>
             <button type="button" className="btn btn-primary" onClick={save} disabled={saving}>
               {saving ? <><div className="spinner" /> {t("saving")}</> : t("saveProduct")}
@@ -258,7 +267,7 @@ export default function AdminProductsTab({ toast }) {
             <div className="user-row" key={p.id} style={{ flexWrap: "wrap", gap: 8 }}>
               <div className="user-info" style={{ flex: 1 }}>
                 <div className="user-display">{formatProductLabel({ ...p, schedule_pattern: p.schedule_pattern }, days, p.product_templates?.code)}</div>
-                <div className="user-email">{p.instructor_name}{p.capacity != null ? ` · ${t("assessmentCapacity")}: ${p.capacity}` : ""}</div>
+                <div className="user-email">{p.instructor_name}{p.capacity != null ? ` · ${t("assessmentCapacity")}: ${p.capacity}` : ""}{p.price != null ? ` · ${t("productPrice")}: ₪${p.price}` : ""}</div>
               </div>
               <button type="button" className="btn btn-outline btn-sm" onClick={() => startEdit(p)}>{t("editProduct")}</button>
             </div>

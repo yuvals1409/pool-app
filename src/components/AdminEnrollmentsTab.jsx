@@ -10,7 +10,7 @@ import { regenerateEnrollmentPasses } from "../lib/summerCourse.js";
 import { formatProductLabel } from "../lib/productLabel.js";
 import { useLang } from "../i18n.jsx";
 import { fmt_time } from "../lib/lessonDates.js";
-import { useIsDesktop } from "../lib/useBreakpoint.js";
+import { cancelEnrollment as cancelEnrollmentRpc } from "../lib/waitlist.js";
 
 const PAYMENT_STATUSES = ["unpaid", "paid", "waived"];
 const HISTORY_FILTERS = ["active", "all", "cancelled"];
@@ -184,39 +184,22 @@ export default function AdminEnrollmentsTab({ toast }) {
     }
   };
 
-  const cancelFuturePasses = async (enrollmentId) => {
-    const today = new Date().toISOString().slice(0, 10);
-    const { data: passes, error } = await supabase
-      .from("access_passes")
-      .select("id, scheduled_sessions(session_date)")
-      .eq("enrollment_id", enrollmentId)
-      .eq("status", "active");
-    if (error) return;
-    const ids = (passes || [])
-      .filter((p) => p.scheduled_sessions?.session_date >= today)
-      .map((p) => p.id);
-    if (ids.length) {
-      await supabase.from("access_passes").update({ status: "cancelled" }).in("id", ids);
-    }
-  };
-
   const cancelEnrollment = async (row) => {
     const name = row.participant?.full_name || "—";
     if (!confirm(t("cancelEnrollmentConfirm", { name }))) return;
     setSavingId(row.id);
-    const { error } = await supabase
-      .from("enrollments")
-      .update({ active: false })
-      .eq("id", row.id);
-    if (error) {
-      toast.show(error.message);
-      setSavingId(null);
-      return;
+    try {
+      const data = await cancelEnrollmentRpc(row.id);
+      if (data?.result !== "ok") {
+        toast.show(t("systemError"));
+      } else {
+        toast.show(t("enrollmentCancelled"));
+        if (searchMode) await runSearch();
+        else await loadByProduct(selectedProductId, historyFilter);
+      }
+    } catch (e) {
+      toast.show(e.message);
     }
-    await cancelFuturePasses(row.id);
-    toast.show(t("enrollmentCancelled"));
-    if (searchMode) await runSearch();
-    else await loadByProduct(selectedProductId, historyFilter);
     setSavingId(null);
   };
 

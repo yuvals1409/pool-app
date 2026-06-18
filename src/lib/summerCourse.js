@@ -10,7 +10,7 @@ export function parseSummerRegisterPath() {
     return true;
   }
   const params = new URLSearchParams(window.location.search);
-  return params.get("register") === "summer" || !!params.get("invite");
+  return params.get("register") === "summer" || !!params.get("invite") || !!params.get("offer");
 }
 
 export function getSummerInviteToken() {

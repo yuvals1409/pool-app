@@ -7,17 +7,47 @@ import {
   registerSummerCourse,
 } from "../lib/summerCourse.js";
 import { getPublicPassUrl } from "../lib/accessPass.js";
+import {
+  getWaitlistOfferToken,
+  getWaitlistOffer,
+  joinWaitlist,
+  registerFromWaitlistOffer,
+} from "../lib/waitlist.js";
 
 export default function SummerRegisterPage({ toast }) {
   const { t } = useLang();
   const token = getSummerInviteToken();
+  const offerToken = getWaitlistOfferToken();
   const [invite, setInvite] = useState(null);
+  const [offer, setOffer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [waitlistSuccess, setWaitlistSuccess] = useState(null);
 
   useEffect(() => {
+    if (offerToken) {
+      (async () => {
+        try {
+          const data = await getWaitlistOffer(offerToken);
+          if (data?.result !== "ok") {
+            setErrorMsg({
+              not_found: t("waitlistOfferNotFound"),
+              invalid: t("waitlistOfferInvalid"),
+              expired: t("waitlistOfferExpired"),
+            }[data?.result] || t("systemError"));
+          } else {
+            setOffer(data);
+          }
+        } catch (e) {
+          setErrorMsg(e.message || t("systemError"));
+        }
+        setLoading(false);
+      })();
+      return;
+    }
+
     if (!token) {
       setErrorMsg(t("summerInviteMissing"));
       setLoading(false);
@@ -35,14 +65,18 @@ export default function SummerRegisterPage({ toast }) {
           }[data?.result] || t("systemError"));
         } else {
           setInvite(data);
-          if (data.courses?.length === 1) setSelectedId(data.courses[0].id);
+          const available = (data.courses || []).filter((c) => !c.is_full);
+          if (available.length === 1) setSelectedId(available[0].id);
         }
       } catch (e) {
         setErrorMsg(e.message || t("systemError"));
       }
       setLoading(false);
     })();
-  }, [token, t]);
+  }, [token, offerToken, t]);
+
+  const selectedCourse = invite?.courses?.find((c) => c.id === selectedId);
+  const isFull = selectedCourse?.is_full;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -52,17 +86,60 @@ export default function SummerRegisterPage({ toast }) {
     }
     setSubmitting(true);
     setErrorMsg(null);
+    setWaitlistSuccess(null);
     try {
-      const data = await registerSummerCourse(token, selectedId);
+      if (isFull) {
+        const data = await joinWaitlist({
+          targetType: "product",
+          targetId: selectedId,
+          childName: invite.child_name,
+          phone: invite.parent_phone,
+          parentName: invite.parent_name,
+          summerInviteToken: token,
+        });
+        if (data?.result === "ok") {
+          setWaitlistSuccess(data.position);
+          toast?.show(t("waitlistJoined", { n: data.position }));
+        } else {
+          setErrorMsg({
+            already_on_waitlist: t("waitlistAlreadyJoined"),
+            not_full: t("waitlistNotFull"),
+            invite_invalid: t("summerInviteInvalid"),
+          }[data?.result] || t("systemError"));
+        }
+      } else {
+        const data = await registerSummerCourse(token, selectedId);
+        if (data?.result === "ok" && data.public_token) {
+          window.location.href = getPublicPassUrl(data.public_token);
+          return;
+        }
+        setErrorMsg({
+          course_full: t("summerCourseFull"),
+          duplicate_enrollment: t("duplicateEnrollment"),
+          already_used: t("summerInviteUsed"),
+          invite_invalid: t("summerInviteInvalid"),
+        }[data?.result] || t("systemError"));
+      }
+    } catch (err) {
+      setErrorMsg(err.message || t("systemError"));
+    }
+    setSubmitting(false);
+  };
+
+  const handleOfferRegister = async () => {
+    setSubmitting(true);
+    setErrorMsg(null);
+    try {
+      const data = await registerFromWaitlistOffer(offerToken);
       if (data?.result === "ok" && data.public_token) {
         window.location.href = getPublicPassUrl(data.public_token);
         return;
       }
       setErrorMsg({
+        expired: t("waitlistOfferExpired"),
+        spot_taken: t("waitlistSpotTaken"),
         course_full: t("summerCourseFull"),
-        duplicate_enrollment: t("duplicateEnrollment"),
-        already_used: t("summerInviteUsed"),
-        invite_invalid: t("summerInviteInvalid"),
+        already_used: t("waitlistOfferUsed"),
       }[data?.result] || t("systemError"));
     } catch (err) {
       setErrorMsg(err.message || t("systemError"));
@@ -72,6 +149,32 @@ export default function SummerRegisterPage({ toast }) {
 
   if (loading) {
     return <div style={{ padding: 40, textAlign: "center", color: "var(--ink-soft)" }}>{t("loading")}</div>;
+  }
+
+  if (offerToken && offer) {
+    return (
+      <div style={{ padding: "24px 20px", maxWidth: 480, margin: "0 auto" }}>
+        <h1 style={{ fontSize: 22, marginBottom: 8, textAlign: "center" }}>{t("waitlistOfferTitle")}</h1>
+        <p style={{ textAlign: "center", color: "var(--ink-soft)", marginBottom: 24, fontSize: 14 }}>
+          {t("waitlistOfferSubtitleSummer")}
+        </p>
+        <div className="lesson-info" style={{ marginBottom: 20 }}>
+          <div className="lesson-info-row"><span className="li-key">{t("child")}</span><span className="li-val">{offer.child_name}</span></div>
+        </div>
+        {errorMsg && (
+          <div className="result-card err" style={{ marginBottom: 16, padding: 12 }}>
+            <div className="result-detail">{errorMsg}</div>
+          </div>
+        )}
+        {offer.already_promoted ? (
+          <div className="result-card ok" style={{ padding: 12 }}>{t("waitlistOfferUsed")}</div>
+        ) : (
+          <button className="btn btn-primary" type="button" disabled={submitting} onClick={handleOfferRegister} style={{ width: "100%" }}>
+            {submitting ? <><div className="spinner" /> {t("saving")}</> : t("waitlistConfirmRegister")}
+          </button>
+        )}
+      </div>
+    );
   }
 
   if (errorMsg && !invite) {
@@ -107,22 +210,32 @@ export default function SummerRegisterPage({ toast }) {
         <form onSubmit={handleSubmit}>
           <div className="field">
             <label className="label">{t("selectSummerCourse")}</label>
-            <select className="input" value={selectedId} onChange={(e) => setSelectedId(e.target.value)}>
+            <select className="input" value={selectedId} onChange={(e) => { setSelectedId(e.target.value); setWaitlistSuccess(null); }}>
               <option value="">{t("selectSummerCoursePlaceholder")}</option>
               {courses.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name} · {fmt_time(c.start_time)} · {t("spotsLeft", { n: c.spots_left })}
+                  {c.name} · {fmt_time(c.start_time)}
+                  {c.is_full ? ` · ${t("waitlistFull")}` : ` · ${t("spotsLeft", { n: c.spots_left })}`}
                 </option>
               ))}
             </select>
           </div>
+
+          {waitlistSuccess != null && (
+            <div className="result-card ok" style={{ marginBottom: 16, padding: 12 }}>
+              <div className="result-detail">{t("waitlistJoined", { n: waitlistSuccess })}</div>
+            </div>
+          )}
+
           {errorMsg && (
             <div className="result-card err" style={{ marginBottom: 16, padding: 12 }}>
               <div className="result-detail">{errorMsg}</div>
             </div>
           )}
           <button className="btn btn-primary" type="submit" disabled={submitting} style={{ width: "100%" }}>
-            {submitting ? <><div className="spinner" /> {t("saving")}</> : t("registerSummerCourse")}
+            {submitting ? <><div className="spinner" /> {t("saving")}</> : (
+              isFull ? t("joinWaitlist") : t("registerSummerCourse")
+            )}
           </button>
         </form>
       )}

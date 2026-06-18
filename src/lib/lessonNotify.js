@@ -161,6 +161,23 @@ export async function shareTextViaWhatsApp(phone, message) {
   await shareMessageViaWhatsApp(phone, message);
 }
 
+export function buildWaitlistOfferMessage({ childName, offerUrl, targetLabel, expiresAt }, { t, fmtDateDay }) {
+  const expiry = expiresAt ? fmtDateDay(String(expiresAt).slice(0, 10)) : "";
+  return [
+    t("waHello"),
+    t("waWaitlistSpotOpen", { name: childName }),
+    targetLabel ? `${t("waitlistTarget")}: ${targetLabel}` : "",
+    "",
+    t("waWaitlistRegisterLink"),
+    offerUrl,
+    expiry ? `${t("waitlistOfferExpires")}: ${expiry}` : "",
+  ].filter(Boolean).join("\n");
+}
+
+export async function shareWaitlistOfferViaWhatsApp(phone, message) {
+  await shareMessageViaWhatsApp(phone, message);
+}
+
 export async function shareTicketViaWhatsApp(lesson, phone, toast, i18n, { updated = false } = {}) {
   const blob = await generateTicketImage(lesson, i18n);
   const file = new File([blob], `ticket-${lesson.child_name}.png`, { type: "image/png" });
