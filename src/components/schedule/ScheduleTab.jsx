@@ -3,14 +3,16 @@ import { AnimatePresence } from "framer-motion";
 import { useLang } from "../../i18n.jsx";
 import { supabase } from "../../lib/supabase.js";
 import {
-  canEditSchedule, canManage, canViewAllInstructors,
+  canEditSchedule, canManage, canViewAllInstructors, canMarkAttendance,
 } from "../../lib/permissions.js";
 import { parseDateStr } from "../../lib/lessonDates.js";
 import { buildInstructorMap } from "../../lib/instructorColors.js";
 import {
   updateLesson, cancelLesson, createAndNotify, RECURRING_SCOPE,
 } from "../../lib/lessonMutations.js";
-import { loadScheduleEvents, isGroupScheduleEvent } from "../../lib/scheduleEvents.js";
+import {
+  loadScheduleEvents, isGroupScheduleEvent, buildAttendanceFocusFromEvent,
+} from "../../lib/scheduleEvents.js";
 import ScheduleToolbar from "./ScheduleToolbar.jsx";
 import MonthView from "./MonthView.jsx";
 import WeekView from "./WeekView.jsx";
@@ -22,7 +24,7 @@ import RecurringScopeDialog from "./RecurringScopeDialog.jsx";
 import { useIsDesktop } from "../../lib/useBreakpoint.js";
 import "./schedule.css";
 
-export default function ScheduleTab({ profile, toast }) {
+export default function ScheduleTab({ profile, toast, onMarkAttendance }) {
   const i18n = useLang();
   const { t } = i18n;
   const isDesktop = useIsDesktop();
@@ -39,6 +41,15 @@ export default function ScheduleTab({ profile, toast }) {
 
   const [panel, setPanel] = useState(null);
   const [sessionPanel, setSessionPanel] = useState(null);
+  const showMarkAttendance = canMarkAttendance(profile);
+
+  const handleMarkAttendance = (event) => {
+    const focus = buildAttendanceFocusFromEvent(event);
+    if (focus && onMarkAttendance) {
+      setSessionPanel(null);
+      onMarkAttendance(focus);
+    }
+  };
   const [pendingAction, setPendingAction] = useState(null);
 
   const load = useCallback(async () => {
@@ -262,6 +273,8 @@ export default function ScheduleTab({ profile, toast }) {
                 event={sessionPanel}
                 onClose={() => setSessionPanel(null)}
                 layout={panelLayout}
+                showMarkAttendance={showMarkAttendance}
+                onMarkAttendance={handleMarkAttendance}
               />
             )}
             {panel && (
@@ -295,6 +308,8 @@ export default function ScheduleTab({ profile, toast }) {
                 event={sessionPanel}
                 onClose={() => setSessionPanel(null)}
                 layout={panelLayout}
+                showMarkAttendance={showMarkAttendance}
+                onMarkAttendance={handleMarkAttendance}
               />
             )}
           </AnimatePresence>

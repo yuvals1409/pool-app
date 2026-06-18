@@ -3,7 +3,7 @@ import { AnimatedSheetOverlay, AnimatedSheetPanel } from "../ui/AnimatedSheet.js
 import { fmt_time } from "../../lib/lessonDates.js";
 import { templateLabel } from "../../lib/attendance.js";
 
-export default function SessionSchedulePanel({ event, onClose, layout = "sheet" }) {
+export default function SessionSchedulePanel({ event, onClose, layout = "sheet", onMarkAttendance, showMarkAttendance }) {
   const { t, fmtDateDay } = useLang();
 
   const content = (
@@ -38,6 +38,11 @@ export default function SessionSchedulePanel({ event, onClose, layout = "sheet" 
           </div>
         )}
         <p className="schedule-session-hint">{t("scheduleGroupSessionHint")}</p>
+        {showMarkAttendance && onMarkAttendance && (
+          <button type="button" className="btn btn-primary mt-8" style={{ width: "100%" }} onClick={() => onMarkAttendance(event)}>
+            {t("markAttendance")}
+          </button>
+        )}
       </div>
   );
 

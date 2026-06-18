@@ -1,0 +1,254 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const MONTHLY_TABS = ["מאי", "יוני", "יולי"];
+
+function base64url(data: Uint8Array | string) {
+  const str = typeof data === "string" ? data : String.fromCharCode(...data);
+  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+async function getGoogleAccessToken(serviceAccount: { client_email: string; private_key: string }) {
+  const header = base64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+  const now = Math.floor(Date.now() / 1000);
+  const claim = base64url(JSON.stringify({
+    iss: serviceAccount.client_email,
+    scope: "https://www.googleapis.com/auth/spreadsheets",
+    aud: "https://oauth2.googleapis.com/token",
+    iat: now,
+    exp: now + 3600,
+  }));
+  const key = await crypto.subtle.importKey(
+    "pkcs8",
+    pemToArrayBuffer(serviceAccount.private_key),
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign(
+    "RSASSA-PKCS1-v1_5",
+    key,
+    new TextEncoder().encode(`${header}.${claim}`),
+  );
+  const jwt = `${header}.${claim}.${base64url(new Uint8Array(sig))}`;
+  const res = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
+  });
+  const json = await res.json();
+  if (!json.access_token) throw new Error(json.error || "google_auth_failed");
+  return json.access_token as string;
+}
+
+function pemToArrayBuffer(pem: string) {
+  const b64 = pem.replace(/-----[^-]+-----/g, "").replace(/\s/g, "");
+  const raw = atob(b64);
+  const buf = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) buf[i] = raw.charCodeAt(i);
+  return buf.buffer;
+}
+
+async function readSheetTab(token: string, spreadsheetId: string, tab: string) {
+  const range = encodeURIComponent(`${tab}!A:Z`);
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  if (!res.ok) throw new Error(`sheet_read_failed:${tab}`);
+  const json = await res.json();
+  return (json.values || []) as string[][];
+}
+
+async function writeSheetTab(
+  token: string,
+  spreadsheetId: string,
+  tab: string,
+  rows: string[][],
+) {
+  const range = encodeURIComponent(`${tab}!A1`);
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?valueInputOption=USER_ENTERED`;
+  const res = await fetch(url, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ values: rows }),
+  });
+  if (!res.ok) throw new Error(`sheet_write_failed:${tab}`);
+}
+
+function hashRow(cells: string[]) {
+  return cells.join("|");
+}
+
+async function syncTabPull(supabase: ReturnType<typeof createClient>, tab: string, rows: string[][]) {
+  if (rows.length < 2) return { rows_in: 0, rows_out: 0, errors: [] as string[] };
+  const header = rows[0].map((h) => String(h).trim().toLowerCase());
+  const phoneIdx = header.findIndex((h) => h.includes("טלפון") || h.includes("phone"));
+  const childIdx = header.findIndex((h) => h.includes("ילד") || h.includes("שם"));
+  const paidIdx = header.findIndex((h) => h.includes("שולם") || h.includes("paid"));
+  const attendIdx = header.findIndex((h) => h.includes("נוכחות") || h.includes("attendance"));
+  const assessIdx = header.findIndex((h) => h.includes("מבדק") || h.includes("assessment"));
+  let rowsIn = 0;
+  const errors: string[] = [];
+
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row?.length) continue;
+    const rowKey = `${tab}:${i}`;
+    const contentHash = hashRow(row);
+    const phone = phoneIdx >= 0 ? String(row[phoneIdx] || "").replace(/\s/g, "") : "";
+    const childName = childIdx >= 0 ? String(row[childIdx] || "").trim() : "";
+
+    if (paidIdx >= 0 && phone && childName) {
+      const paidVal = String(row[paidIdx] || "").trim();
+      const status = /^(1|כן|שולם|paid|true)$/i.test(paidVal) ? "paid" : "unpaid";
+      const { data: parts } = await supabase
+        .from("participants")
+        .select("id, enrollments(id, active)")
+        .eq("full_name", childName)
+        .limit(1);
+      const enrollmentId = parts?.[0]?.enrollments?.find((e: { active: boolean }) => e.active)?.id;
+      if (enrollmentId) {
+        await supabase.from("enrollments").update({ payment_status: status }).eq("id", enrollmentId);
+        rowsIn++;
+      }
+    }
+
+    if (assessIdx >= 0 && childName) {
+      const resultVal = String(row[assessIdx] || "").trim().toLowerCase();
+      let result: string | null = null;
+      if (/עבר|passed/.test(resultVal)) result = "passed";
+      if (/נכשל|failed/.test(resultVal)) result = "failed";
+      if (result) {
+        const { data: part } = await supabase
+          .from("participants")
+          .select("id")
+          .eq("full_name", childName)
+          .maybeSingle();
+        if (part?.id) {
+          await supabase.from("assessment_leads")
+            .update({ assessment_result: result })
+            .eq("participant_id", part.id);
+          rowsIn++;
+        }
+      }
+    }
+
+    await supabase.from("sheet_row_links").upsert({
+      sheet_tab: tab,
+      row_key: rowKey,
+      entity_type: "row",
+      entity_id: crypto.randomUUID(),
+      content_hash: contentHash,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "sheet_tab,row_key" });
+  }
+
+  return { rows_in: rowsIn, rows_out: 0, errors };
+}
+
+async function syncTabPush(supabase: ReturnType<typeof createClient>, tab: string) {
+  const { data: enrollments } = await supabase
+    .from("enrollments")
+    .select(`
+      payment_status, active,
+      participant:participants(full_name, family:families(phone)),
+      product:products(name)
+    `)
+    .eq("active", true)
+    .limit(500);
+
+  const header = ["טלפון הורה", "שם ילד", "חוג", "שולם", "נוכחות", "מבדק"];
+  const out: string[][] = [header];
+  for (const e of enrollments || []) {
+    out.push([
+      e.participant?.family?.phone || "",
+      e.participant?.full_name || "",
+      e.product?.name || "",
+      e.payment_status === "paid" ? "שולם" : "לא שולם",
+      "",
+      "",
+    ]);
+  }
+  return { rows: out, rows_out: out.length - 1 };
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+      },
+    });
+  }
+
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) {
+    return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401 });
+  }
+
+  const { direction = "both", tabs = MONTHLY_TABS } = await req.json().catch(() => ({}));
+  const spreadsheetId = Deno.env.get("SHEETS_SPREADSHEET_ID");
+  const saJson = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_JSON");
+
+  if (!spreadsheetId || !saJson) {
+    return new Response(JSON.stringify({
+      ok: false,
+      message: "Configure SHEETS_SPREADSHEET_ID and GOOGLE_SERVICE_ACCOUNT_JSON in Edge Function secrets",
+    }), { status: 501, headers: { "Content-Type": "application/json" } });
+  }
+
+  const serviceAccount = JSON.parse(saJson);
+  const token = await getGoogleAccessToken(serviceAccount);
+  const results = [];
+
+  for (const tab of tabs) {
+    const { data: run } = await supabase.from("sheet_sync_runs").insert({
+      direction,
+      sheet_tab: tab,
+      status: "running",
+    }).select("id").single();
+
+    const errors: string[] = [];
+    let rowsIn = 0;
+    let rowsOut = 0;
+
+    try {
+      if (direction === "pull" || direction === "both") {
+        const sheetRows = await readSheetTab(token, spreadsheetId, tab);
+        const pull = await syncTabPull(supabase, tab, sheetRows);
+        rowsIn = pull.rows_in;
+        errors.push(...pull.errors);
+      }
+      if (direction === "push" || direction === "both") {
+        const pushResult = await syncTabPush(supabase, tab);
+        await writeSheetTab(token, spreadsheetId, tab, pushResult.rows);
+        rowsOut = pushResult.rows_out;
+      }
+      await supabase.from("sheet_sync_runs").update({
+        finished_at: new Date().toISOString(),
+        rows_in: rowsIn,
+        rows_out: rowsOut,
+        errors,
+        status: errors.length ? "partial" : "ok",
+      }).eq("id", run?.id);
+      results.push({ tab, rows_in: rowsIn, rows_out: rowsOut });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      await supabase.from("sheet_sync_runs").update({
+        finished_at: new Date().toISOString(),
+        errors: [msg],
+        status: "failed",
+      }).eq("id", run?.id);
+      results.push({ tab, error: msg });
+    }
+  }
+
+  return new Response(JSON.stringify({ ok: true, message: "sheet_sync_complete", results }), {
+    headers: { "Content-Type": "application/json" },
+  });
+});

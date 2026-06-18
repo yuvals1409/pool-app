@@ -34,6 +34,8 @@ import AdminAssessmentTab from "./components/AdminAssessmentTab.jsx";
 import AdminProductsTab from "./components/AdminProductsTab.jsx";
 import AdminSeasonsTab from "./components/AdminSeasonsTab.jsx";
 import AdminAttendanceTab from "./components/AdminAttendanceTab.jsx";
+import AdminDashboardTab from "./components/AdminDashboardTab.jsx";
+import AdminSheetSyncTab from "./components/AdminSheetSyncTab.jsx";
 import InstructorAttendanceTab from "./components/InstructorAttendanceTab.jsx";
 import AssessmentRegisterPage from "./components/AssessmentRegisterPage.jsx";
 import SummerRegisterPage from "./components/SummerRegisterPage.jsx";
@@ -1008,6 +1010,8 @@ function AdminTab({ profile, toast }) {
     { id: "seasons", label: t("tabSeasons") },
     { id: "assessment", label: t("tabAssessment") },
     { id: "attendance", label: t("tabAttendance") },
+    { id: "dashboard", label: t("tabDashboard") },
+    { id: "sheets", label: t("tabSheetSync") },
   ];
 
   const renderAdminNavBtn = (section, className) => (
@@ -1053,6 +1057,10 @@ function AdminTab({ profile, toast }) {
         <AdminAssessmentTab toast={toast} />
       ) : adminSection === "attendance" ? (
         <AdminAttendanceTab toast={toast} />
+      ) : adminSection === "dashboard" ? (
+        <AdminDashboardTab toast={toast} />
+      ) : adminSection === "sheets" ? (
+        <AdminSheetSyncTab toast={toast} />
       ) : (
         <>
       <div className="section-sub">
@@ -1332,6 +1340,7 @@ export default function App() {
   const [profile,  setProfile]  = useState(null);
   const [tab,      setTab]      = useState("instructor");
   const [tabDirection, setTabDirection] = useState(0);
+  const [attendanceFocus, setAttendanceFocus] = useState(null);
   const reducedMotion = useReducedMotion();
   const isDesktop = useIsDesktop();
   const toast = useToast();
@@ -1567,6 +1576,11 @@ export default function App() {
     setTab(nextId);
   };
 
+  const handleMarkAttendanceFromSchedule = (focus) => {
+    setAttendanceFocus(focus);
+    goToTab("attendance");
+  };
+
   const slideOffset = (motionDir) => {
     if (reducedMotion) return 0;
     const sign = dir === "rtl" ? -1 : 1;
@@ -1580,9 +1594,21 @@ export default function App() {
   const renderActiveTab = () => {
     switch (tab) {
       case "instructor": return <InstructorTab profile={profile} toast={toast} />;
-      case "attendance": return <InstructorAttendanceTab toast={toast} />;
+      case "attendance": return (
+        <InstructorAttendanceTab
+          toast={toast}
+          initialFocus={attendanceFocus}
+          onFocusHandled={() => setAttendanceFocus(null)}
+        />
+      );
       case "guard":      return <GuardTab toast={toast} />;
-      case "schedule":   return <ScheduleTab profile={profile} toast={toast} />;
+      case "schedule":   return (
+        <ScheduleTab
+          profile={profile}
+          toast={toast}
+          onMarkAttendance={handleMarkAttendanceFromSchedule}
+        />
+      );
       case "office":     return <OfficeTab toast={toast} />;
       case "admin":      return <AdminTab profile={profile} toast={toast} />;
       default:           return null;

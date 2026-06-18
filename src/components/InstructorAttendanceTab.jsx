@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useLang } from "../i18n.jsx";
 import { fmt_time } from "../lib/lessonDates.js";
 import {
@@ -13,31 +13,39 @@ function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export default function InstructorAttendanceTab({ toast }) {
+export default function InstructorAttendanceTab({ toast, initialFocus, onFocusHandled }) {
   const { t, fmtDateDay } = useLang();
-  const [date, setDate] = useState(todayStr());
+  const [date, setDate] = useState(initialFocus?.date || todayStr());
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeSession, setActiveSession] = useState(null);
   const [roster, setRoster] = useState(null);
   const [rosterLoading, setRosterLoading] = useState(false);
+  const focusHandledRef = useRef(false);
+
+  useEffect(() => {
+    if (initialFocus?.date) setDate(initialFocus.date);
+    focusHandledRef.current = false;
+  }, [initialFocus]);
 
   const loadSessions = useCallback(async () => {
     setLoading(true);
     try {
       const data = await listInstructorSessions(date);
       setSessions(data);
-      setActiveSession(null);
-      setRoster(null);
+      if (!initialFocus || focusHandledRef.current) {
+        setActiveSession(null);
+        setRoster(null);
+      }
     } catch (e) {
       toast.show(e.message || t("systemError"));
     }
     setLoading(false);
-  }, [date, toast, t]);
+  }, [date, toast, t, initialFocus]);
 
   useEffect(() => { loadSessions(); }, [loadSessions]);
 
-  const openSession = async (session) => {
+  const openSession = useCallback(async (session) => {
     setActiveSession(session);
     setRosterLoading(true);
     try {
@@ -54,7 +62,23 @@ export default function InstructorAttendanceTab({ toast }) {
       setActiveSession(null);
     }
     setRosterLoading(false);
-  };
+  }, [toast, t]);
+
+  useEffect(() => {
+    if (!initialFocus || loading || focusHandledRef.current || sessions.length === 0) return;
+    const match = sessions.find((s) => {
+      if (initialFocus.lessonId) return s.lesson_id === initialFocus.lessonId;
+      if (initialFocus.scheduledSessionId) {
+        return s.scheduled_session_id === initialFocus.scheduledSessionId;
+      }
+      return false;
+    });
+    if (match) {
+      focusHandledRef.current = true;
+      openSession(match);
+      onFocusHandled?.();
+    }
+  }, [initialFocus, loading, sessions, openSession, onFocusHandled]);
 
   if (activeSession) {
     if (rosterLoading) {

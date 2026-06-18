@@ -11,24 +11,46 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   },
 });
 
+function fmt(d) {
+  return d.toISOString().slice(0, 10);
+}
+
+function weekBoundsSunday(d) {
+  const sunday = new Date(d);
+  sunday.setHours(0, 0, 0, 0);
+  sunday.setDate(sunday.getDate() - sunday.getDay());
+  const saturday = new Date(sunday);
+  saturday.setDate(sunday.getDate() + 6);
+  return { start: sunday, end: saturday };
+}
+
+/** Current week + next week (ברקודים נוצרים בחמישי לשבוע הבא) */
+export function getPassGenerationRange() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const thisWeek = weekBoundsSunday(today);
+  const nextSunday = new Date(thisWeek.start);
+  nextSunday.setDate(nextSunday.getDate() + 7);
+  const nextWeek = weekBoundsSunday(nextSunday);
+  return { from: thisWeek.start, to: nextWeek.end };
+}
+
 export async function ensureWeeklyLessonsGenerated() {
-  await supabase.rpc("generate_weekly_recurring_lessons");
+  const { from, to } = getPassGenerationRange();
+  const nextSunday = new Date(from);
+  nextSunday.setDate(nextSunday.getDate() + 7);
+  await supabase.rpc("generate_weekly_recurring_lessons", { p_target_week_start: fmt(from) });
+  await supabase.rpc("generate_weekly_recurring_lessons", { p_target_week_start: fmt(nextSunday) });
 }
 
 export async function ensureWeeklySessionsGenerated() {
-  const today = new Date();
-  const end = new Date(today);
-  end.setDate(end.getDate() + 7);
-  const fmt = (d) => d.toISOString().slice(0, 10);
-  await supabase.rpc("generate_weekly_sessions", { p_from: fmt(today), p_to: fmt(end) });
+  const { from, to } = getPassGenerationRange();
+  await supabase.rpc("generate_weekly_sessions", { p_from: fmt(from), p_to: fmt(to) });
 }
 
 export async function ensureAccessPassesGenerated() {
-  const today = new Date();
-  const end = new Date(today);
-  end.setDate(end.getDate() + 7);
-  const fmt = (d) => d.toISOString().slice(0, 10);
-  await supabase.rpc("generate_access_passes", { p_from: fmt(today), p_to: fmt(end) });
+  const { from, to } = getPassGenerationRange();
+  await supabase.rpc("generate_access_passes", { p_from: fmt(from), p_to: fmt(to) });
 }
 
 export async function markLessonNotified(lessonId) {
