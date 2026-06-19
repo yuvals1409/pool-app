@@ -20,6 +20,7 @@ export default function LessonBlock({
   const classes = [
     "lesson-block",
     isGroup ? "group-session" : "",
+    lesson.is_substitute ? "substitute-session" : "",
     compact ? "month" : "",
     past ? "past" : "",
     status === "cancelled" ? "cancelled" : "",

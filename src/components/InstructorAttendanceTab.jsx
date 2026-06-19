@@ -6,6 +6,7 @@ import {
   getSessionAttendanceRoster,
   getLessonAttendance,
   templateLabel,
+  resolveSessionTemplateCode,
 } from "../lib/attendance.js";
 import AttendanceRoster from "./AttendanceRoster.jsx";
 
@@ -89,7 +90,7 @@ export default function InstructorAttendanceTab({ toast, initialFocus, onFocusHa
         <div className="section-title">{activeSession.title}</div>
         <div className="section-sub" style={{ marginBottom: 16 }}>
           {fmtDateDay(activeSession.session_date)} · {fmt_time(activeSession.start_time)}
-          {" · "}{templateLabel(t, activeSession.template_code)}
+          {" · "}{templateLabel(t, resolveSessionTemplateCode(activeSession))}
         </div>
         <AttendanceRoster
           session={activeSession}
@@ -121,7 +122,9 @@ export default function InstructorAttendanceTab({ toast, initialFocus, onFocusHa
         </div>
       ) : (
         <div className="grouped-list" style={{ marginTop: 16 }}>
-          {sessions.map((s) => (
+          {sessions.map((s) => {
+            const typeLabel = templateLabel(t, resolveSessionTemplateCode(s));
+            return (
             <button
               type="button"
               key={s.session_id}
@@ -130,20 +133,26 @@ export default function InstructorAttendanceTab({ toast, initialFocus, onFocusHa
               onClick={() => openSession(s)}
             >
               <div className="user-info" style={{ flex: 1 }}>
-                <div className="user-display">
-                  {s.title}
-                  <span className="badge badge-pending" style={{ marginInlineStart: 8 }}>
-                    {templateLabel(t, s.template_code)}
+                {s.title ? <div className="user-display">{s.title}</div> : null}
+                <div
+                  className="user-email"
+                  style={{ display: "flex", alignItems: "center", gap: 8, overflow: "visible" }}
+                >
+                  <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {fmt_time(s.start_time)}
+                    {" · "}{t("attendanceMarkedCount", { marked: s.marked_count, total: s.expected_count })}
                   </span>
-                </div>
-                <div className="user-email">
-                  {fmt_time(s.start_time)}
-                  {" · "}{t("attendanceMarkedCount", { marked: s.marked_count, total: s.expected_count })}
+                  {typeLabel ? (
+                    <span className="badge badge-pending" style={{ flexShrink: 0 }}>
+                      {typeLabel}
+                    </span>
+                  ) : null}
                 </div>
               </div>
               <span className="btn btn-outline btn-sm">{t("markAttendance")}</span>
             </button>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

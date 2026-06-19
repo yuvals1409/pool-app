@@ -15,9 +15,29 @@ export function normalizePrivateLesson(lesson) {
   };
 }
 
+function getSessionOverride(session) {
+  const raw = session.session_instructor_overrides;
+  if (!raw) return null;
+  return Array.isArray(raw) ? raw[0] : raw;
+}
+
+function effectiveGroupInstructor(session) {
+  const product = session.products;
+  const override = getSessionOverride(session);
+  return {
+    instructor_id: override?.instructor_id ?? product?.instructor_id ?? null,
+    instructor_name: override?.instructor_name ?? product?.instructor_name ?? null,
+    is_substitute: Boolean(override?.instructor_id),
+    original_instructor_id: override?.original_instructor_id ?? product?.instructor_id ?? null,
+    original_instructor_name: product?.instructor_name ?? null,
+    substitute_reason: override?.reason ?? null,
+  };
+}
+
 export function normalizeGroupSession(session) {
   const product = session.products;
   const code = product?.product_templates?.code || "annual_section";
+  const instructor = effectiveGroupInstructor(session);
   return {
     id: `group-${session.id}`,
     schedule_kind: "group",
@@ -29,8 +49,12 @@ export function normalizeGroupSession(session) {
     lesson_date: session.session_date,
     start_time: session.start_time,
     end_time: session.end_time,
-    instructor_id: product?.instructor_id,
-    instructor_name: product?.instructor_name,
+    instructor_id: instructor.instructor_id,
+    instructor_name: instructor.instructor_name,
+    is_substitute: instructor.is_substitute,
+    original_instructor_id: instructor.original_instructor_id,
+    original_instructor_name: instructor.original_instructor_name,
+    substitute_reason: instructor.substitute_reason,
     cancelled: session.status === "cancelled",
     used: false,
   };
@@ -72,7 +96,7 @@ export function eventDurationMinutes(event) {
 function filterGroupSessionForInstructor(session, profileId) {
   const code = session.products?.product_templates?.code;
   if (code === "swim_assessment") return false;
-  return session.products?.instructor_id === profileId;
+  return effectiveGroupInstructor(session).instructor_id === profileId;
 }
 
 function filterAssessmentSlotForInstructor(slot) {
@@ -107,6 +131,9 @@ export async function loadScheduleEvents({
     .from("scheduled_sessions")
     .select(`
       id, session_date, start_time, end_time, status,
+      session_instructor_overrides (
+        instructor_id, instructor_name, original_instructor_id, reason
+      ),
       products (
         name, instructor_id, instructor_name,
         product_templates (code)

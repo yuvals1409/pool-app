@@ -271,6 +271,10 @@ export default function ScheduleTab({ profile, toast, onMarkAttendance }) {
               <SessionSchedulePanel
                 key={sessionPanel.id}
                 event={sessionPanel}
+                profile={profile}
+                instructors={instructors}
+                toast={toast}
+                onSubstituteChange={() => { setSessionPanel(null); load(); }}
                 onClose={() => setSessionPanel(null)}
                 layout={panelLayout}
                 showMarkAttendance={showMarkAttendance}
@@ -306,6 +310,10 @@ export default function ScheduleTab({ profile, toast, onMarkAttendance }) {
               <SessionSchedulePanel
                 key={sessionPanel.id}
                 event={sessionPanel}
+                profile={profile}
+                instructors={instructors}
+                toast={toast}
+                onSubstituteChange={() => { setSessionPanel(null); load(); }}
                 onClose={() => setSessionPanel(null)}
                 layout={panelLayout}
                 showMarkAttendance={showMarkAttendance}

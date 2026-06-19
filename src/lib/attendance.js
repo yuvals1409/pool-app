@@ -61,7 +61,15 @@ export async function markLessonScanAttendance(lessonId) {
   if (error) throw error;
 }
 
+export function resolveSessionTemplateCode(session) {
+  if (session?.template_code) return session.template_code;
+  if (session?.session_type === "private") return "private_lesson";
+  if (session?.session_type === "group") return "annual_section";
+  return null;
+}
+
 export function templateLabel(t, code) {
+  if (!code) return null;
   const map = {
     annual_section: t("productTypeAnnual"),
     summer_course: t("productTypeSummer"),
