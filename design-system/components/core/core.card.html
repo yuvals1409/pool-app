@@ -1,0 +1,120 @@
+<!-- @dsCard group="Components" viewport="700x500" name="Core Components" subtitle="Button · Badge · Avatar · Card · KpiCard · Input · Spinner" -->
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-body); background: var(--surface); direction: rtl; }
+  @keyframes sl-spin { to { transform: rotate(360deg); } }
+  .sec { margin-bottom: 18px; }
+  .sec-label { font-size: 10px; font-weight: 600; color: var(--ink-soft); font-family: var(--font-mono); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .06em; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const NS = window.StreamLineDesignSystem_627cd6 || {};
+const { Button, Badge, Avatar, Card, KpiCard, Field, Input, Select, Spinner } = NS;
+
+function App() {
+  return (
+    <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 18 }}>
+
+      <div className="sec">
+        <div className="sec-label">BUTTONS</div>
+        <div className="row">
+          <Button variant="primary" fullWidth={false}>שמור שיעור</Button>
+          <Button variant="secondary" fullWidth={false}>ביטול</Button>
+          <Button variant="outline" fullWidth={false}>הרשמה</Button>
+          <Button variant="danger" fullWidth={false} size="sm">מחק</Button>
+          <Button variant="success" fullWidth={false} size="sm">אישור ✓</Button>
+          <Button variant="ghost" fullWidth={false} size="sm">עוד פרטים</Button>
+          <Button variant="whatsapp" fullWidth={false} size="sm">שלח WhatsApp</Button>
+          <Button variant="google" fullWidth={false}>כניסה עם Google</Button>
+          <Button variant="primary" fullWidth={false} loading>שומר...</Button>
+          <Button variant="primary" fullWidth={false} disabled>מושבת</Button>
+        </div>
+      </div>
+
+      <div className="sec">
+        <div className="sec-label">BADGES</div>
+        <div className="row">
+          <Badge variant="active">פעיל</Badge>
+          <Badge variant="pending">ממתין</Badge>
+          <Badge variant="cancelled">בוטל</Badge>
+          <Badge variant="used">שומש</Badge>
+          <Badge variant="admin">מנהל</Badge>
+          <Badge variant="instructor">מדריך</Badge>
+          <Badge variant="guard">שומר</Badge>
+          <Badge variant="office">משרד</Badge>
+          <Badge variant="parent">הורה</Badge>
+          <Badge variant="info">מידע</Badge>
+          <Badge variant="neutral">ניטרלי</Badge>
+        </div>
+      </div>
+
+      <div className="sec">
+        <div className="sec-label">AVATAR</div>
+        <div className="row" style={{ gap: 12 }}>
+          {['יובל כהן','דנה לוי','משה בן דוד','רחל אברהם'].map((n,i) => (
+            <Avatar key={n} name={n} size={[24,32,44,44][i]} />
+          ))}
+        </div>
+      </div>
+
+      <div className="sec">
+        <div className="sec-label">CARDS + KPI</div>
+        <div className="row" style={{ alignItems: 'stretch' }}>
+          <Card style={{ width: 150 }}>
+            <div style={{ fontSize: 'var(--text-subhead)', fontWeight: 600, color: 'var(--ink)' }}>כרטיס בסיסי</div>
+            <div style={{ fontSize: 'var(--text-caption)', color: 'var(--ink-mid)', marginTop: 4 }}>border · no shadow</div>
+          </Card>
+          <Card elevated style={{ width: 150 }}>
+            <div style={{ fontSize: 'var(--text-subhead)', fontWeight: 600, color: 'var(--ink)' }}>מוגבה</div>
+            <div style={{ fontSize: 'var(--text-caption)', color: 'var(--ink-mid)', marginTop: 4 }}>elevated shadow</div>
+          </Card>
+          <KpiCard label="שיעורים" value="24" accent />
+          <KpiCard label="ילדים פעילים" value="187" />
+          <KpiCard label="מדריכים" value="8" />
+        </div>
+      </div>
+
+      <div className="sec">
+        <div className="sec-label">FORM</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, maxWidth: 580 }}>
+          <Field label="שם הילד"><Input placeholder="שם פרטי ומשפחה" /></Field>
+          <Field label="מדריך">
+            <Select value=""><option value="">בחר...</option><option>יובל</option><option>דנה</option></Select>
+          </Field>
+          <Field label="שגיאה" hint="שדה חובה"><Input placeholder="הכנס ערך" error /></Field>
+        </div>
+      </div>
+
+      <div className="sec">
+        <div className="sec-label">SPINNER</div>
+        <div className="row" style={{ gap: 16 }}>
+          <Spinner size={16} />
+          <Spinner size={22} />
+          <Spinner size={30} />
+          <div style={{ background: 'var(--pool)', borderRadius: 8, padding: 8, display: 'inline-flex' }}>
+            <Spinner size={22} color="white" />
+          </div>
+          <Spinner size={22} color="muted" />
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

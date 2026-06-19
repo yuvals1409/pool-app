@@ -1,0 +1,24 @@
+/* ─────────────────────────────────────────────────────────────
+   Stream Line — Shadow / Elevation Tokens
+   ───────────────────────────────────────────────────────────── */
+:root {
+  --shadow-xs:  0 1px 3px rgba(0, 119, 182, 0.06);
+  --shadow-sm:  0 2px 8px rgba(0, 119, 182, 0.08);
+  --shadow:     0 4px 24px rgba(0, 119, 182, 0.10);
+  --shadow-lg:  0 8px 40px rgba(0, 119, 182, 0.16);
+  --shadow-xl:  0 16px 64px rgba(0, 119, 182, 0.20);
+  --shadow-btn: 0 4px 16px rgba(0, 119, 182, 0.28);
+  --shadow-btn-hover: 0 6px 20px rgba(0, 119, 182, 0.36);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --shadow-xs:  0 1px 3px rgba(0, 0, 0, 0.20);
+    --shadow-sm:  0 2px 8px rgba(0, 0, 0, 0.28);
+    --shadow:     0 4px 24px rgba(0, 0, 0, 0.35);
+    --shadow-lg:  0 8px 40px rgba(0, 0, 0, 0.50);
+    --shadow-xl:  0 16px 64px rgba(0, 0, 0, 0.65);
+    --shadow-btn: 0 4px 16px rgba(0, 0, 0, 0.40);
+    --shadow-btn-hover: 0 6px 20px rgba(0, 0, 0, 0.50);
+  }
+}

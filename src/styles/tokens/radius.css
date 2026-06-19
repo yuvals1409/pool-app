@@ -1,0 +1,13 @@
+/* ─────────────────────────────────────────────────────────────
+   Stream Line — Border Radius Tokens
+   ───────────────────────────────────────────────────────────── */
+:root {
+  --radius-xs:    4px;
+  --radius-sm:    8px;
+  --radius:       10px;
+  --radius-control: 10px;
+  --radius-card:  16px;
+  --radius-xl:    20px;
+  --radius-2xl:   24px;
+  --radius-pill:  999px;
+}

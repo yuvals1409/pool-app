@@ -1,0 +1,52 @@
+<!-- @dsCard group="Brand" viewport="700x180" name="Logo & Identity" subtitle="Stream Line wordmark, wave mark and brand summary" -->
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-body); background: var(--bg); color: var(--ink); }
+  .wrap { display: flex; align-items: center; gap: 28px; padding: 20px 28px; }
+  .logo-zone { flex-shrink: 0; }
+  .logo-zone img { height: 120px; width: auto; display: block; }
+  .divider { width: 1px; height: 120px; background: var(--border); flex-shrink: 0; }
+  .info { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+  .brand-name { font-size: 1.75rem; font-weight: 700; color: var(--ink); letter-spacing: -0.03em; }
+  .brand-sub { font-size: var(--text-subhead); color: var(--ink-mid); line-height: 1.5; }
+  .swatches { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .swatch-item { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .swatch { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid rgba(0,0,0,.08); }
+  .swatch-label { font-size: 9px; color: var(--ink-soft); font-family: var(--font-mono); }
+  .tags { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; flex-shrink: 0; }
+  .tag { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: var(--radius-pill); font-size: 11px; font-weight: 600; background: var(--pool-pale); color: var(--pool-deep); font-family: var(--font-mono); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo-zone">
+    <img src="../assets/stream-line-logo.jpeg" alt="Stream Line Logo">
+  </div>
+  <div class="divider"></div>
+  <div class="info">
+    <div>
+      <div class="brand-name">Stream Line</div>
+      <div class="brand-sub">בית ספר לשחייה · קאנטרי נווה עוז, פתח תקווה</div>
+    </div>
+    <div class="swatches">
+      <div class="swatch-item"><div class="swatch" style="background:#0077B6"></div><div class="swatch-label">--pool</div></div>
+      <div class="swatch-item"><div class="swatch" style="background:#023E8A"></div><div class="swatch-label">--pool-deep</div></div>
+      <div class="swatch-item"><div class="swatch" style="background:#90E0EF"></div><div class="swatch-label">--pool-light</div></div>
+      <div class="swatch-item"><div class="swatch" style="background:#E17055"></div><div class="swatch-label">--accent-warm</div></div>
+      <div class="swatch-item"><div class="swatch" style="background:#00B894"></div><div class="swatch-label">--success</div></div>
+      <div class="swatch-item"><div class="swatch" style="background:#012A4A"></div><div class="swatch-label">--ink</div></div>
+    </div>
+  </div>
+  <div class="tags">
+    <div class="tag">PWA · Mobile-First</div>
+    <div class="tag">RTL · עברית</div>
+    <div class="tag">React + Supabase</div>
+  </div>
+</div>
+</body>
+</html>

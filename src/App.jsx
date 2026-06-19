@@ -189,46 +189,19 @@ function useToast() {
 // ─────────────────────────────────────────────────────────────
 //  LOGO + TICKET / QR
 // ─────────────────────────────────────────────────────────────
-const LOGO_SRC = "/logo.png";
-let logoCache = null;
-let logoProcessedCache = null;
-
-function loadLogoImage() {
-  if (logoCache) return Promise.resolve(logoCache);
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => { logoCache = img; resolve(img); };
-    img.onerror = reject;
-    img.src = LOGO_SRC;
-  });
-}
-
-function processLogoRemoveBlack(img) {
-  if (logoProcessedCache) return logoProcessedCache;
-  const canvas = document.createElement("canvas");
-  canvas.width = img.width;
-  canvas.height = img.height;
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(img, 0, 0);
-  const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  for (let i = 0; i < data.length; i += 4) {
-    if (data[i] < 45 && data[i + 1] < 45 && data[i + 2] < 45) data[i + 3] = 0;
-  }
-  ctx.putImageData(new ImageData(data, canvas.width, canvas.height), 0, 0);
-  logoProcessedCache = canvas;
-  return canvas;
-}
-
-async function loadProcessedLogo() {
-  return processLogoRemoveBlack(await loadLogoImage());
-}
+const LOGO_SRC = "/stream-line-logo.jpeg";
+const LOGO_FALLBACK = "/logo.png";
 
 function BrandLogo({ height = 44 }) {
   const { t } = useLang();
-  const [src, setSrc] = useState(null);
-  useEffect(() => { loadProcessedLogo().then(c => setSrc(c.toDataURL("image/png"))); }, []);
   return (
-    <img className="brand-logo" src={src || LOGO_SRC} alt={t("logoAlt")} style={{ height }} />
+    <img
+      className="brand-logo"
+      src={LOGO_SRC}
+      alt={t("logoAlt")}
+      style={{ height }}
+      onError={(e) => { e.currentTarget.src = LOGO_FALLBACK; }}
+    />
   );
 }
 

@@ -1,0 +1,22 @@
+/* ─────────────────────────────────────────────────────────────
+   Stream Line — Layout Tokens
+   ───────────────────────────────────────────────────────────── */
+:root {
+  --app-max-w:          440px;
+  --app-max-w-desktop:  1280px;
+  --sidebar-w:          240px;
+  --tab-bar-h:          49px;
+  --tap-target-min:     44px;
+  --header-h:           auto;
+  --breakpoint-desktop: 768px;
+
+  --z-base:     0;
+  --z-raised:   10;
+  --z-sticky:   50;
+  --z-overlay:  100;
+  --z-toast:    200;
+  --z-flash:    300;
+
+  --content-padding: var(--space-4);
+  --section-gap:     var(--space-5);
+}

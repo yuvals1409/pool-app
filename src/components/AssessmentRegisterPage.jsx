@@ -11,7 +11,8 @@ import {
 } from "../lib/waitlist.js";
 import "../styles/assessment-landing.css";
 
-const LOGO_SRC = "/logo.png";
+const LOGO_SRC = "/stream-line-logo.jpeg";
+const LOGO_FALLBACK = "/logo.png";
 
 function normalizePhone(phone) {
   return phone.replace(/\s/g, "").trim();
@@ -217,7 +218,7 @@ export default function AssessmentRegisterPage({ toast }) {
       <div className="assessment-landing" dir={dir}>
         <div className="landing-offer-wrap">
           <div className="landing-offer-card">
-            <img src={LOGO_SRC} alt={t("logoAlt")} style={{ height: 48, marginBottom: 16 }} />
+            <img src={LOGO_SRC} alt={t("logoAlt")} style={{ height: 48, marginBottom: 16 }} onError={(e) => { e.currentTarget.src = LOGO_FALLBACK; }} />
             <h1 style={{ fontSize: 22, marginBottom: 8 }}>{t("waitlistOfferTitle")}</h1>
             <p style={{ color: "var(--landing-muted)", marginBottom: 24, fontSize: 14 }}>
               {t("waitlistOfferSubtitle")}
@@ -277,7 +278,7 @@ export default function AssessmentRegisterPage({ toast }) {
     <div className="assessment-landing" dir={dir}>
       <nav className="landing-nav">
         <div className="landing-nav-brand">
-          <img src={LOGO_SRC} alt={t("logoAlt")} />
+          <img src={LOGO_SRC} alt={t("logoAlt")} onError={(e) => { e.currentTarget.src = LOGO_FALLBACK; }} />
           <span>Stream Line</span>
         </div>
         <div className="landing-nav-actions">

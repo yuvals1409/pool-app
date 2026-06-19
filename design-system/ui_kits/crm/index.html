@@ -1,0 +1,340 @@
+<!-- @dsCard group="Admin CRM" viewport="1280x720" name="Admin Dashboard" subtitle="KPIs · Enrollments · Schedule · Users management" -->
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+/* Force LIGHT mode preview regardless of OS dark setting */
+html{color-scheme:light}
+:root{
+--pool:#0077B6;--pool-deep:#023E8A;--pool-mid:#0090D4;--pool-light:#90E0EF;--pool-pale:#CAF0F8;--pool-faint:#F0F8FF;
+--surface:#F0F8FF;--white:#FFFFFF;--ink:#012A4A;--ink-mid:#2C6E8A;--ink-soft:#6BA3BE;--ink-faint:rgba(107,163,190,.5);
+--success:#00B894;--success-bg:#EAFAF6;--danger:#D63031;--danger-bg:#FFF0F0;--warn:#FDCB6E;--warn-bg:#FFFBF0;--info:#0984E3;--info-bg:#EBF4FF;
+--border:#C8E6F0;--separator:#C8E6F0;
+--label:#012A4A;--label-secondary:#2C6E8A;--label-tertiary:#6BA3BE;
+--bg:#FFFFFF;--bg-secondary:#F0F8FF;--bg-tertiary:#FFFFFF;--accent:#0077B6;
+--nav-bg:rgba(255,255,255,.72);--nav-border:rgba(60,60,67,.12);--nav-inactive:rgba(60,60,67,.6);
+--badge-pending-fg:#b7791f;--badge-admin-bg:#EDE9FE;--badge-admin-fg:#5B21B6;--badge-instructor-bg:rgba(0,119,182,.10);--badge-instructor-fg:#023E8A;--badge-guard-bg:rgba(0,184,148,.12);--badge-guard-fg:#059669;--badge-office-bg:#FFF7ED;--badge-office-fg:#C2410C;--badge-parent-bg:#CAF0F8;--badge-parent-fg:#023E8A;
+}
+html,body{height:100%;background:var(--surface);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","IBM Plex Sans Hebrew",sans-serif;font-size:15px;color:var(--ink)}
+@keyframes sl-spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.layout{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:240px;flex-shrink:0;display:flex;flex-direction:column;background:var(--bg-secondary);border-inline-start:1px solid var(--separator);overflow-y:auto;padding:0}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:16px 14px 14px;border-bottom:1px solid var(--separator);margin-bottom:8px}
+.sidebar-logo img{height:28px}
+.sidebar-logo span{font-size:15px;font-weight:700;color:var(--ink)}
+.sidebar-nav{display:flex;flex-direction:column;gap:2px;padding:0 8px;flex:1}
+.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:none;border-radius:10px;background:transparent;font-family:inherit;font-size:14px;font-weight:500;color:var(--nav-inactive);cursor:pointer;text-align:start;transition:background .12s,color .12s;min-height:44px}
+.nav-btn.active{background:var(--pool-pale);color:var(--accent);font-weight:600}
+.nav-btn:hover:not(.active){background:var(--surface);color:var(--accent)}
+.nav-btn svg{flex-shrink:0}
+.sidebar-user{display:flex;align-items:center;gap:10px;padding:12px 14px;border-top:1px solid var(--separator);margin-top:auto}
+.user-av{width:32px;height:32px;border-radius:50%;background:var(--pool-pale);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);flex-shrink:0}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{background:var(--bg);border-bottom:1px solid var(--separator);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;min-height:52px}
+.content{flex:1;overflow-y:auto;padding:24px}
+.page-title{font-size:22px;font-weight:700;color:var(--ink);margin-bottom:4px}
+.page-sub{font-size:14px;color:var(--ink-mid);margin-bottom:20px}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.kpi{background:var(--bg);border:1px solid var(--separator);border-radius:16px;padding:16px;text-align:center}
+.kpi-label{font-size:12px;color:var(--ink-mid);margin-bottom:6px}
+.kpi-val{font-size:28px;font-weight:700;color:var(--accent);font-family:ui-monospace,"IBM Plex Mono",monospace;line-height:1}
+.kpi-delta{font-size:12px;margin-top:4px;font-family:ui-monospace,"IBM Plex Mono",monospace}
+.kpi-up{color:var(--success)}
+.kpi-dn{color:var(--danger)}
+.card{background:var(--bg);border:1px solid var(--separator);border-radius:16px;padding:16px;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:700;color:var(--ink-mid);margin-bottom:14px;text-transform:none}
+.chart-bars{display:flex;align-items:flex-end;gap:6px;height:120px}
+.bar-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
+.bar{width:100%;border-radius:4px 4px 0 0;transition:opacity .15s;cursor:pointer}
+.bar:hover{opacity:.8}
+.bar-label{font-size:10px;color:var(--ink-soft);font-family:ui-monospace,"IBM Plex Mono",monospace;text-align:center}
+.bar-val{font-size:10px;color:var(--ink-mid);font-weight:600;font-family:ui-monospace,"IBM Plex Mono",monospace}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;font-family:ui-monospace,"IBM Plex Mono",monospace;white-space:nowrap}
+.ba{background:var(--success-bg);color:var(--success)}
+.bp{background:var(--warn-bg);color:#b7791f}
+.bc{background:var(--danger-bg);color:var(--danger)}
+.bi{background:var(--info-bg);color:var(--info)}
+.data-table{width:100%;border-collapse:collapse}
+.data-table th,.data-table td{padding:10px 12px;text-align:start;border-bottom:1px solid var(--border);vertical-align:middle}
+.data-table th{background:var(--surface);font-size:12px;font-weight:700;color:var(--ink-mid);white-space:nowrap}
+.data-table td{font-size:13px;color:var(--ink)}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:rgba(0,119,182,.025)}
+.search-bar{display:flex;gap:10px;margin-bottom:16px;align-items:center}
+.search-input{flex:1;padding:10px 14px;border:1.5px solid var(--separator);border-radius:10px;font-family:inherit;font-size:14px;color:var(--ink);background:var(--bg);outline:none;min-height:44px}
+.search-input:focus{border-color:var(--accent)}
+.btn-sm{padding:8px 14px;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;min-height:36px}
+.btn-primary{background:linear-gradient(135deg,#0077B6,#023E8A);color:#fff;box-shadow:0 2px 8px rgba(0,119,182,.25)}
+.btn-ghost{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
+.role-section{margin-bottom:12px}
+.role-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg);border:1px solid var(--separator);border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;color:var(--ink);min-height:44px}
+.user-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--separator);min-height:44px}
+.user-av-sm{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.donut-wrap{display:flex;align-items:center;gap:16px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-mid);margin-bottom:6px}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo } = React;
+
+const ENROLLMENTS = [
+  { id:1, child:'נועה כהן',    parent:'ליאת כהן',    product:'שיעור פרטי',   instructor:'יובל לוי',   date:'01/09/2025', status:'active',   paid:true },
+  { id:2, child:'אורי שמש',    parent:'דן שמש',      product:'שיעור פרטי',   instructor:'דנה אברהם',  date:'03/09/2025', status:'active',   paid:true },
+  { id:3, child:'מיה גולן',    parent:'רות גולן',    product:'קורס קיץ',     instructor:'משה בן דוד', date:'10/06/2026', status:'active',   paid:false },
+  { id:4, child:'תום פרידמן',  parent:'יוסי פרידמן', product:'קורס קבוצתי', instructor:'יובל לוי',   date:'15/09/2025', status:'pending',  paid:false },
+  { id:5, child:'שני דוידוב',  parent:'אנה דוידוב',  product:'שיעור פרטי',  instructor:'רחל כץ',     date:'20/09/2025', status:'active',   paid:true },
+  { id:6, child:'ליאם ברגר',   parent:'מרים ברגר',   product:'מבדק',         instructor:'יובל לוי',   date:'05/06/2026', status:'active',   paid:true },
+  { id:7, child:'רונן אבי',    parent:'שרה אבי',     product:'קורס קיץ',     instructor:'דנה אברהם',  date:'12/06/2026', status:'cancelled',paid:false },
+  { id:8, child:'נועם כץ',     parent:'גיל כץ',      product:'שיעור פרטי',  instructor:'משה בן דוד', date:'01/09/2025', status:'active',   paid:true },
+];
+
+const WEEKLY_DATA = [
+  {day:'א׳',count:12},{day:'ב׳',count:18},{day:'ג׳',count:15},{day:'ד׳',count:22},{day:'ה׳',count:9}
+];
+
+const USERS = [
+  { name:'יובל לוי',    email:'yuval@neve-oz.co.il',    role:'מדריך',   color:'#0077B6' },
+  { name:'דנה אברהם',   email:'dana@neve-oz.co.il',     role:'מדריכה',  color:'#00B894' },
+  { name:'משה בן דוד',  email:'moshe@neve-oz.co.il',    role:'מדריך',   color:'#6C5CE7' },
+  { name:'רחל כץ',      email:'rachel@neve-oz.co.il',   role:'מדריכה',  color:'#E17055' },
+  { name:'שמש גל',      email:'gal@neve-oz.co.il',      role:'שומר',    color:'#FDCB6E' },
+  { name:'בכר אורלי',   email:'orly@neve-oz.co.il',     role:'משרד',    color:'#A29BFE' },
+  { name:'יובל S.',     email:'admin@neve-oz.co.il',    role:'מנהל',    color:'#023E8A' },
+];
+
+const ICON = {
+  dashboard: <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>,
+  schedule:  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+  enroll:    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+  attend:    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>,
+  users:     <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>,
+  payroll:   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+};
+const NAV = [{id:'dashboard',label:'דשבורד',icon:'dashboard'},{id:'schedule',label:'לו"ז',icon:'schedule'},{id:'enrollments',label:'הרשמות',icon:'enroll'},{id:'attendance',label:'נוכחות',icon:'attend'},{id:'users',label:'משתמשים',icon:'users'},{id:'payroll',label:'שכר מדריכים',icon:'payroll'}];
+
+function StatusBadge({s}) {
+  if(s==='active')    return <span className="badge ba">פעיל</span>;
+  if(s==='pending')   return <span className="badge bp">ממתין</span>;
+  if(s==='cancelled') return <span className="badge bc">בוטל</span>;
+  return <span className="badge bi">{s}</span>;
+}
+
+function DashboardView() {
+  const maxCount = Math.max(...WEEKLY_DATA.map(d=>d.count));
+  const donut = [{label:'פעילים',val:156,color:'#0077B6'},{label:'ממתינים',val:23,color:'#FDCB6E'},{label:'בוטלו',val:8,color:'#D63031'}];
+  const total = donut.reduce((a,b)=>a+b.val,0);
+  let startAngle = -90;
+  const arcs = donut.map(d=>{
+    const pct = d.val/total;
+    const a = pct*360;
+    const r = 40;
+    const cx=52,cy=52;
+    const x1=cx+r*Math.cos(startAngle*Math.PI/180);
+    const y1=cy+r*Math.sin(startAngle*Math.PI/180);
+    const end=startAngle+a;
+    const x2=cx+r*Math.cos(end*Math.PI/180);
+    const y2=cy+r*Math.sin(end*Math.PI/180);
+    const large=a>180?1:0;
+    const path=`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`;
+    startAngle=end;
+    return {...d,path};
+  });
+  return (
+    <div style={{animation:'fadeIn .25s ease'}}>
+      <div className="page-title">דשבורד</div>
+      <div className="page-sub">סיכום פעילות — יוני 2026</div>
+      <div className="kpi-grid">
+        {[{l:'שיעורים השבוע',v:'87',d:'+12%',up:true},{l:'ילדים פעילים',v:'187',d:'+5%',up:true},{l:'מדריכים',v:'4',d:'',up:null},{l:'הכנסה החודש',v:'₪32,400',d:'+8%',up:true}].map(k=>(
+          <div key={k.l} className="kpi">
+            <div className="kpi-label">{k.l}</div>
+            <div className="kpi-val">{k.v}</div>
+            {k.d&&<div className={`kpi-delta ${k.up?'kpi-up':'kpi-dn'}`}>{k.up?'↑':'↓'} {k.d}</div>}
+          </div>
+        ))}
+      </div>
+      <div className="charts-grid">
+        <div className="card">
+          <div className="card-title">שיעורים לפי יום — השבוע</div>
+          <div className="chart-bars">
+            {WEEKLY_DATA.map(d=>(
+              <div key={d.day} className="bar-wrap">
+                <div className="bar-val">{d.count}</div>
+                <div className="bar" style={{height:`${(d.count/maxCount)*100}px`,background:'linear-gradient(180deg,#0077B6,#023E8A)'}}></div>
+                <div className="bar-label">{d.day}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-title">התפלגות הרשמות</div>
+          <div className="donut-wrap">
+            <svg width="104" height="104" viewBox="0 0 104 104">
+              {arcs.map((a,i)=><path key={i} d={a.path} fill={a.color} stroke="#fff" strokeWidth="2"/>)}
+              <circle cx="52" cy="52" r="22" fill="#fff"/>
+              <text x="52" y="57" textAnchor="middle" fontSize="14" fontWeight="700" fill="#012A4A">{total}</text>
+            </svg>
+            <div>
+              {donut.map(d=>(
+                <div key={d.label} className="legend-item">
+                  <div className="legend-dot" style={{background:d.color}}></div>
+                  <span>{d.label}</span>
+                  <span style={{fontFamily:'ui-monospace,"IBM Plex Mono",monospace',fontWeight:600,color:'var(--ink)',marginRight:'auto',marginInlineStart:8}}>{d.val}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="card">
+        <div className="card-title">שיעורים אחרונים שנסרקו</div>
+        <table className="data-table">
+          <thead><tr><th>ילד/ה</th><th>מדריך</th><th>שעה</th><th>סטטוס</th></tr></thead>
+          <tbody>
+            {[{c:'נועה כהן',i:'יובל',t:'16:30',s:'active'},{c:'אורי שמש',i:'דנה',t:'16:00',s:'active'},{c:'מיה גולן',i:'משה',t:'15:00',s:'active'},{c:'תום פרידמן',i:'יובל',t:'17:00',s:'pending'}].map((r,i)=>(
+              <tr key={i}><td style={{fontWeight:600}}>{r.c}</td><td>{r.i}</td><td dir="ltr" style={{fontFamily:'ui-monospace,"IBM Plex Mono",monospace'}}>{r.t}</td><td><StatusBadge s={r.s}/></td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function EnrollmentsView() {
+  const [q, setQ] = useState('');
+  const filtered = useMemo(()=>ENROLLMENTS.filter(e=>!q||e.child.includes(q)||e.parent.includes(q)||e.instructor.includes(q)),[q]);
+  return (
+    <div style={{animation:'fadeIn .25s ease'}}>
+      <div className="page-title">הרשמות</div>
+      <div className="page-sub">{ENROLLMENTS.length} רשומות סה"כ</div>
+      <div className="search-bar">
+        <input className="search-input" placeholder="חיפוש לפי ילד, הורה או מדריך..." value={q} onChange={e=>setQ(e.target.value)} dir="rtl"/>
+        <button className="btn-sm btn-primary">+ הרשמה חדשה</button>
+        <button className="btn-sm btn-ghost">ייצוא Excel</button>
+      </div>
+      <div style={{background:'var(--bg)',border:'1px solid var(--separator)',borderRadius:16,overflow:'hidden'}}>
+        <table className="data-table">
+          <thead>
+            <tr><th>ילד/ה</th><th>הורה</th><th>מוצר</th><th>מדריך</th><th>תאריך הרשמה</th><th>סטטוס</th><th>תשלום</th></tr>
+          </thead>
+          <tbody>
+            {filtered.map(e=>(
+              <tr key={e.id}>
+                <td style={{fontWeight:600}}>{e.child}</td>
+                <td style={{color:'var(--ink-mid)'}}>{e.parent}</td>
+                <td>{e.product}</td>
+                <td>{e.instructor}</td>
+                <td dir="ltr" style={{fontFamily:'ui-monospace,"IBM Plex Mono",monospace',color:'var(--ink-mid)'}}>{e.date}</td>
+                <td><StatusBadge s={e.status}/></td>
+                <td><span className={`badge ${e.paid?'ba':'bc'}`}>{e.paid?'שולם':'לא שולם'}</span></td>
+              </tr>
+            ))}
+            {filtered.length===0&&<tr><td colSpan={7} style={{textAlign:'center',padding:24,color:'var(--ink-soft)'}}>לא נמצאו רשומות</td></tr>}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function UsersView() {
+  const byRole = { 'מנהל':[], 'מדריך':[], 'מדריכה':[], 'שומר':[], 'משרד':[] };
+  USERS.forEach(u=>{ if(byRole[u.role]) byRole[u.role].push(u); });
+  const [open, setOpen] = useState({'מדריך':true,'מדריכה':true});
+  return (
+    <div style={{animation:'fadeIn .25s ease'}}>
+      <div className="page-title">משתמשים</div>
+      <div className="page-sub">{USERS.length} משתמשים פעילים</div>
+      {Object.entries(byRole).filter(([,us])=>us.length>0).map(([role,users])=>(
+        <div key={role} className="role-section">
+          <button className="role-header" onClick={()=>setOpen(o=>({...o,[role]:!o[role]}))}>
+            <span style={{display:'flex',alignItems:'center',gap:8}}>
+              <span style={{fontWeight:700}}>{role}</span>
+              <span style={{fontFamily:'ui-monospace,"IBM Plex Mono",monospace',fontSize:12,color:'var(--ink-soft)'}}>{users.length}</span>
+            </span>
+            <span style={{fontSize:12,color:'var(--ink-soft)',transform:open[role]?'rotate(180deg)':'none',display:'inline-block',transition:'transform .2s'}}>▼</span>
+          </button>
+          {open[role]&&(
+            <div style={{background:'var(--bg)',border:'1px solid var(--separator)',borderTop:'none',borderRadius:'0 0 10px 10px',overflow:'hidden'}}>
+              {users.map((u,i)=>(
+                <div key={u.name} className="user-row" style={{borderBottom:i<users.length-1?'1px solid var(--separator)':'none'}}>
+                  <div className="user-av-sm" style={{background:u.color+'22',color:u.color}}>{u.name.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontWeight:600,fontSize:14,color:'var(--ink)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{u.name}</div>
+                    <div style={{fontSize:12,color:'var(--ink-mid)',fontFamily:'ui-monospace,"IBM Plex Mono",monospace',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',direction:'ltr',textAlign:'right'}}>{u.email}</div>
+                  </div>
+                  <span className="badge" style={{background:u.color+'22',color:u.color}}>{u.role}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+      <div style={{marginTop:8}}>
+        <button className="btn-sm btn-primary">+ הוסף משתמש</button>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [section, setSection] = useState('dashboard');
+  const VIEWS = { dashboard:<DashboardView/>, enrollments:<EnrollmentsView/>, users:<UsersView/> };
+  return (
+    <div className="layout">
+      <div className="main">
+        <div className="topbar">
+          <div style={{display:'flex',alignItems:'center',gap:8}}>
+            <svg width="18" height="18" fill="none" stroke="var(--ink-soft)" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input placeholder="חיפוש גלובלי..." style={{border:'none',background:'none',fontFamily:'inherit',fontSize:14,color:'var(--ink)',outline:'none',width:200}} dir="rtl"/>
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <span className="badge ba">מנהל</span>
+            <div style={{display:'flex',alignItems:'center',gap:8}}>
+              <div className="user-av" style={{background:'var(--pool-pale)',color:'var(--accent)',width:32,height:32,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700}}>יס</div>
+              <span style={{fontSize:13,fontWeight:600,color:'var(--ink)'}}>יובל S.</span>
+            </div>
+          </div>
+        </div>
+        <div className="content">{VIEWS[section]||<DashboardView/>}</div>
+      </div>
+      <div className="sidebar">
+        <div className="sidebar-logo">
+          <img src="../../assets/stream-line-logo.jpeg" alt="Stream Line" style={{height:28,width:'auto',borderRadius:3}}/>
+          <span>Stream Line</span>
+        </div>
+        <div className="sidebar-nav">
+          {NAV.map(n=>(
+            <button key={n.id} className={`nav-btn${section===n.id?' active':''}`} onClick={()=>setSection(n.id)}>
+              {ICON[n.icon]}{n.label}
+            </button>
+          ))}
+        </div>
+        <div className="sidebar-user">
+          <div style={{width:32,height:32,borderRadius:'50%',background:'var(--pool-pale)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'var(--accent)',flexShrink:0}}>יס</div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:13,fontWeight:600,color:'var(--ink)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>יובל S.</div>
+            <div style={{fontSize:11,color:'var(--ink-mid)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontFamily:'ui-monospace,"IBM Plex Mono",monospace',direction:'ltr',textAlign:'right'}}>admin@neve-oz.co.il</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

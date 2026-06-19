@@ -1,0 +1,25 @@
+<!-- @dsCard group="Type" viewport="700x220" name="Body & Caption Type" subtitle="Body through micro — default body tracking −0.022em" -->
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-body); background: #fff; padding: 20px 24px; color: var(--ink); }
+  .row { display: flex; align-items: baseline; gap: 14px; padding: 5px 0; border-bottom: 1px solid var(--border); }
+  .row:last-child { border-bottom: none; }
+  .token { font-size: 10px; color: var(--ink-soft); font-family: var(--font-mono); width: 140px; flex-shrink: 0; text-align: left; }
+  .meta { font-size: 10px; color: var(--ink-soft); font-family: var(--font-mono); margin-right: auto; white-space: nowrap; }
+  .mono-row { display: flex; align-items: center; gap: 14px; padding: 5px 0; border-bottom: 1px solid var(--border); margin-top: 8px; }
+</style>
+</head>
+<body>
+  <div class="row"><div class="token">--text-body</div><div style="font-size:var(--text-body);letter-spacing:var(--tracking-body)">כניסה לשיעור מאושרת — ברוך הבא</div><div class="meta">17px · 400 · −0.022em</div></div>
+  <div class="row"><div class="token">--text-subhead</div><div style="font-size:var(--text-subhead)">שם הילד: נועה כהן · מדריך: יובל</div><div class="meta">15px · 400</div></div>
+  <div class="row"><div class="token">--text-footnote</div><div style="font-size:var(--text-footnote);color:var(--ink-mid)">שיעור מחר בשעה 16:30 — יום רביעי</div><div class="meta">13px · 400</div></div>
+  <div class="row"><div class="token">--text-caption</div><div style="font-size:var(--text-caption);color:var(--ink-soft)">עודכן לאחרונה · 19/06/2026</div><div class="meta">12px · 400</div></div>
+  <div class="row"><div class="token">--text-micro</div><div style="font-size:var(--text-micro);color:var(--ink-soft)">Tab label · nav label</div><div class="meta">11px · 500</div></div>
+  <div class="mono-row"><div class="token">--font-mono</div><div style="font-family:var(--font-mono);font-size:var(--text-subhead);direction:ltr">08:30 · 09:00 · +972-50-123-4567</div><div class="meta">IBM Plex Mono · times, phones, codes</div></div>
+</body>
+</html>

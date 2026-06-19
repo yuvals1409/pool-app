@@ -1,0 +1,202 @@
+/* ─────────────────────────────────────────────────────────────
+   Stream Line — Class-based Component Styles
+
+   Drop-in CSS classes for integrating into an existing
+   CSS-class-based React app (mirrors the pool-app codebase
+   conventions). All values come from the design tokens.
+
+   Usage:  @import "styles.css";   (tokens — required first)
+           @import "components.css";
+   ───────────────────────────────────────────────────────────── */
+
+/* ── BUTTONS ── */
+.btn {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-body);
+  cursor: pointer;
+  transition: all var(--dur-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--tap-target-min);
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:disabled { opacity: .45; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+.btn-sm { width: auto; padding: var(--space-2) var(--space-4); font-size: var(--text-subhead); min-height: var(--tap-target-min); }
+.btn-lg { min-height: 52px; font-size: var(--text-headline); }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--pool) 0%, var(--pool-deep) 100%);
+  color: var(--on-primary);
+  box-shadow: var(--shadow-btn);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: var(--shadow-btn-hover); }
+.btn-primary:active { transform: translateY(0); }
+
+.btn-secondary {
+  background: var(--bg);
+  color: var(--ink);
+  border: 1.5px solid var(--separator);
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+.btn-secondary:hover { background: var(--bg-secondary); }
+
+.btn-outline {
+  background: var(--bg);
+  color: var(--accent);
+  border: 1.5px solid var(--accent);
+}
+.btn-outline:hover { background: var(--pool-pale); }
+
+.btn-danger  { background: var(--danger);  color: var(--on-danger); }
+.btn-success { background: var(--success); color: var(--on-success); }
+.btn-whatsapp{ background: #25D366;        color: #fff; }
+
+.btn-google {
+  background: var(--bg);
+  color: #3c4043;
+  border: 1.5px solid var(--separator);
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+.btn-google:hover { background: var(--bg-secondary); }
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-bold);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+.badge-active    { background: var(--success-bg); color: var(--success); }
+.badge-pending   { background: var(--warn-bg);    color: var(--badge-pending-fg); }
+.badge-cancelled { background: var(--danger-bg);  color: var(--danger); }
+.badge-used      { background: var(--danger-bg);  color: var(--danger); }
+.badge-info      { background: var(--info-bg);    color: var(--info); }
+.badge-admin     { background: var(--badge-admin-bg);      color: var(--badge-admin-fg); }
+.badge-owner     { background: var(--badge-owner-bg);      color: var(--badge-owner-fg); }
+.badge-instructor{ background: var(--badge-instructor-bg); color: var(--badge-instructor-fg); }
+.badge-guard     { background: var(--badge-guard-bg);      color: var(--badge-guard-fg); }
+.badge-office    { background: var(--badge-office-bg);     color: var(--badge-office-fg); }
+.badge-parent    { background: var(--badge-parent-bg);     color: var(--badge-parent-fg); }
+
+/* role-badge — monospace pill used in the app header */
+.role-badge {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--separator);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  font-weight: var(--weight-medium);
+  color: var(--label-secondary);
+}
+
+/* ── INPUTS ── */
+.input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1.5px solid var(--separator);
+  border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--label);
+  background: var(--bg-secondary);
+  outline: none;
+  min-height: var(--tap-target-min);
+  transition: border-color var(--dur-fast);
+}
+.input:focus { border-color: var(--accent); background: var(--bg); }
+.input::placeholder { color: var(--label-tertiary); }
+
+.label {
+  display: block;
+  font-size: var(--text-footnote);
+  font-weight: var(--weight-semibold);
+  color: var(--label-secondary);
+  margin-bottom: var(--space-2);
+}
+
+/* ── CARD ── */
+.card {
+  background: var(--bg);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-card);
+  padding: var(--space-4);
+}
+.card-elevated { box-shadow: var(--shadow); }
+
+/* ── BOTTOM TAB BAR (mobile) ── */
+.nav {
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  inset-inline: 0;
+  max-width: var(--app-max-w);
+  margin: 0 auto;
+  z-index: var(--z-overlay);
+  background: var(--nav-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid var(--nav-border);
+  padding: var(--space-1) var(--space-2);
+  padding-bottom: calc(var(--space-1) + env(safe-area-inset-bottom, 0px));
+  gap: var(--space-1);
+}
+@supports not (backdrop-filter: blur(1px)) { .nav { background: var(--bg); } }
+
+.nav-btn {
+  flex: 1;
+  padding: 6px var(--space-1) var(--space-2);
+  background: none;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: var(--text-micro);
+  font-weight: var(--weight-medium);
+  line-height: 1.2;
+  color: var(--nav-inactive);
+  transition: color var(--dur-normal);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: var(--tap-target-min);
+  -webkit-tap-highlight-color: transparent;
+}
+.nav-btn.active { color: var(--accent); }
+@media (hover: hover) { .nav-btn:hover:not(.active) { color: var(--accent); } }
+
+/* ── DESKTOP SIDEBAR ── */
+.sidebar-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3);
+  border: none;
+  border-radius: var(--radius);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: var(--text-subhead);
+  font-weight: var(--weight-medium);
+  color: var(--nav-inactive);
+  cursor: pointer;
+  text-align: start;
+  transition: background var(--dur-fast), color var(--dur-fast);
+  min-height: var(--tap-target-min);
+}
+.sidebar-btn.active { background: var(--pool-pale); color: var(--accent); font-weight: var(--weight-semibold); }
+.sidebar-btn:hover:not(.active) { background: var(--surface); color: var(--accent); }
