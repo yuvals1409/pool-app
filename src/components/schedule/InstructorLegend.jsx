@@ -4,7 +4,7 @@ export default function InstructorLegend({ instructors }) {
     <div className="schedule-legend">
       {instructors.map(inst => (
         <span key={inst.id} className="schedule-legend-chip">
-          <span className="schedule-legend-dot" style={{ background: inst.color.bg }} />
+          <span className={`schedule-legend-dot ${inst.className}`} />
           {inst.name}
         </span>
       ))}

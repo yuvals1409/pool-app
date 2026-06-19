@@ -1,4 +1,4 @@
-import { getInstructorColor } from "../../lib/instructorColors.js";
+import { getInstructorClass } from "../../lib/instructorColors.js";
 import { fmt_time, lessonStatus, isPastLesson } from "../../lib/lessonDates.js";
 import { isGroupScheduleEvent } from "../../lib/scheduleEvents.js";
 import { templateLabel } from "../../lib/attendance.js";
@@ -13,12 +13,13 @@ export default function LessonBlock({
 }) {
   const isGroup = isGroupScheduleEvent(lesson);
   const status = isGroup ? null : lessonStatus(lesson);
-  const color = getInstructorColor(lesson.instructor_id);
+  const instrClass = getInstructorClass(lesson.instructor_id);
   const past = isPastLesson(lesson);
   const title = lesson.display_title || lesson.child_name;
 
   const classes = [
     "lesson-block",
+    instrClass,
     isGroup ? "group-session" : "",
     lesson.is_substitute ? "substitute-session" : "",
     compact ? "month" : "",
@@ -31,7 +32,7 @@ export default function LessonBlock({
   return (
     <div
       className={classes}
-      style={{ background: color.bg, color: color.text, ...style }}
+      style={style}
       onClick={(e) => { e.stopPropagation(); onClick?.(lesson); }}
       role="button"
       tabIndex={0}

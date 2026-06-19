@@ -7,8 +7,14 @@
   animation: scanFlash 350ms ease-out forwards;
 }
 
-.scan-flash.ok { background: rgba(48, 209, 88, 0.35); }
-.scan-flash.err { background: rgba(255, 69, 58, 0.35); }
+.scan-flash.ok {
+  background: rgba(0, 184, 148, 0.35);
+  background: color-mix(in srgb, var(--success) 35%, transparent);
+}
+.scan-flash.err {
+  background: rgba(214, 48, 49, 0.35);
+  background: color-mix(in srgb, var(--danger) 35%, transparent);
+}
 
 @keyframes scanFlash {
   0% { opacity: 0.85; }

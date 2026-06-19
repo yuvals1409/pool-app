@@ -1,13 +1,4 @@
-const PALETTE = [
-  { bg: "#0077B6", text: "#FFFFFF" },
-  { bg: "#00B894", text: "#FFFFFF" },
-  { bg: "#6C5CE7", text: "#FFFFFF" },
-  { bg: "#E17055", text: "#FFFFFF" },
-  { bg: "#0984E3", text: "#FFFFFF" },
-  { bg: "#FDCB6E", text: "#012A4A" },
-  { bg: "#A29BFE", text: "#FFFFFF" },
-  { bg: "#00CEC9", text: "#012A4A" },
-];
+const PALETTE_SIZE = 8;
 
 function hashId(id) {
   if (!id) return 0;
@@ -16,8 +7,9 @@ function hashId(id) {
   return Math.abs(h);
 }
 
-export function getInstructorColor(instructorId) {
-  return PALETTE[hashId(instructorId) % PALETTE.length];
+export function getInstructorClass(instructorId) {
+  const index = hashId(instructorId) % PALETTE_SIZE;
+  return `instr-${index + 1}`;
 }
 
 export function buildInstructorMap(lessons) {
@@ -28,7 +20,7 @@ export function buildInstructorMap(lessons) {
       map.set(l.instructor_id, {
         id: l.instructor_id,
         name: l.instructor_name,
-        color: getInstructorColor(l.instructor_id),
+        className: getInstructorClass(l.instructor_id),
       });
     }
   }

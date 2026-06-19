@@ -205,6 +205,17 @@ function BrandLogo({ height = 44 }) {
   );
 }
 
+function headerRoleBadgeClass(role, { owner = false, parent = false } = {}) {
+  if (parent) return "badge-parent";
+  if (owner) return "badge-owner";
+  return {
+    admin: "badge-admin",
+    instructor: "badge-instructor",
+    guard: "badge-guard",
+    office: "badge-office",
+  }[role] || "badge-pending";
+}
+
 function QRCanvas({ value, size = 220 }) {
   const ref = useRef();
   useEffect(() => {
@@ -1483,7 +1494,7 @@ export default function App() {
             <div className="header-logo"><BrandLogo height={32} /> {t("parentTicket")}</div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <LanguageSwitcher compact />
-              <span className="role-badge">{t("roleParent")}</span>
+              <span className={`badge ${headerRoleBadgeClass(null, { parent: true })}`}>{t("roleParent")}</span>
             </div>
           </div>
           <div className="header-sub">{t("neveOz")}</div>
@@ -1626,7 +1637,7 @@ export default function App() {
               <div className="header-logo"><BrandLogo height={32} /> {t("neveOz")}</div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <LanguageSwitcher compact />
-                <span className="role-badge">{roleLabel(profile.role, isOwner(profile))}</span>
+                <span className={`badge ${headerRoleBadgeClass(profile.role, { owner: isOwner(profile) })}`}>{roleLabel(profile.role, isOwner(profile))}</span>
               </div>
             </div>
             <div className="header-user">

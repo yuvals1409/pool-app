@@ -144,11 +144,28 @@
 
 /* Lesson block */
 .lesson-block {
-  border-radius: 4px; padding: 2px 5px; font-size: 11px; font-weight: 600; line-height: 1.25;
+  border-radius: var(--radius-xs); padding: 2px 5px; font-size: 11px; font-weight: 600; line-height: 1.25;
   cursor: pointer; overflow: hidden; position: relative;
   box-shadow: 0 1px 3px rgba(0,0,0,.1); border: 1px solid rgba(255,255,255,.25);
   box-sizing: border-box;
 }
+.lesson-block.instr-1 { background: var(--instr-1); color: #fff; }
+.lesson-block.instr-2 { background: var(--instr-2); color: #fff; }
+.lesson-block.instr-3 { background: var(--instr-3); color: #fff; }
+.lesson-block.instr-4 { background: var(--instr-4); color: #fff; }
+.lesson-block.instr-5 { background: var(--instr-5); color: #fff; }
+.lesson-block.instr-6 { background: var(--instr-6); color: var(--ink); }
+.lesson-block.instr-7 { background: var(--instr-7); color: #fff; }
+.lesson-block.instr-8 { background: var(--instr-8); color: var(--ink); }
+
+.schedule-legend-dot.instr-1 { background: var(--instr-1); }
+.schedule-legend-dot.instr-2 { background: var(--instr-2); }
+.schedule-legend-dot.instr-3 { background: var(--instr-3); }
+.schedule-legend-dot.instr-4 { background: var(--instr-4); }
+.schedule-legend-dot.instr-5 { background: var(--instr-5); }
+.schedule-legend-dot.instr-6 { background: var(--instr-6); }
+.schedule-legend-dot.instr-7 { background: var(--instr-7); }
+.schedule-legend-dot.instr-8 { background: var(--instr-8); }
 .lesson-block.group-session {
   border: 2px dashed rgba(255, 255, 255, 0.45);
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
