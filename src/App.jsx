@@ -34,6 +34,7 @@ import AdminAssessmentTab from "./components/AdminAssessmentTab.jsx";
 import AdminProductsTab from "./components/AdminProductsTab.jsx";
 import AdminSeasonsTab from "./components/AdminSeasonsTab.jsx";
 import AdminAttendanceTab from "./components/AdminAttendanceTab.jsx";
+import AdminUtilizationTab from "./components/AdminUtilizationTab.jsx";
 import AdminDashboardTab from "./components/AdminDashboardTab.jsx";
 import AdminSheetSyncTab from "./components/AdminSheetSyncTab.jsx";
 import AdminWaitlistTab from "./components/AdminWaitlistTab.jsx";
@@ -1015,6 +1016,7 @@ function AdminTab({ profile, toast }) {
     { id: "seasons", label: t("tabSeasons") },
     { id: "assessment", label: t("tabAssessment") },
     { id: "attendance", label: t("tabAttendance") },
+    { id: "utilization", label: t("tabUtilization") },
     { id: "waitlist", label: t("tabWaitlist") },
     { id: "dashboard", label: t("tabDashboard") },
     { id: "payroll", label: t("tabPayroll") },
@@ -1064,6 +1066,8 @@ function AdminTab({ profile, toast }) {
         <AdminAssessmentTab toast={toast} />
       ) : adminSection === "attendance" ? (
         <AdminAttendanceTab toast={toast} />
+      ) : adminSection === "utilization" ? (
+        <AdminUtilizationTab toast={toast} />
       ) : adminSection === "dashboard" ? (
         <AdminDashboardTab toast={toast} />
       ) : adminSection === "payroll" ? (

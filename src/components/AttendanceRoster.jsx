@@ -102,6 +102,8 @@ export default function AttendanceRoster({ session, roster, onSaved, onBack, toa
         name: r.child_name,
         current: r.attendance_status,
         source: r.attendance_source,
+        isMakeup: r.is_makeup || r.attendee_type === "makeup",
+        homeProductName: r.home_product_name,
       }));
 
   return (
@@ -117,7 +119,15 @@ export default function AttendanceRoster({ session, roster, onSaved, onBack, toa
           return (
             <div className="user-row" key={row.key} style={{ flexWrap: "wrap", gap: 8 }}>
               <div className="user-info" style={{ flex: "1 1 100%" }}>
-                <div className="user-display">{row.name}</div>
+                <div className="user-display">
+                  {row.name}
+                  {row.isMakeup && (
+                    <span className="badge badge-active" style={{ marginInlineStart: 8 }}>{t("makeupBadge")}</span>
+                  )}
+                </div>
+                {row.isMakeup && row.homeProductName && (
+                  <div className="user-email">{t("makeupFromGroup")}: {row.homeProductName}</div>
+                )}
                 {row.current && row.current !== "pending" && (
                   <div className="user-email">
                     {statusLabel(mark.status || row.current)}

@@ -30,6 +30,7 @@ export default function AdminProductsTab({ toast }) {
   const [weekdays, setWeekdays] = useState([2, 4]);
   const [courseStart, setCourseStart] = useState("");
   const [courseEnd, setCourseEnd] = useState("");
+  const [levelLabel, setLevelLabel] = useState("");
 
   const loadMeta = useCallback(async () => {
     const [{ data: seasonRows }, { data: templateRows }, { data: instructorRows }] = await Promise.all([
@@ -51,7 +52,7 @@ export default function AdminProductsTab({ toast }) {
     setLoading(true);
     const { data, error } = await supabase
       .from("products")
-      .select("id, name, day_of_week, start_time, end_time, instructor_name, instructor_id, capacity, price, schedule_pattern, template_id, product_templates(code)")
+      .select("id, name, day_of_week, start_time, end_time, instructor_name, instructor_id, capacity, price, level_label, schedule_pattern, template_id, product_templates(code)")
       .eq("season_id", sid)
       .order("name");
     if (error) toast.show(error.message);
@@ -76,6 +77,7 @@ export default function AdminProductsTab({ toast }) {
     setWeekdays([2, 4]);
     setCourseStart("");
     setCourseEnd("");
+    setLevelLabel("");
     setShowForm(false);
   };
 
@@ -95,6 +97,7 @@ export default function AdminProductsTab({ toast }) {
     setWeekdays(Array.isArray(sp.weekdays) ? sp.weekdays : [2, 4]);
     setCourseStart(sp.course_start || "");
     setCourseEnd(sp.course_end || "");
+    setLevelLabel(p.level_label || "");
     setShowForm(true);
   };
 
@@ -125,6 +128,7 @@ export default function AdminProductsTab({ toast }) {
       instructor_name: instructorName.trim(),
       capacity: Number.isInteger(cap) ? cap : null,
       price: priceVal != null && priceVal >= 0 ? priceVal : null,
+      level_label: levelLabel.trim() || null,
     };
 
     if (templateCode === "summer_course") {
@@ -239,6 +243,10 @@ export default function AdminProductsTab({ toast }) {
               <input className="input" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} dir="ltr" />
               <input className="input" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} dir="ltr" />
             </div>
+          </div>
+          <div className="field">
+            <label className="label">{t("productLevelLabel")}</label>
+            <input className="input" value={levelLabel} onChange={(e) => setLevelLabel(e.target.value)} placeholder={t("productLevelLabelPlaceholder")} />
           </div>
           <div className="field">
             <label className="label">{t("assessmentCapacity")}</label>

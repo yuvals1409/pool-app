@@ -12,6 +12,8 @@ import { useLang } from "../i18n.jsx";
 import { fmt_time } from "../lib/lessonDates.js";
 import { cancelEnrollment as cancelEnrollmentRpc } from "../lib/waitlist.js";
 import { useIsDesktop } from "../lib/useBreakpoint.js";
+import { getEnrollmentUtilization, listUtilizationReport } from "../lib/utilization.js";
+import MakeupBookingModal from "./MakeupBookingModal.jsx";
 
 const PAYMENT_STATUSES = ["unpaid", "paid", "waived"];
 const HISTORY_FILTERS = ["active", "all", "cancelled"];
@@ -51,6 +53,11 @@ export default function AdminEnrollmentsTab({ toast }) {
   const [editPaymentStatus, setEditPaymentStatus] = useState("unpaid");
   const [editValidFrom, setEditValidFrom] = useState("");
   const [editValidUntil, setEditValidUntil] = useState("");
+  const [utilizationMap, setUtilizationMap] = useState({});
+  const [makeupRow, setMakeupRow] = useState(null);
+  const [makeupUtil, setMakeupUtil] = useState(null);
+
+  const todayStr = () => new Date().toISOString().slice(0, 10);
 
   const paymentLabel = (status) => ({
     paid: t("paymentPaid"),
@@ -91,9 +98,49 @@ export default function AdminEnrollmentsTab({ toast }) {
     })();
   }, [toast]);
 
+  const loadUtilization = useCallback(async (enrollmentRows, productId = null) => {
+    const active = (enrollmentRows || []).filter((r) => r.active);
+    if (!active.length) {
+      setUtilizationMap({});
+      return;
+    }
+    try {
+      if (productId) {
+        const report = await listUtilizationReport({
+          asOf: todayStr(),
+          productId,
+          minShortfall: 0,
+        });
+        const map = {};
+        for (const r of report) map[r.enrollment_id] = r;
+        setUtilizationMap(map);
+        return;
+      }
+      const results = await Promise.all(
+        active.map((r) => getEnrollmentUtilization(r.id, todayStr())),
+      );
+      const map = {};
+      active.forEach((r, i) => {
+        const u = results[i];
+        if (u?.result === "ok") {
+          map[r.id] = {
+            entitled: u.entitled,
+            utilized: u.utilized,
+            shortfall: u.shortfall,
+            makeup_scheduled: u.makeup_scheduled,
+          };
+        }
+      });
+      setUtilizationMap(map);
+    } catch {
+      setUtilizationMap({});
+    }
+  }, []);
+
   const loadByProduct = useCallback(async (productId, filter) => {
     if (!productId) {
       setRows([]);
+      setUtilizationMap({});
       return;
     }
     setListLoading(true);
@@ -106,9 +153,12 @@ export default function AdminEnrollmentsTab({ toast }) {
     else if (filter === "cancelled") q = q.eq("active", false);
     const { data, error } = await q;
     if (error) toast.show(error.message);
-    else setRows(data || []);
+    else {
+      setRows(data || []);
+      await loadUtilization(data || [], productId);
+    }
     setListLoading(false);
-  }, [toast]);
+  }, [toast, loadUtilization]);
 
   useEffect(() => {
     if (!searchMode) loadByProduct(selectedProductId, historyFilter);
@@ -158,6 +208,7 @@ export default function AdminEnrollmentsTab({ toast }) {
       const { data: enrollments, error } = await eq;
       if (error) throw error;
       setSearchRows(enrollments || []);
+      await loadUtilization(enrollments || []);
     } catch (e) {
       toast.show(e.message || t("systemError"));
     }
@@ -404,10 +455,42 @@ export default function AdminEnrollmentsTab({ toast }) {
     </>
   );
 
+  const openMakeup = async (row) => {
+    try {
+      const data = await getEnrollmentUtilization(row.id, todayStr());
+      setMakeupUtil(data);
+      setMakeupRow({
+        id: row.id,
+        child_name: row.participant?.full_name,
+        product_name: row.product?.name,
+        participant: row.participant,
+        product: row.product,
+      });
+    } catch (e) {
+      toast.show(e.message || t("systemError"));
+    }
+  };
+
+  const refreshUtilization = async () => {
+    if (searchMode) await loadUtilization(searchRows);
+    else await loadUtilization(rows, selectedProductId);
+  };
+
+  const renderUtilization = (row) => {
+    const u = utilizationMap[row.id];
+    if (!u || !row.active) return "—";
+    return `${u.entitled}/${u.utilized} (${u.shortfall})`;
+  };
+
   const renderRowActions = (row) => (
     <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
       {row.active && (
         <>
+          {utilizationMap[row.id]?.shortfall > 0 && (
+            <button type="button" className="btn btn-sm btn-primary" onClick={() => openMakeup(row)}>
+              {t("bookMakeup")}
+            </button>
+          )}
           <button type="button" className="btn btn-sm btn-outline" onClick={() => startEdit(row)}>{t("editEnrollment")}</button>
           <button type="button" className="btn btn-sm btn-outline" onClick={() => copyEnrollmentTicketLink(row.id, { toast, t })}>
             {t("copyTicketLink")}
@@ -428,7 +511,7 @@ export default function AdminEnrollmentsTab({ toast }) {
     if (isEditing) {
       return (
         <tr key={row.id} className="data-table-edit-row">
-          <td colSpan={6}>{renderEditFields(row)}</td>
+          <td colSpan={7}>{renderEditFields(row)}</td>
         </tr>
       );
     }
@@ -441,6 +524,7 @@ export default function AdminEnrollmentsTab({ toast }) {
         <td dir="ltr">{row.participant?.family?.phone || "—"}</td>
         <td>{productLabel(row.product)}</td>
         <td>{paymentLabel(row.payment_status)}</td>
+        <td>{renderUtilization(row)}</td>
         <td>{fmtDateDay(row.valid_until)}</td>
         <td><div className="actions-cell">{renderRowActions(row)}</div></td>
       </tr>
@@ -465,6 +549,11 @@ export default function AdminEnrollmentsTab({ toast }) {
                 {t("parentPhone")}: {row.participant?.family?.phone || "—"}
               </div>
               <div className="log-meta">{t("paymentStatus")}: {paymentLabel(row.payment_status)}</div>
+              {row.active && utilizationMap[row.id] && (
+                <div className="log-meta">
+                  {t("utilizationBalance")}: {renderUtilization(row)}
+                </div>
+              )}
               <div className="log-meta">
                 {t("validFrom")}: {fmtDateDay(row.valid_from)} · {t("validUntil")}: {fmtDateDay(row.valid_until)}
               </div>
@@ -592,6 +681,7 @@ export default function AdminEnrollmentsTab({ toast }) {
                 <th>{t("parentPhone")}</th>
                 <th>{t("sectionClass")}</th>
                 <th>{t("paymentStatus")}</th>
+                <th>{t("utilizationBalance")}</th>
                 <th>{t("validUntil")}</th>
                 <th></th>
               </tr>
@@ -610,6 +700,16 @@ export default function AdminEnrollmentsTab({ toast }) {
           )}
           {displayRows.map(renderRow)}
         </div>
+      )}
+
+      {makeupRow && (
+        <MakeupBookingModal
+          enrollment={makeupRow}
+          utilization={makeupUtil}
+          toast={toast}
+          onClose={() => { setMakeupRow(null); setMakeupUtil(null); }}
+          onBooked={refreshUtilization}
+        />
       )}
     </div>
   );
