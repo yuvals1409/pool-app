@@ -111,12 +111,16 @@ export default function AdminAttendanceTab({ toast }) {
     system: t("attendanceSourceSystem"),
   }[s] || s);
 
-  const filtersClass = isDesktop ? "attendance-filters--desktop" : "";
-  const filtersStyle = isDesktop ? undefined : { display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" };
+  const filtersClass = isDesktop ? "attendance-filters--desktop filter-bar" : "filter-bar";
 
   return (
     <div>
-      <div className={filtersClass} style={filtersStyle}>
+      <div className="page-header">
+        <h1 className="page-title">{t("tabAttendance")}</h1>
+        <p className="page-sub">{t("attendanceSub")}</p>
+      </div>
+
+      <div className={filtersClass}>
         <div className="field">
           <label className="label">{t("validFrom")}</label>
           <input className="input" type="date" value={from} onChange={(e) => setFrom(e.target.value)} dir="ltr" />

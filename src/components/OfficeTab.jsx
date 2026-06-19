@@ -154,19 +154,21 @@ export default function OfficeTab({ toast }) {
 
   return (
     <div className="office-layout">
-      <div className="section-title">{t("tabOffice")}</div>
+      <div className="page-header">
+        <h1 className="page-title">{t("tabOffice")}</h1>
+      </div>
 
-      <div className="card" style={{ marginTop: 12, marginBottom: 20 }}>
-        <div className="section-sub" style={{ marginBottom: 12 }}>{t("dueToday")}</div>
+      <div className="card card-spaced">
+        <div className="crm-card-title">{t("dueToday")}</div>
         {tasksLoading ? (
-          <div style={{ color: "var(--ink-soft)" }}>{t("loading")}</div>
+          <div className="text-muted">{t("loading")}</div>
         ) : dueTasks.length === 0 ? (
-          <div style={{ color: "var(--ink-soft)" }}>{t("noDueTasks")}</div>
+          <div className="text-muted">{t("noDueTasks")}</div>
         ) : (
           <div className="grouped-list">
             {dueTasks.map((task) => (
-              <div className="user-row" key={task.task_id} style={{ flexWrap: "wrap", gap: 8 }}>
-                <div className="user-info" style={{ flex: 1 }}>
+              <div className="user-row" key={task.task_id}>
+                <div className="user-info">
                   <div className="user-display">{task.title}</div>
                   <div className="user-email">
                     {task.child_name || "—"}
@@ -174,7 +176,7 @@ export default function OfficeTab({ toast }) {
                     {task.due_date ? ` · ${fmtDateDay(task.due_date)}` : ""}
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                <div className="user-actions-row">
                   <button
                     type="button"
                     className="btn btn-outline btn-sm"
@@ -198,23 +200,21 @@ export default function OfficeTab({ toast }) {
         )}
       </div>
 
-      <div className="section-sub">{t("searchByPhoneOrChild")}</div>
-
-      <div className="name-edit" style={{ marginTop: 12 }}>
+      <div className="search-bar">
         <input
-          className="name-edit-input"
+          className="search-input"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t("searchByPhoneOrChild")}
           onKeyDown={(e) => e.key === "Enter" && search()}
         />
-        <button className="name-edit-btn" onClick={search} disabled={loading}>
+        <button className="btn btn-primary btn-sm" onClick={search} disabled={loading}>
           {loading ? "..." : t("search")}
         </button>
       </div>
 
       {!loading && rows.length === 0 && query.trim() && (
-        <div style={{ marginTop: 24, color: "var(--ink-soft)", textAlign: "center" }}>{t("noEnrollmentsFound")}</div>
+        <div className="loading-center text-muted">{t("noEnrollmentsFound")}</div>
       )}
 
       {isDesktop && rows.length > 0 ? (

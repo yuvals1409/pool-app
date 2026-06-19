@@ -1,3 +1,48 @@
+/* Mobile PWA polish — aligned with design-system/ui_kits/mobile */
+
+.header.app-header {
+  background: var(--bg-secondary);
+  padding: 12px 16px 14px;
+}
+
+.header-top {
+  margin-bottom: 4px;
+}
+
+.header-logo {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.nav-btn.active {
+  color: var(--pool);
+  font-weight: 600;
+}
+
+@media (hover: hover) {
+  .nav-btn:hover:not(.active) {
+    color: var(--pool);
+  }
+}
+
+.lesson-info {
+  background: var(--bg);
+  border: 1px solid var(--separator);
+  border-radius: 16px;
+  padding: var(--space-4);
+  margin: var(--space-3) 0;
+}
+
+.lesson-info-row {
+  padding: 8px 0;
+  font-size: 15px;
+  border-bottom: 1px solid var(--pool-light);
+}
+
+.lesson-info-row:last-child {
+  border-bottom: none;
+}
+
 /* Scan flash overlay */
 .scan-flash {
   position: fixed;

@@ -176,8 +176,12 @@ export default function AdminProductsTab({ toast }) {
 
   return (
     <div>
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
-        <select className="input" value={seasonId} onChange={(e) => setSeasonId(e.target.value)} style={{ flex: 1, minWidth: 160 }}>
+      <div className="page-header">
+        <h1 className="page-title">{t("tabProducts")}</h1>
+      </div>
+
+      <div className="filter-bar">
+        <select className="input" value={seasonId} onChange={(e) => setSeasonId(e.target.value)}>
           {seasons.map((s) => (
             <option key={s.id} value={s.id}>{s.name}{s.active ? ` (${t("active")})` : ""}</option>
           ))}

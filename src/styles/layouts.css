@@ -1,0 +1,222 @@
+/* CRM / Notion-style page layouts — from design-system/ui_kits/crm */
+
+.page-header {
+  margin-bottom: var(--space-5);
+}
+
+.page-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: var(--space-1);
+  line-height: 1.27;
+}
+
+.page-sub {
+  font-size: 14px;
+  color: var(--ink-mid);
+  margin-bottom: 0;
+  line-height: 1.4;
+}
+
+.topbar {
+  background: var(--bg);
+  border-bottom: 1px solid var(--separator);
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  min-height: 52px;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-inline-start: auto;
+}
+
+/* KPI grid */
+.kpi-grid,
+.dashboard-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+@media (min-width: 640px) {
+  .kpi-grid,
+  .dashboard-kpi-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.kpi,
+.dashboard-kpi-card {
+  background: var(--bg);
+  border: 1px solid var(--separator);
+  border-radius: 16px;
+  padding: var(--space-4);
+  text-align: center;
+}
+
+.kpi-label,
+.dashboard-kpi-label {
+  font-size: 12px;
+  color: var(--ink-mid);
+  margin-bottom: 6px;
+}
+
+.kpi-val,
+.dashboard-kpi-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  line-height: 1;
+}
+
+.crm-card {
+  background: var(--bg);
+  border: 1px solid var(--separator);
+  border-radius: 16px;
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.crm-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-mid);
+  margin-bottom: 14px;
+}
+
+.filter-bar {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-bar .input,
+.filter-bar select.input {
+  flex: 1;
+  min-width: 120px;
+  width: auto;
+}
+
+.search-bar {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  align-items: center;
+}
+
+.search-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1.5px solid var(--separator);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--bg);
+  outline: none;
+  min-height: 44px;
+}
+
+.search-input:focus {
+  border-color: var(--accent);
+}
+
+.role-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--separator);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  min-height: 44px;
+  width: 100%;
+  font-family: inherit;
+  text-align: start;
+}
+
+.user-av-sm {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+  background: var(--pool-pale);
+  color: var(--accent);
+}
+
+.loading-center {
+  text-align: center;
+  padding: var(--space-8);
+  color: var(--ink-soft);
+}
+
+.text-muted {
+  color: var(--ink-soft);
+}
+
+.admin-chip {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: var(--ink-mid);
+  min-height: 36px;
+  transition: background 0.12s, color 0.12s;
+}
+
+.admin-chip.active {
+  background: var(--pool-pale);
+  color: var(--accent);
+}
+
+.admin-chip:hover:not(.active) {
+  background: var(--surface);
+  color: var(--accent);
+}
+
+.user-actions-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.session-list-btn {
+  width: 100%;
+  text-align: inherit;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-family: inherit;
+}
+
+.card-spaced {
+  margin-top: 12px;
+  margin-bottom: 20px;
+}

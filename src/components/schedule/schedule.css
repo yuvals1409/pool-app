@@ -9,8 +9,8 @@
 .schedule-toolbar-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 .schedule-nav { display: flex; align-items: center; gap: 6px; }
 .schedule-nav-btn {
-  width: 44px; height: 44px; border: 1.5px solid var(--border); border-radius: 10px;
-  background: var(--white); color: var(--ink); font-size: 16px; cursor: pointer;
+  width: 44px; height: 44px; border: 1px solid var(--separator); border-radius: 10px;
+  background: var(--bg); color: var(--ink); font-size: 16px; cursor: pointer;
   display: flex; align-items: center; justify-content: center; font-family: inherit;
   transition: background .15s, border-color .15s;
 }
@@ -199,9 +199,10 @@
   display: flex; align-items: flex-end; justify-content: center;
 }
 .schedule-panel {
-  background: var(--bg); border-radius: var(--radius-card) var(--radius-card) 0 0;
+  background: var(--bg); border-radius: 16px 16px 0 0;
+  border-top: 1px solid var(--separator);
   width: 100%; max-width: 440px; max-height: 85vh; overflow-y: auto;
-  padding: 20px; box-shadow: var(--shadow-lg);
+  padding: 20px;
 }
 .schedule-panel-handle {
   width: 40px; height: 4px; background: var(--border); border-radius: 2px;

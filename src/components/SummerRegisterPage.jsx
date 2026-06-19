@@ -14,6 +14,8 @@ import {
   registerFromWaitlistOffer,
 } from "../lib/waitlist.js";
 
+import "../styles/assessment-landing.css";
+
 export default function SummerRegisterPage({ toast }) {
   const { t } = useLang();
   const token = getSummerInviteToken();
@@ -148,17 +150,15 @@ export default function SummerRegisterPage({ toast }) {
   };
 
   if (loading) {
-    return <div style={{ padding: 40, textAlign: "center", color: "var(--ink-soft)" }}>{t("loading")}</div>;
+    return <div className="assessment-landing loading-center">{t("loading")}</div>;
   }
 
   if (offerToken && offer) {
     return (
-      <div style={{ padding: "24px 20px", maxWidth: 480, margin: "0 auto" }}>
-        <h1 style={{ fontSize: 22, marginBottom: 8, textAlign: "center" }}>{t("waitlistOfferTitle")}</h1>
-        <p style={{ textAlign: "center", color: "var(--ink-soft)", marginBottom: 24, fontSize: 14 }}>
-          {t("waitlistOfferSubtitleSummer")}
-        </p>
-        <div className="lesson-info" style={{ marginBottom: 20 }}>
+      <div className="assessment-landing landing-page-shell">
+        <h1 className="page-title">{t("waitlistOfferTitle")}</h1>
+        <p className="page-sub">{t("waitlistOfferSubtitleSummer")}</p>
+        <div className="lesson-info">
           <div className="lesson-info-row"><span className="li-key">{t("child")}</span><span className="li-val">{offer.child_name}</span></div>
         </div>
         {errorMsg && (
@@ -188,13 +188,11 @@ export default function SummerRegisterPage({ toast }) {
   const courses = invite?.courses || [];
 
   return (
-    <div style={{ padding: "24px 20px", maxWidth: 480, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 22, marginBottom: 8, textAlign: "center" }}>{t("summerRegisterTitle")}</h1>
-      <p style={{ textAlign: "center", color: "var(--ink-soft)", marginBottom: 24, fontSize: 14 }}>
-        {t("summerRegisterSubtitle")}
-      </p>
+    <div className="assessment-landing landing-page-shell">
+      <h1 className="page-title">{t("summerRegisterTitle")}</h1>
+      <p className="page-sub">{t("summerRegisterSubtitle")}</p>
 
-      <div className="lesson-info" style={{ marginBottom: 20 }}>
+      <div className="lesson-info">
         <div className="lesson-info-row"><span className="li-key">{t("child")}</span><span className="li-val">{invite.child_name}</span></div>
         {invite.parent_name && (
           <div className="lesson-info-row"><span className="li-key">{t("parentNameOptional")}</span><span className="li-val">{invite.parent_name}</span></div>

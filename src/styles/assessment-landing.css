@@ -1,15 +1,15 @@
 .assessment-landing {
-  --landing-hero-from: #023E8A;
-  --landing-hero-mid: #0077B6;
-  --landing-hero-to: #48CAE4;
-  --landing-surface: #F0F8FF;
-  --landing-card: #FFFFFF;
-  --landing-ink: #012A4A;
-  --landing-muted: #5A8FA8;
-  --landing-accent: #0077B6;
-  --landing-accent-dark: #023E8A;
-  --landing-success: #00B894;
-  --landing-gold: #F4A261;
+  --landing-hero-from: var(--pool-deep);
+  --landing-hero-mid: var(--pool);
+  --landing-hero-to: var(--pool-light);
+  --landing-surface: var(--surface);
+  --landing-card: var(--bg);
+  --landing-ink: var(--ink);
+  --landing-muted: var(--ink-mid);
+  --landing-accent: var(--pool);
+  --landing-accent-dark: var(--pool-deep);
+  --landing-success: var(--success);
+  --landing-gold: var(--warn);
   --landing-max-w: 1040px;
   --landing-gutter: 20px;
   width: 100%;
@@ -21,6 +21,22 @@
 
 .assessment-landing * {
   box-sizing: border-box;
+}
+
+.landing-page-shell {
+  padding: 24px 20px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.landing-page-shell .page-title {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.landing-page-shell .page-sub {
+  text-align: center;
+  margin-bottom: 24px;
 }
 
 .landing-nav {
@@ -71,13 +87,13 @@
   min-height: 44px;
   padding: 0 20px;
   border: none;
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--landing-accent) 0%, var(--landing-accent-dark) 100%);
+  border-radius: 10px;
+  background: var(--landing-accent);
   color: #fff;
   font-size: 0.9375rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(0, 119, 182, 0.28);
+  box-shadow: 0 2px 8px rgba(0, 119, 182, 0.2);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -217,10 +233,11 @@
 
 .landing-section-title {
   margin: 0 0 8px;
-  font-size: 1.5rem;
+  font-size: 22px;
   font-weight: 700;
   text-align: center;
   color: var(--landing-ink);
+  line-height: 1.27;
 }
 
 .landing-section-sub {

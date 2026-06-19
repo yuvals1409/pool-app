@@ -83,12 +83,12 @@ export default function InstructorAttendanceTab({ toast, initialFocus, onFocusHa
 
   if (activeSession) {
     if (rosterLoading) {
-      return <div style={{ textAlign: "center", padding: 32, color: "var(--ink-soft)" }}>{t("loading")}</div>;
+      return <div className="loading-center">{t("loading")}</div>;
     }
     return (
       <div>
         <div className="section-title">{activeSession.title}</div>
-        <div className="section-sub" style={{ marginBottom: 16 }}>
+        <div className="section-sub">
           {fmtDateDay(activeSession.session_date)} · {fmt_time(activeSession.start_time)}
           {" · "}{templateLabel(t, resolveSessionTemplateCode(activeSession))}
         </div>
@@ -108,28 +108,27 @@ export default function InstructorAttendanceTab({ toast, initialFocus, onFocusHa
       <div className="section-title">{t("tabAttendance")}</div>
       <div className="section-sub">{t("attendanceSub")}</div>
 
-      <div className="field" style={{ marginTop: 16 }}>
+      <div className="field">
         <label className="label">{t("date")}</label>
         <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} dir="ltr" />
       </div>
 
       {loading ? (
-        <div style={{ textAlign: "center", padding: 32, color: "var(--ink-soft)" }}>{t("loading")}</div>
+        <div className="loading-center">{t("loading")}</div>
       ) : sessions.length === 0 ? (
-        <div className="empty" style={{ marginTop: 24 }}>
+        <div className="empty">
           <div className="empty-icon">📋</div>
           <div className="empty-text">{t("noSessionsForAttendance")}</div>
         </div>
       ) : (
-        <div className="grouped-list" style={{ marginTop: 16 }}>
+        <div className="grouped-list">
           {sessions.map((s) => {
             const typeLabel = templateLabel(t, resolveSessionTemplateCode(s));
             return (
             <button
               type="button"
               key={s.session_id}
-              className="user-row"
-              style={{ width: "100%", textAlign: "inherit", border: "none", background: "transparent", cursor: "pointer", flexWrap: "wrap", gap: 8 }}
+              className="user-row session-list-btn"
               onClick={() => openSession(s)}
             >
               <div className="user-info" style={{ flex: 1 }}>

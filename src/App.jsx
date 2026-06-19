@@ -1020,22 +1020,20 @@ function AdminTab({ profile, toast }) {
 
   return (
     <div>
-      <div className="section-title">{t("tabAdmin")}</div>
-
       <div className="admin-shell">
         {isDesktop && (
-          <aside className="admin-sidebar">
+          <aside className="admin-rail">
             {adminSections.map((section) =>
-              renderAdminNavBtn(section, `admin-sidebar-btn${adminSection === section.id ? " active" : ""}`),
+              renderAdminNavBtn(section, `sidebar-btn${adminSection === section.id ? " active" : ""}`),
             )}
           </aside>
         )}
 
         <div className="admin-content">
           {!isDesktop && (
-            <div className="admin-nav-mobile" style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+            <div className="admin-nav-mobile">
               {adminSections.map((section) =>
-                renderAdminNavBtn(section, `btn btn-sm ${adminSection === section.id ? "btn-primary" : "btn-outline"}`),
+                renderAdminNavBtn(section, `admin-chip${adminSection === section.id ? " active" : ""}`),
               )}
             </div>
           )}
@@ -1062,31 +1060,36 @@ function AdminTab({ profile, toast }) {
         <AdminSheetSyncTab toast={toast} />
       ) : (
         <>
-      <div className="section-sub">
-        {isOwner(profile) ? t("manageSubOwner") : t("manageSubAdmin")}
+      <div className="page-header">
+        <h1 className="page-title">{t("adminSectionUsers")}</h1>
+        <p className="page-sub">
+          {isOwner(profile) ? t("manageSubOwner") : t("manageSubAdmin")}
+        </p>
       </div>
 
-      <div className="card" style={{ marginBottom: 20 }}>
-        <div className="field">
-          <label className="label">{t("userEmail")}</label>
-          <input className="input" type="email" placeholder="name@example.com" value={email}
-            onChange={e => setEmail(e.target.value)} dir="ltr" />
-        </div>
-        <div className="field">
-          <label className="label">{t("roleProfile")}</label>
-          <select className="input" value={role} onChange={e => setRole(e.target.value)}>
+      <div className="card">
+        <div className="search-bar">
+          <input
+            className="search-input"
+            type="email"
+            placeholder="name@example.com"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            dir="ltr"
+          />
+          <select className="input" value={role} onChange={e => setRole(e.target.value)} style={{ width: "auto", minWidth: 120 }}>
             {roles.map(r => (
               <option key={r} value={r}>{roleLabel(r)}</option>
             ))}
           </select>
+          <button className="btn btn-primary btn-sm" onClick={assignUser} disabled={saving}>
+            {saving ? <><div className="spinner" /> {t("saving")}</> : t("addUser")}
+          </button>
         </div>
-        <button className="btn btn-primary" onClick={assignUser} disabled={saving}>
-          {saving ? <><div className="spinner" /> {t("saving")}</> : t("addUser")}
-        </button>
       </div>
 
       {loading ? (
-        <div style={{ textAlign: "center", padding: 32, color: "var(--ink-soft)" }}>{t("loading")}</div>
+        <div className="loading-center">{t("loading")}</div>
       ) : (
         <>
           {waitingInvites.length > 0 && (
@@ -1628,14 +1631,21 @@ export default function App() {
                 </button>
               ))}
             </nav>
+            <div className="sidebar-user">
+              {profile.avatar_url
+                ? <img className="avatar" src={profile.avatar_url} alt="" />
+                : <div className="avatar-placeholder">{initials(profile.full_name)}</div>
+              }
+              <span className="sidebar-user-name">{profile.full_name || profile.email}</span>
+            </div>
           </aside>
         )}
 
         <div className="app-main">
-          <div className="header">
+          <div className="header topbar app-header">
             <div className="header-top">
               <div className="header-logo"><BrandLogo height={32} /> {t("neveOz")}</div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div className="topbar-actions">
                 <LanguageSwitcher compact />
                 <span className={`badge ${headerRoleBadgeClass(profile.role, { owner: isOwner(profile) })}`}>{roleLabel(profile.role, isOwner(profile))}</span>
               </div>

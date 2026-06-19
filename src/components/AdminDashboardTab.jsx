@@ -138,15 +138,19 @@ export default function AdminDashboardTab({ toast }) {
 
   return (
     <div>
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+      <div className="page-header">
+        <h1 className="page-title">{t("tabDashboard")}</h1>
+      </div>
+
+      <div className="filter-bar">
         <input className="input" type="date" value={from} onChange={(e) => setFrom(e.target.value)} dir="ltr" />
         <input className="input" type="date" value={to} onChange={(e) => setTo(e.target.value)} dir="ltr" />
-        <select className="input" value={seasonId} onChange={(e) => setSeasonId(e.target.value)} style={{ minWidth: 120 }}>
+        <select className="input" value={seasonId} onChange={(e) => setSeasonId(e.target.value)}>
           {seasons.map((s) => (
             <option key={s.id} value={s.id}>{s.name}</option>
           ))}
         </select>
-        <select className="input" value={productId} onChange={(e) => setProductId(e.target.value)} style={{ minWidth: 140 }}>
+        <select className="input" value={productId} onChange={(e) => setProductId(e.target.value)}>
           <option value="">{t("allProducts")}</option>
           {products.map((p) => (
             <option key={p.id} value={p.id}>{p.name}</option>
@@ -155,7 +159,7 @@ export default function AdminDashboardTab({ toast }) {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: "center", padding: 32, color: "var(--ink-soft)" }}>{t("loading")}</div>
+        <div className="loading-center">{t("loading")}</div>
       ) : (
         <>
           <div className="dashboard-kpi-grid">

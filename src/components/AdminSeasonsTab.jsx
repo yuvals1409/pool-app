@@ -68,7 +68,11 @@ export default function AdminSeasonsTab({ toast }) {
 
   return (
     <div>
-      <div style={{ marginBottom: 16 }}>
+      <div className="page-header">
+        <h1 className="page-title">{t("tabSeasons")}</h1>
+      </div>
+
+      <div className="filter-bar">
         <button type="button" className="btn btn-primary btn-sm" onClick={() => { resetForm(); setShowForm(true); }}>
           {t("addSeason")}
         </button>

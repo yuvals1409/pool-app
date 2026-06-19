@@ -137,13 +137,14 @@ export default function AdminUtilizationTab({ toast }) {
     late: t("attendanceLate"),
   }[s] || s);
 
-  const filtersStyle = isDesktop ? undefined : { display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" };
-
   return (
     <div>
-      <div className="section-sub">{t("utilizationSub")}</div>
+      <div className="page-header">
+        <h1 className="page-title">{t("tabUtilization")}</h1>
+        <p className="page-sub">{t("utilizationSub")}</p>
+      </div>
 
-      <div style={filtersStyle}>
+      <div className="filter-bar">
         <div className="field">
           <label className="label">{t("utilizationAsOf")}</label>
           <input className="input" type="date" dir="ltr" value={asOf} onChange={(e) => setAsOf(e.target.value)} />

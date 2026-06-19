@@ -22,7 +22,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--bg);
+  background: var(--surface);
   box-shadow: var(--shadow-lg);
   position: relative;
 }

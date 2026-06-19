@@ -149,11 +149,14 @@ export default function AdminInstructorPayrollTab({ toast }) {
 
   return (
     <div>
-      <div className="section-sub" style={{ marginBottom: 16 }}>{t("payrollSub")}</div>
+      <div className="page-header">
+        <h1 className="page-title">{t("tabPayroll")}</h1>
+        <p className="page-sub">{t("payrollSub")}</p>
+      </div>
 
-      <div className="card" style={{ marginBottom: 20 }}>
-        <div className="label" style={{ marginBottom: 12 }}>{t("payrollRates")}</div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+      <div className="card">
+        <div className="crm-card-title">{t("payrollRates")}</div>
+        <div className="filter-bar">
           <select
             className="input"
             style={{ flex: 1, minWidth: 180 }}

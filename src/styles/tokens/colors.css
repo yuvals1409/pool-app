@@ -82,45 +82,52 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --pool:         #0a84ff;
-    --pool-deep:    #0066cc;
-    --pool-mid:     #2196f3;
-    --pool-light:   #3a9ee8;
-    --pool-pale:    #1c2c3e;
-    --pool-faint:   #111a25;
-    --surface:      #1c1c1e;
-    --white:        #2c2c2e;
-    --ink:          rgba(255, 255, 255, 0.92);
-    --ink-mid:      rgba(235, 235, 245, 0.75);
-    --ink-soft:     rgba(235, 235, 245, 0.55);
-    --ink-faint:    rgba(235, 235, 245, 0.3);
-    --success:      #30d158;
-    --success-bg:   rgba(48, 209, 88, 0.15);
-    --danger:       #ff453a;
-    --danger-bg:    rgba(255, 69, 58, 0.15);
-    --warn:         #ff9f0a;
-    --warn-bg:      rgba(255, 159, 10, 0.15);
-    --info:         #64d2ff;
-    --info-bg:      rgba(100, 210, 255, 0.15);
-    --border:       rgba(84, 84, 88, 0.45);
+    /* Notion-like warm dark palette */
+    --pool:         #4dabf7;
+    --pool-deep:    #339af0;
+    --pool-mid:     #74c0fc;
+    --pool-light:   #1e3a5f;
+    --pool-pale:    #2a3544;
+    --pool-faint:   #1f2933;
+    --surface:      #2f2f2f;
+    --white:        #2a2a2a;
+    --ink:          rgba(255, 255, 255, 0.9);
+    --ink-mid:      rgba(255, 255, 255, 0.65);
+    --ink-soft:     rgba(255, 255, 255, 0.45);
+    --ink-faint:    rgba(255, 255, 255, 0.28);
+    --success:      #3dd68c;
+    --success-bg:   rgba(61, 214, 140, 0.12);
+    --danger:       #ff6b6b;
+    --danger-bg:    rgba(255, 107, 107, 0.12);
+    --warn:         #fcc419;
+    --warn-bg:      rgba(252, 196, 25, 0.12);
+    --info:         #74c0fc;
+    --info-bg:      rgba(116, 192, 252, 0.12);
+    --border:       rgba(255, 255, 255, 0.09);
 
-    --badge-pending-fg:    #ffd166;
-    --badge-admin-bg:      rgba(167,139,250,.18); --badge-admin-fg:      #c4b5fd;
-    --badge-owner-bg:      rgba(192,132,252,.18); --badge-owner-fg:      #e9d5ff;
-    --badge-instructor-bg: rgba(10,132,255,.20);  --badge-instructor-fg: #7cc0ff;
-    --badge-guard-bg:      rgba(48,209,88,.20);   --badge-guard-fg:      #5be584;
-    --badge-office-bg:     rgba(251,146,60,.20);  --badge-office-fg:     #fdba74;
-    --badge-parent-bg:     rgba(10,132,255,.18);  --badge-parent-fg:     #7cc0ff;
-    --label:        rgba(255, 255, 255, 0.92);
-    --label-secondary: rgba(235, 235, 245, 0.6);
-    --label-tertiary:  rgba(235, 235, 245, 0.3);
-    --bg:           #000000;
-    --bg-secondary: #1c1c1e;
-    --bg-tertiary:  #2c2c2e;
-    --separator:    rgba(84, 84, 88, 0.6);
-    --nav-bg:       rgba(28, 28, 30, 0.82);
-    --nav-border:   rgba(84, 84, 88, 0.5);
-    --nav-inactive: rgba(235, 235, 245, 0.6);
+    --badge-pending-fg:    #fcc419;
+    --badge-admin-bg:      rgba(167, 139, 250, 0.18);
+    --badge-admin-fg:      #c4b5fd;
+    --badge-owner-bg:      rgba(192, 132, 252, 0.18);
+    --badge-owner-fg:      #e9d5ff;
+    --badge-instructor-bg: rgba(77, 171, 247, 0.18);
+    --badge-instructor-fg: #a5d8ff;
+    --badge-guard-bg:      rgba(61, 214, 140, 0.18);
+    --badge-guard-fg:      #8ce99a;
+    --badge-office-bg:     rgba(251, 146, 60, 0.18);
+    --badge-office-fg:     #ffc078;
+    --badge-parent-bg:     rgba(77, 171, 247, 0.15);
+    --badge-parent-fg:     #a5d8ff;
+    --label:            rgba(255, 255, 255, 0.9);
+    --label-secondary:  rgba(255, 255, 255, 0.6);
+    --label-tertiary:   rgba(255, 255, 255, 0.38);
+    --bg:           #191919;
+    --bg-secondary: #252525;
+    --bg-tertiary:  #2f2f2f;
+    --separator:    rgba(255, 255, 255, 0.09);
+    --nav-bg:       rgba(37, 37, 37, 0.85);
+    --nav-border:   rgba(255, 255, 255, 0.09);
+    --nav-inactive: rgba(255, 255, 255, 0.5);
   }
 }
 

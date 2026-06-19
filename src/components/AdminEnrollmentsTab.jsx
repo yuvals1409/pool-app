@@ -567,15 +567,19 @@ export default function AdminEnrollmentsTab({ toast }) {
 
   return (
     <div>
-      <div className="name-edit" style={{ marginTop: 12 }}>
+      <div className="page-header">
+        <h1 className="page-title">{t("tabEnrollments")}</h1>
+      </div>
+
+      <div className="search-bar">
         <input
-          className="name-edit-input"
+          className="search-input"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={t("searchByPhoneOrChild")}
           onKeyDown={(e) => e.key === "Enter" && runSearch()}
         />
-        <button className="name-edit-btn" onClick={runSearch} disabled={searchLoading}>
+        <button className="btn btn-primary btn-sm" onClick={runSearch} disabled={searchLoading}>
           {searchLoading ? "..." : t("search")}
         </button>
         {searchMode && (
@@ -585,7 +589,7 @@ export default function AdminEnrollmentsTab({ toast }) {
         )}
       </div>
 
-      <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
+      <div className="filter-bar">
         {HISTORY_FILTERS.map((f) => (
           <button
             key={f}

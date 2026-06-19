@@ -34,9 +34,12 @@ export default function AdminSheetSyncTab({ toast }) {
 
   return (
     <div>
-      <div className="section-sub" style={{ marginBottom: 16 }}>{t("sheetSyncSub")}</div>
+      <div className="page-header">
+        <h1 className="page-title">{t("tabSheetSync")}</h1>
+        <p className="page-sub">{t("sheetSyncSub")}</p>
+      </div>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+      <div className="filter-bar">
         <button type="button" className="btn btn-primary btn-sm" disabled={syncing} onClick={() => runSync("both")}>
           {syncing ? <><div className="spinner" /> {t("sheetSyncRunning")}</> : t("sheetSyncNow")}
         </button>

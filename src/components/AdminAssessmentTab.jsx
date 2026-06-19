@@ -392,12 +392,16 @@ export default function AdminAssessmentTab({ toast }) {
   };
 
   if (loading && view === "slots") {
-    return <div style={{ textAlign: "center", padding: 32, color: "var(--ink-soft)" }}>{t("loading")}</div>;
+    return <div className="loading-center">{t("loading")}</div>;
   }
 
   return (
     <div>
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+      <div className="page-header">
+        <h1 className="page-title">{t("tabAssessment")}</h1>
+      </div>
+
+      <div className="filter-bar">
         <button
           type="button"
           className={`btn btn-sm ${view === "slots" ? "btn-primary" : "btn-outline"}`}

@@ -65,6 +65,10 @@ export default function AdminWaitlistTab({ toast }) {
 
   return (
     <div>
+      <div className="page-header">
+        <h1 className="page-title">{t("tabWaitlist")}</h1>
+      </div>
+
       {pending.length > 0 && (
         <div className="card" style={{ marginBottom: 20, borderColor: "var(--accent)" }}>
           <div className="section-sub" style={{ marginBottom: 12 }}>{t("waitlistPendingNotify")} ({pending.length})</div>
