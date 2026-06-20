@@ -360,7 +360,7 @@ export default function AdminCustomersTab({ toast }) {
     <div>
       {!isDesktop && (
         <div className="page-header">
-          <h1 className="page-title">{t("adminSubTabCustomers")}</h1>
+          <h1 className="page-title">{t("tabCustomers")}</h1>
           <p className="page-sub">{t("customersSub")}</p>
         </div>
       )}

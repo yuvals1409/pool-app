@@ -9,6 +9,7 @@ import {
 } from "./permissions.js";
 
 export const ADMIN_SECTION_IDS = [
+  "customers",
   "users",
   "enrollments",
   "products",
@@ -30,6 +31,7 @@ export const PERSONAL_SECTION_IDS = [
 ];
 
 const ADMIN_MOBILE_SECTION_IDS = [
+  "customers",
   "users",
   "enrollments",
   "attendance",
@@ -155,5 +157,5 @@ export function sanitizeActiveTab(currentTab, profile, isDesktop) {
 export function sanitizeAdminSection(currentSection, profile, isDesktop) {
   const sections = getAdminSections(profile, isDesktop);
   if (sections.includes(currentSection)) return currentSection;
-  return sections[0] || "users";
+  return sections[0] || "customers";
 }
