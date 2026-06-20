@@ -31,6 +31,39 @@ export const ADMIN_SECTION_IDS = [
   "sheets",
 ];
 
+export const ADMIN_NAV_GROUPS = [
+  { id: "crm", labelKey: "adminGroupCrm", sectionIds: ["customers", "enrollments", "waitlist"] },
+  { id: "catalog", labelKey: "adminGroupCatalog", sectionIds: ["products", "seasons", "pricelist", "assessment"] },
+  { id: "operations", labelKey: "adminGroupOperations", sectionIds: ["operations", "attendance", "utilization", "alerts"] },
+  { id: "insights", labelKey: "adminGroupInsights", sectionIds: ["dashboard", "health", "students", "instructors"] },
+  { id: "finance", labelKey: "adminGroupFinance", sectionIds: ["finance", "payroll"] },
+  { id: "team", labelKey: "adminGroupTeam", sectionIds: ["users"] },
+  { id: "system", labelKey: "adminGroupSystem", sectionIds: ["marketing", "sheets"] },
+];
+
+const ADMIN_SECTION_LABEL_KEYS = {
+  customers: "tabCustomers",
+  users: "adminSectionUsers",
+  enrollments: "tabEnrollments",
+  products: "tabProducts",
+  pricelist: "tabPriceList",
+  seasons: "tabSeasons",
+  assessment: "tabAssessment",
+  marketing: "tabMarketing",
+  attendance: "tabAttendance",
+  alerts: "tabAlerts",
+  operations: "tabOperations",
+  utilization: "tabUtilization",
+  waitlist: "tabWaitlist",
+  dashboard: "tabDashboard",
+  health: "tabHealth",
+  students: "tabStudents",
+  finance: "tabFinance",
+  instructors: "tabInstructorsAnalytics",
+  payroll: "tabPayroll",
+  sheets: "tabSheetSync",
+};
+
 export const PERSONAL_SECTION_IDS = [
   "schedule",
   "payroll",
@@ -124,6 +157,36 @@ export function getAdminSections(profile, isDesktop) {
   if (isFullAccess(profile) || isDesktop) return [...ADMIN_SECTION_IDS];
   if (profile.role === "admin") return [...ADMIN_MOBILE_SECTION_IDS];
   return [...ADMIN_SECTION_IDS];
+}
+
+export function getVisibleSectionsInGroup(groupId, profile, isDesktop) {
+  const allowed = new Set(getAdminSections(profile, isDesktop));
+  const group = ADMIN_NAV_GROUPS.find((g) => g.id === groupId);
+  if (!group) return [];
+  return group.sectionIds.filter((id) => allowed.has(id));
+}
+
+export function getAdminNavGroups(profile, isDesktop) {
+  return ADMIN_NAV_GROUPS
+    .map((group) => ({
+      ...group,
+      sectionIds: getVisibleSectionsInGroup(group.id, profile, isDesktop),
+    }))
+    .filter((group) => group.sectionIds.length > 0);
+}
+
+export function getAdminGroupForSection(sectionId) {
+  const group = ADMIN_NAV_GROUPS.find((g) => g.sectionIds.includes(sectionId));
+  return group?.id ?? null;
+}
+
+export function adminGroupLabel(groupId, t) {
+  const group = ADMIN_NAV_GROUPS.find((g) => g.id === groupId);
+  return t(group?.labelKey || groupId);
+}
+
+export function adminSectionLabel(sectionId, t) {
+  return t(ADMIN_SECTION_LABEL_KEYS[sectionId] || sectionId);
 }
 
 export function getPersonalSections() {

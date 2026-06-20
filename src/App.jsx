@@ -49,6 +49,7 @@ import AdminSheetSyncTab from "./components/AdminSheetSyncTab.jsx";
 import AdminWaitlistTab from "./components/AdminWaitlistTab.jsx";
 import AdminInstructorPayrollTab from "./components/AdminInstructorPayrollTab.jsx";
 import AdminCustomersTab from "./components/AdminCustomersTab.jsx";
+import { AdminGroupNav, AdminSectionSubNav } from "./components/admin/AdminSectionNav.jsx";
 import InstructorAttendanceTab from "./components/InstructorAttendanceTab.jsx";
 import InstructorPersonalTab from "./components/InstructorPersonalTab.jsx";
 import { StudentProfileProvider, useStudentProfile } from "./lib/StudentProfileContext.jsx";
@@ -65,11 +66,11 @@ import { getOAuthRedirectUrl } from "./lib/authRedirect.js";
 import { useIsDesktop } from "./lib/useBreakpoint.js";
 import {
   getVisibleTabs,
-  getAdminSections,
   getPlatformGate,
   sanitizeActiveTab,
   sanitizeAdminSection,
   personalSectionLabel,
+  adminSectionLabel,
 } from "./lib/navigationPolicy.js";
 import AppWorkspaceShell from "./components/layout/AppWorkspaceShell.jsx";
 import {
@@ -80,7 +81,6 @@ import {
   EmptyState,
   Field,
   Input,
-  NavItem,
   Select,
   Spinner,
 } from "./components/ui/ds/index.js";
@@ -999,62 +999,34 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
     </Card>
   );
 
-  const adminSections = [
-    { id: "customers", label: t("tabCustomers") },
-    { id: "users", label: t("adminSectionUsers") },
-    { id: "enrollments", label: t("tabEnrollments") },
-    { id: "products", label: t("tabProducts") },
-    { id: "pricelist", label: t("tabPriceList") },
-    { id: "seasons", label: t("tabSeasons") },
-    { id: "assessment", label: t("tabAssessment") },
-    { id: "marketing", label: t("tabMarketing") },
-    { id: "attendance", label: t("tabAttendance") },
-    { id: "alerts", label: t("tabAlerts") },
-    { id: "operations", label: t("tabOperations") },
-    { id: "utilization", label: t("tabUtilization") },
-    { id: "waitlist", label: t("tabWaitlist") },
-    { id: "dashboard", label: t("tabDashboard") },
-    { id: "health", label: t("tabHealth") },
-    { id: "students", label: t("tabStudents") },
-    { id: "finance", label: t("tabFinance") },
-    { id: "instructors", label: t("tabInstructorsAnalytics") },
-    { id: "payroll", label: t("tabPayroll") },
-    { id: "sheets", label: t("tabSheetSync") },
-  ].filter((section) => getAdminSections(profile, isDesktop).includes(section.id));
-
   return (
     <StudentProfileProvider>
     <div>
       <div className="admin-shell">
         {isDesktop && (
-          <aside className="admin-rail" style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            {adminSections.map((section) => (
-              <NavItem
-                key={section.id}
-                label={section.label}
-                active={adminSection === section.id}
-                onClick={() => setAdminSection(section.id)}
-              />
-            ))}
-          </aside>
+          <AdminGroupNav
+            variant="rail"
+            profile={profile}
+            adminSection={adminSection}
+            onAdminSectionChange={setAdminSection}
+          />
         )}
 
         <div className="admin-content">
           {!isDesktop && (
-            <div className="admin-nav-mobile" style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, marginBottom: 12 }}>
-              {adminSections.map((section) => (
-                <Button
-                  key={section.id}
-                  size="sm"
-                  variant={adminSection === section.id ? "secondary" : "ghost"}
-                  onClick={() => setAdminSection(section.id)}
-                  style={{ flexShrink: 0 }}
-                >
-                  {section.label}
-                </Button>
-              ))}
-            </div>
+            <AdminGroupNav
+              variant="mobile"
+              profile={profile}
+              adminSection={adminSection}
+              onAdminSectionChange={setAdminSection}
+            />
           )}
+
+          <AdminSectionSubNav
+            profile={profile}
+            adminSection={adminSection}
+            onAdminSectionChange={setAdminSection}
+          />
 
       {adminSection === "customers" ? (
         <AdminCustomersTab toast={toast} />
@@ -1679,30 +1651,8 @@ export default function App() {
   const useNarrowContent = isDesktop && !PRIORITY_TABS.has(tab);
 
   const activeTabMeta = allTabs.find(ti => ti.id === tab);
-  const adminSectionTitles = {
-    customers: t("tabCustomers"),
-    users: t("adminSectionUsers"),
-    enrollments: t("tabEnrollments"),
-    products: t("tabProducts"),
-    pricelist: t("tabPriceList"),
-    seasons: t("tabSeasons"),
-    assessment: t("tabAssessment"),
-    marketing: t("tabMarketing"),
-    attendance: t("tabAttendance"),
-    alerts: t("tabAlerts"),
-    operations: t("tabOperations"),
-    utilization: t("tabUtilization"),
-    waitlist: t("tabWaitlist"),
-    dashboard: t("tabDashboard"),
-    health: t("tabHealth"),
-    students: t("tabStudents"),
-    finance: t("tabFinance"),
-    instructors: t("tabInstructorsAnalytics"),
-    payroll: t("tabPayroll"),
-    sheets: t("tabSheetSync"),
-  };
   const topBarTitle = tab === "admin"
-    ? (adminSectionTitles[adminSection] || activeTabMeta?.label || t("tabAdmin"))
+    ? (adminSectionLabel(adminSection, t) || activeTabMeta?.label || t("tabAdmin"))
     : tab === "personal"
       ? personalSectionLabel(personalSection, t)
       : (activeTabMeta?.label || t("tabSchedule"));

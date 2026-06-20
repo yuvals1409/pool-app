@@ -191,6 +191,17 @@
     display: none;
   }
 
+  .admin-section-subnav {
+    margin-bottom: var(--space-4);
+  }
+
+  .admin-section-subnav--scroll {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
   .enrollments-filters--desktop {
     display: flex;
     flex-wrap: nowrap;
