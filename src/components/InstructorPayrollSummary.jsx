@@ -75,28 +75,30 @@ export default function InstructorPayrollSummary({ profile, toast }) {
             <div className="info-box" style={{ marginBottom: 12 }}>{t("payrollMissingRateHint")}</div>
           )}
           {(summary.by_template || []).length > 0 ? (
-            <table className="data-table" style={{ width: "100%", fontSize: "var(--text-footnote)" }}>
+            <div className="data-table-wrap">
+            <table className="data-table">
               <thead>
                 <tr>
-                  <th>{t("payrollEntityType")}</th>
-                  <th>{t("payrollSessions")}</th>
-                  <th>{t("payrollHours")}</th>
-                  <th>{t("ratePerHour")}</th>
-                  <th>{t("totalPay")}</th>
+                  <th className="col-text">{t("payrollEntityType")}</th>
+                  <th className="col-num">{t("payrollSessions")}</th>
+                  <th className="col-num">{t("payrollHours")}</th>
+                  <th className="col-num">{t("ratePerHour")}</th>
+                  <th className="col-num">{t("totalPay")}</th>
                 </tr>
               </thead>
               <tbody>
                 {(summary.by_template || []).map((bt) => (
                   <tr key={bt.template_code}>
-                    <td>{templateLabel(t, bt.template_code)}</td>
-                    <td>{bt.session_count}</td>
-                    <td>{bt.total_hours}</td>
-                    <td>{bt.rate_per_hour != null ? `₪${bt.rate_per_hour}` : "—"}</td>
-                    <td>{bt.total_pay != null ? `₪${bt.total_pay}` : "—"}</td>
+                    <td className="col-text">{templateLabel(t, bt.template_code)}</td>
+                    <td className="col-num">{bt.session_count}</td>
+                    <td className="col-num">{bt.total_hours}</td>
+                    <td className="col-num">{bt.rate_per_hour != null ? `₪${bt.rate_per_hour}` : "—"}</td>
+                    <td className="col-num">{bt.total_pay != null ? `₪${bt.total_pay}` : "—"}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            </div>
           ) : (
             <div className="empty-text">{t("payrollNoData")}</div>
           )}

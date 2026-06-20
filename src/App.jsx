@@ -14,12 +14,11 @@ import {
 } from "./lib/config.js";
 import { supabase, ensureWeeklyLessonsGenerated, ensureWeeklySessionsGenerated, ensureAccessPassesGenerated, markLessonNotified } from "./lib/supabase.js";
 import {
-  isOwner, canManage, canCreateLesson, canScan, canViewSchedule, canAccessOffice, canMarkAttendance,
-  canEditSchedule,
+  isOwner, canManage, canEditSchedule,
   ACTIVE_USER_ROLE_ORDER, assignableRoles, canRevokeUser,
 } from "./lib/permissions.js";
 import {
-  fmt_time, toLocalDateStr, dateToDayOfWeek, getWeekBounds,
+  fmt_time, dateToDayOfWeek,
   parseLessonDateTime, addMinutes, isValidStartTime,
 } from "./lib/lessonDates.js";
 import {
@@ -41,10 +40,10 @@ import AdminSheetSyncTab from "./components/AdminSheetSyncTab.jsx";
 import AdminWaitlistTab from "./components/AdminWaitlistTab.jsx";
 import AdminInstructorPayrollTab from "./components/AdminInstructorPayrollTab.jsx";
 import InstructorAttendanceTab from "./components/InstructorAttendanceTab.jsx";
+import InstructorPersonalTab from "./components/InstructorPersonalTab.jsx";
+import PlatformGatePage from "./components/PlatformGatePage.jsx";
 import AssessmentRegisterPage from "./components/AssessmentRegisterPage.jsx";
 import SummerRegisterPage from "./components/SummerRegisterPage.jsx";
-import InstructorAssessmentResults from "./components/InstructorAssessmentResults.jsx";
-import InstructorPayrollSummary from "./components/InstructorPayrollSummary.jsx";
 import { parseAssessmentRegisterPath } from "./lib/assessment.js";
 import { parseSummerRegisterPath } from "./lib/summerCourse.js";
 import {
@@ -53,6 +52,14 @@ import {
 import { markLessonScanAttendance } from "./lib/attendance.js";
 import { getOAuthRedirectUrl } from "./lib/authRedirect.js";
 import { useIsDesktop } from "./lib/useBreakpoint.js";
+import {
+  getVisibleTabs,
+  getAdminSections,
+  getPlatformGate,
+  sanitizeActiveTab,
+  sanitizeAdminSection,
+  personalSectionLabel,
+} from "./lib/navigationPolicy.js";
 import AppWorkspaceShell from "./components/layout/AppWorkspaceShell.jsx";
 import {
   Avatar,
@@ -67,7 +74,7 @@ import {
   Spinner,
 } from "./components/ui/ds/index.js";
 
-const PRIORITY_TABS = new Set(["schedule", "office", "admin"]);
+const PRIORITY_TABS = new Set(["schedule", "office", "admin", "personal"]);
 
 // ─────────────────────────────────────────────────────────────
 //  HELPERS
@@ -374,106 +381,6 @@ function PendingPage({ user, onLogout }) {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  PENDING WEEKLY BARCODES
-// ─────────────────────────────────────────────────────────────
-function PendingWeeklyBarcodes({ profile, toast, onSent }) {
-  const i18n = useLang();
-  const { t, fmtDateDay } = i18n;
-  const [pending, setPending] = useState([]);
-  const [sending, setSending] = useState(false);
-  const [sendingId, setSendingId] = useState(null);
-
-  const load = useCallback(async () => {
-    await ensureWeeklyLessonsGenerated();
-    const { start, end } = getWeekBounds();
-    let query = supabase.from("lessons").select("*")
-      .not("recurring_lesson_id", "is", null)
-      .is("notified_at", null)
-      .eq("cancelled", false)
-      .eq("used", false)
-      .gte("lesson_date", toLocalDateStr(start))
-      .lte("lesson_date", toLocalDateStr(end))
-      .order("lesson_date", { ascending: true });
-    if (!canManage(profile)) query = query.eq("instructor_id", profile.id);
-    const { data } = await query;
-    setPending(data || []);
-  }, [profile.id, profile.role]);
-
-  useEffect(() => { load(); }, [load]);
-
-  const sendOne = async (lesson) => {
-    if (!lesson.parent_phone) return toast.show(t("phoneRequiredForNotify"));
-    setSendingId(lesson.id);
-    try {
-      await shareTicketViaWhatsApp(lesson, lesson.parent_phone, toast, i18n);
-      await markLessonNotified(lesson.id);
-      toast.show(t("barcodeSent"));
-      await load();
-      onSent?.();
-    } catch {
-      toast.show(t("shareError"));
-    }
-    setSendingId(null);
-  };
-
-  const sendAll = async () => {
-    if (!pending.length) return;
-    setSending(true);
-    for (const lesson of pending) {
-      if (!lesson.parent_phone) continue;
-      try {
-        await shareTicketViaWhatsApp(lesson, lesson.parent_phone, toast, i18n);
-        await markLessonNotified(lesson.id);
-      } catch {
-        toast.show(t("shareError"));
-        break;
-      }
-    }
-    toast.show(t("allBarcodesSent"));
-    setSending(false);
-    await load();
-    onSent?.();
-  };
-
-  if (!pending.length) return null;
-
-  return (
-    <div className="pending-banner">
-      <div className="pending-banner-title">📬 {t("pendingBarcodes")}</div>
-      <div className="pending-banner-sub">{t("pendingBarcodesSub", { count: pending.length })}</div>
-      <Button
-        fullWidth
-        onClick={sendAll}
-        disabled={sending || !!sendingId}
-        style={{ background: "#25D366", borderColor: "#25D366", color: "#fff" }}
-      >
-        {sending ? <><Spinner size={16} color="#fff" /> {t("preparingImage")}</> : t("sendAllBarcodes")}
-      </Button>
-      <div style={{ marginTop: 14 }}>
-        {pending.map(lesson => (
-          <div className="pending-item" key={lesson.id}>
-            <div className="pending-item-info">
-              <div className="pending-item-name">{lesson.child_name}</div>
-              <div className="pending-item-meta">
-                {fmtDateDay(lesson.lesson_date)} · {fmt_time(lesson.start_time)}
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => sendOne(lesson)}
-              disabled={sending || sendingId === lesson.id}
-            >
-              {sendingId === lesson.id ? "..." : t("sendBarcode")}
-            </Button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────
 //  INSTRUCTOR TAB
 // ─────────────────────────────────────────────────────────────
 function InstructorTab({ profile, toast }) {
@@ -484,7 +391,6 @@ function InstructorTab({ profile, toast }) {
   const [created, setCreated] = useState(null);
   const [loading, setLoading] = useState(false);
   const [sharing, setSharing] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
   const upd = k => e => setForm(f => ({...f, [k]: e.target.value}));
 
   useEffect(() => { ensureWeeklyLessonsGenerated(); }, []);
@@ -545,7 +451,6 @@ function InstructorTab({ profile, toast }) {
     try {
       await shareTicketViaWhatsApp(created, created.parent_phone, toast, i18n);
       await markLessonNotified(created.id);
-      setRefreshKey(k => k + 1);
     } catch {
       toast.show(t("shareError"));
     }
@@ -583,17 +488,6 @@ function InstructorTab({ profile, toast }) {
 
   return (
     <div>
-      <InstructorPayrollSummary profile={profile} toast={toast} />
-
-      <InstructorAssessmentResults toast={toast} />
-
-      <PendingWeeklyBarcodes
-        key={refreshKey}
-        profile={profile}
-        toast={toast}
-        onSent={() => setRefreshKey(k => k + 1)}
-      />
-
       <div className="section-title">{t("newLesson")}</div>
       <div className="section-sub">{t("newLessonSub")}</div>
       <Card style={{ marginBottom: "var(--space-4)" }}>
@@ -1045,7 +939,7 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
     { id: "dashboard", label: t("tabDashboard") },
     { id: "payroll", label: t("tabPayroll") },
     { id: "sheets", label: t("tabSheetSync") },
-  ];
+  ].filter((section) => getAdminSections(profile, isDesktop).includes(section.id));
 
   return (
     <div>
@@ -1396,6 +1290,7 @@ export default function App() {
   const [profile,  setProfile]  = useState(null);
   const [tab,      setTab]      = useState("instructor");
   const [adminSection, setAdminSection] = useState("users");
+  const [personalSection, setPersonalSection] = useState("schedule");
   const [tabDirection, setTabDirection] = useState(0);
   const [attendanceFocus, setAttendanceFocus] = useState(null);
   const reducedMotion = useReducedMotion();
@@ -1485,11 +1380,11 @@ export default function App() {
   }, [loadProfile]);
 
   useEffect(() => {
-    if (!profile) return;
-    if (canCreateLesson(profile)) setTab("instructor");
-    else if (canAccessOffice(profile)) setTab("office");
-    else if (canScan(profile)) setTab("guard");
-  }, [profile?.id, profile?.role, profile?.email]);
+    if (!profile || profile.status !== "approved") return;
+    if (getPlatformGate(profile, isDesktop)) return;
+    setTab((current) => sanitizeActiveTab(current, profile, isDesktop));
+    setAdminSection((current) => sanitizeAdminSection(current, profile, isDesktop));
+  }, [profile, isDesktop]);
 
   const logout = async () => { await supabase.auth.signOut(); };
 
@@ -1600,15 +1495,17 @@ export default function App() {
     </>
   );
 
-  // ── Approved — build tabs based on role hierarchy ─────────
-  const allTabs = [
-    canCreateLesson(profile) && { id: "instructor", label: t("tabLesson") },
-    canMarkAttendance(profile) && { id: "attendance", label: t("tabAttendance") },
-    canScan(profile)         && { id: "guard",      label: t("tabScan") },
-    canViewSchedule(profile) && { id: "schedule",   label: t("tabSchedule") },
-    canAccessOffice(profile) && { id: "office",     label: t("tabOffice") },
-    canManage(profile)       && { id: "admin",      label: t("tabAdmin") },
-  ].filter(Boolean);
+  const platformGate = getPlatformGate(profile, isDesktop);
+  if (platformGate) {
+    return (
+      <>
+        <PlatformGatePage gate={platformGate} onLogout={logout} />
+        <AnimatedToast msg={toast.msg} visible={toast.visible} standalone />
+      </>
+    );
+  }
+
+  const allTabs = getVisibleTabs(profile, isDesktop, t);
 
   const tabOrder = allTabs.map(ti => ti.id);
 
@@ -1664,6 +1561,15 @@ export default function App() {
           onAdminSectionChange={setAdminSection}
         />
       );
+      case "personal":   return (
+        <InstructorPersonalTab
+          profile={profile}
+          toast={toast}
+          personalSection={personalSection}
+          onPersonalSectionChange={setPersonalSection}
+          onMarkAttendance={handleMarkAttendanceFromSchedule}
+        />
+      );
       default:           return null;
     }
   };
@@ -1686,7 +1592,9 @@ export default function App() {
   };
   const topBarTitle = tab === "admin"
     ? (adminSectionTitles[adminSection] || activeTabMeta?.label || t("tabAdmin"))
-    : (activeTabMeta?.label || t("tabSchedule"));
+    : tab === "personal"
+      ? personalSectionLabel(personalSection, t)
+      : (activeTabMeta?.label || t("tabSchedule"));
   const topBarSubtitle = tab === "schedule"
     ? t("scheduleSub")
     : tab === "admin" && adminSection === "users"

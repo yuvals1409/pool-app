@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "../lib/supabase.js";
 import { generateCourseSeriesSessions } from "../lib/summerCourse.js";
 import { formatProductLabel } from "../lib/productLabel.js";
+import { collectAgeOptions, collectGradeOptions, filterProducts } from "../lib/productFilters.js";
 import { useLang } from "../i18n.jsx";
 import { useIsDesktop } from "../lib/useBreakpoint.js";
 import { seasonOptionLabel } from "../lib/bidi.js";
@@ -44,6 +45,43 @@ export default function AdminProductsTab({ toast }) {
   const [courseEnd, setCourseEnd] = useState("");
   const [levelLabel, setLevelLabel] = useState("");
 
+  const [filterInstructorId, setFilterInstructorId] = useState("");
+  const [filterDay, setFilterDay] = useState("");
+  const [filterGrade, setFilterGrade] = useState("");
+  const [filterAge, setFilterAge] = useState("");
+  const [filterTemplate, setFilterTemplate] = useState("");
+  const [filterSearch, setFilterSearch] = useState("");
+
+  const gradeOptions = useMemo(() => collectGradeOptions(products), [products]);
+  const ageOptions = useMemo(() => collectAgeOptions(products), [products]);
+  const instructorFilterOptions = useMemo(() => {
+    const ids = new Set(products.map((p) => p.instructor_id).filter(Boolean));
+    return instructors.filter((i) => ids.has(i.id));
+  }, [products, instructors]);
+  const filteredProducts = useMemo(
+    () => filterProducts(products, {
+      instructorId: filterInstructorId,
+      day: filterDay,
+      grade: filterGrade,
+      age: filterAge,
+      templateCode: filterTemplate,
+      search: filterSearch,
+    }),
+    [products, filterInstructorId, filterDay, filterGrade, filterAge, filterTemplate, filterSearch],
+  );
+  const hasActiveFilters = Boolean(
+    filterInstructorId || filterDay || filterGrade || filterAge || filterTemplate || filterSearch.trim(),
+  );
+
+  const clearFilters = () => {
+    setFilterInstructorId("");
+    setFilterDay("");
+    setFilterGrade("");
+    setFilterAge("");
+    setFilterTemplate("");
+    setFilterSearch("");
+  };
+
   const loadMeta = useCallback(async () => {
     const [{ data: seasonRows }, { data: templateRows }, { data: instructorRows }] = await Promise.all([
       supabase.from("seasons").select("id, name, active").order("start_date", { ascending: false }),
@@ -74,6 +112,14 @@ export default function AdminProductsTab({ toast }) {
 
   useEffect(() => { loadMeta(); }, [loadMeta]);
   useEffect(() => { if (seasonId) loadProducts(seasonId); }, [seasonId, loadProducts]);
+  useEffect(() => {
+    setFilterInstructorId("");
+    setFilterDay("");
+    setFilterGrade("");
+    setFilterAge("");
+    setFilterTemplate("");
+    setFilterSearch("");
+  }, [seasonId]);
 
   const resetForm = () => {
     setEditingId(null);
@@ -205,6 +251,60 @@ export default function AdminProductsTab({ toast }) {
         </Button>
       </div>
 
+      {!loading && products.length > 0 && (
+        <div className="filter-bar" style={{ alignItems: "flex-end" }}>
+          <Field label={t("instructor")} style={{ marginBottom: 0, minWidth: 140, flex: 1 }}>
+            <Select value={filterInstructorId} onChange={(e) => setFilterInstructorId(e.target.value)}>
+              <option value="">{t("allInstructors")}</option>
+              {instructorFilterOptions.map((inst) => (
+                <option key={inst.id} value={inst.id}>{inst.full_name || inst.email}</option>
+              ))}
+            </Select>
+          </Field>
+          <Field label={t("dayOfWeek")} style={{ marginBottom: 0, minWidth: 120, flex: 1 }}>
+            <Select value={filterDay} onChange={(e) => setFilterDay(e.target.value)}>
+              <option value="">{t("allDays")}</option>
+              {days.map((d, i) => <option key={d} value={i}>{d}</option>)}
+            </Select>
+          </Field>
+          {gradeOptions.length > 0 && (
+            <Field label={t("filterByGrade")} style={{ marginBottom: 0, minWidth: 140, flex: 1 }}>
+              <Select value={filterGrade} onChange={(e) => setFilterGrade(e.target.value)}>
+                <option value="">{t("allGrades")}</option>
+                {gradeOptions.map((g) => <option key={g} value={g}>{g}</option>)}
+              </Select>
+            </Field>
+          )}
+          {ageOptions.length > 0 && (
+            <Field label={t("filterByAge")} style={{ marginBottom: 0, minWidth: 120, flex: 1 }}>
+              <Select value={filterAge} onChange={(e) => setFilterAge(e.target.value)}>
+                <option value="">{t("allAges")}</option>
+                {ageOptions.map((a) => <option key={a} value={a}>{a}</option>)}
+              </Select>
+            </Field>
+          )}
+          <Field label={t("productType")} style={{ marginBottom: 0, minWidth: 120, flex: 1 }}>
+            <Select value={filterTemplate} onChange={(e) => setFilterTemplate(e.target.value)}>
+              <option value="">{t("allTypes")}</option>
+              <option value="annual_section">{t("productTypeAnnual")}</option>
+              <option value="summer_course">{t("productTypeSummer")}</option>
+            </Select>
+          </Field>
+          <Field label={t("search")} style={{ marginBottom: 0, minWidth: 160, flex: 2 }}>
+            <Input
+              value={filterSearch}
+              onChange={(e) => setFilterSearch(e.target.value)}
+              placeholder={t("productSearchPlaceholder")}
+            />
+          </Field>
+          {hasActiveFilters && (
+            <Button type="button" variant="secondary" size="sm" onClick={clearFilters}>
+              {t("clearFilters")}
+            </Button>
+          )}
+        </div>
+      )}
+
       {showForm && (
         <Card style={{ marginBottom: 20 }}>
           <Field label={t("productType")}>
@@ -285,9 +385,11 @@ export default function AdminProductsTab({ toast }) {
         </div>
       ) : products.length === 0 ? (
         <EmptyState title={t("noProducts")} />
+      ) : filteredProducts.length === 0 ? (
+        <EmptyState title={t("noResults")} />
       ) : (
         <div className="grouped-list">
-          {products.map((p) => (
+          {filteredProducts.map((p) => (
             <div className="user-row" key={p.id} style={{ flexWrap: "wrap", gap: 8 }}>
               <div className="user-info" style={{ flex: 1 }}>
                 <div className="user-display">{formatProductLabel({ ...p, schedule_pattern: p.schedule_pattern }, days, p.product_templates?.code)}</div>

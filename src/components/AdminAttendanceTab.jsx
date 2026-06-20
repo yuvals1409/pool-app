@@ -168,25 +168,25 @@ export default function AdminAttendanceTab({ toast }) {
           <table className="data-table">
             <thead>
               <tr>
-                <th>{t("date")}</th>
-                <th>{t("startTime")}</th>
-                <th>{t("child")}</th>
-                <th>{t("sectionClass")}</th>
-                <th>{t("attendanceStatus")}</th>
-                <th>{t("attendanceSource")}</th>
-                <th>{t("notes")}</th>
+                <th className="col-date">{t("date")}</th>
+                <th className="col-date">{t("startTime")}</th>
+                <th className="col-text">{t("child")}</th>
+                <th className="col-text">{t("sectionClass")}</th>
+                <th className="col-text">{t("attendanceStatus")}</th>
+                <th className="col-text">{t("attendanceSource")}</th>
+                <th className="col-text">{t("notes")}</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row) => (
                 <tr key={row.id}>
-                  <td>{fmtDateDay(row.session_date)}</td>
-                  <td dir="ltr">{fmt_time(row.start_time)}</td>
-                  <td>{row.participant_name || row.child_name}</td>
-                  <td>{row.product_name || templateLabel(t, row.template_code) || "—"}</td>
-                  <td>{statusLabel(row.status)}</td>
-                  <td>{sourceLabel(row.source)}</td>
-                  <td>{row.notes || "—"}</td>
+                  <td className="col-date">{fmtDateDay(row.session_date)}</td>
+                  <td className="col-date" dir="ltr">{fmt_time(row.start_time)}</td>
+                  <td className="col-text">{row.participant_name || row.child_name}</td>
+                  <td className="col-text col-text--mid">{row.product_name || templateLabel(t, row.template_code) || "—"}</td>
+                  <td className="col-text">{statusLabel(row.status)}</td>
+                  <td className="col-text col-text--mid">{sourceLabel(row.source)}</td>
+                  <td className="col-text col-text--mid">{row.notes || "—"}</td>
                 </tr>
               ))}
             </tbody>

@@ -203,27 +203,27 @@ export default function AdminUtilizationTab({ toast }) {
           <table className="data-table">
             <thead>
               <tr>
-                <th>{t("child")}</th>
-                <th>{t("parentPhone")}</th>
-                <th>{t("sectionClass")}</th>
-                <th>{t("utilizationEntitled")}</th>
-                <th>{t("utilizationUsed")}</th>
-                <th>{t("utilizationShortfall")}</th>
-                <th>{t("makeupScheduled")}</th>
-                <th></th>
+                <th className="col-text">{t("child")}</th>
+                <th className="col-phone">{t("parentPhone")}</th>
+                <th className="col-text">{t("sectionClass")}</th>
+                <th className="col-num">{t("utilizationEntitled")}</th>
+                <th className="col-num">{t("utilizationUsed")}</th>
+                <th className="col-num">{t("utilizationShortfall")}</th>
+                <th className="col-num">{t("makeupScheduled")}</th>
+                <th className="col-actions"></th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row) => (
                 <tr key={row.enrollment_id}>
-                  <td>{row.child_name}</td>
-                  <td dir="ltr">{row.parent_phone || "—"}</td>
-                  <td>{row.product_name}</td>
-                  <td>{row.entitled}</td>
-                  <td>{row.utilized}</td>
-                  <td><strong>{row.shortfall}</strong></td>
-                  <td>{row.makeup_scheduled}</td>
-                  <td>
+                  <td className="col-text">{row.child_name}</td>
+                  <td className="col-phone" dir="ltr">{row.parent_phone || "—"}</td>
+                  <td className="col-text col-text--mid">{row.product_name}</td>
+                  <td className="col-num">{row.entitled}</td>
+                  <td className="col-num">{row.utilized}</td>
+                  <td className="col-num"><strong>{row.shortfall}</strong></td>
+                  <td className="col-num">{row.makeup_scheduled}</td>
+                  <td className="col-actions">
                     <div className="actions-cell">
                       <Button type="button" size="sm" variant="secondary" onClick={() => openDetail(row)}>
                         {t("utilizationDetail")}

@@ -254,28 +254,30 @@ export default function AdminInstructorPayrollTab({ toast }) {
                 </Button>
               </div>
               {(inst.by_template || []).length > 0 && (
-                <table className="data-table" style={{ width: "100%", fontSize: "var(--text-footnote)" }}>
+                <div className="data-table-wrap">
+                <table className="data-table">
                   <thead>
                     <tr>
-                      <th>{t("payrollEntityType")}</th>
-                      <th>{t("payrollSessions")}</th>
-                      <th>{t("payrollHours")}</th>
-                      <th>{t("ratePerHour")}</th>
-                      <th>{t("totalPay")}</th>
+                      <th className="col-text">{t("payrollEntityType")}</th>
+                      <th className="col-num">{t("payrollSessions")}</th>
+                      <th className="col-num">{t("payrollHours")}</th>
+                      <th className="col-num">{t("ratePerHour")}</th>
+                      <th className="col-num">{t("totalPay")}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {(inst.by_template || []).map((bt) => (
                       <tr key={bt.template_code}>
-                        <td>{labelFor(bt.template_code)}</td>
-                        <td>{bt.session_count}</td>
-                        <td>{bt.total_hours}</td>
-                        <td>{bt.rate_per_hour != null ? `₪${bt.rate_per_hour}` : "—"}</td>
-                        <td>{bt.total_pay != null ? `₪${bt.total_pay}` : "—"}</td>
+                        <td className="col-text">{labelFor(bt.template_code)}</td>
+                        <td className="col-num">{bt.session_count}</td>
+                        <td className="col-num">{bt.total_hours}</td>
+                        <td className="col-num">{bt.rate_per_hour != null ? `₪${bt.rate_per_hour}` : "—"}</td>
+                        <td className="col-num">{bt.total_pay != null ? `₪${bt.total_pay}` : "—"}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+                </div>
               )}
             </Card>
           ))}
@@ -293,30 +295,32 @@ export default function AdminInstructorPayrollTab({ toast }) {
           {detailSessions.length === 0 ? (
             <div className="empty-text">{t("payrollNoData")}</div>
           ) : (
-            <table className="data-table" style={{ width: "100%", fontSize: "var(--text-footnote)" }}>
+            <div className="data-table-wrap">
+            <table className="data-table">
               <thead>
                 <tr>
-                  <th>{t("date")}</th>
-                  <th>{t("startTime")}</th>
-                  <th>{t("sessionTitle")}</th>
-                  <th>{t("payrollEntityType")}</th>
-                  <th>{t("payrollHours")}</th>
-                  <th>{t("totalPay")}</th>
+                  <th className="col-date">{t("date")}</th>
+                  <th className="col-date">{t("startTime")}</th>
+                  <th className="col-text">{t("sessionTitle")}</th>
+                  <th className="col-text">{t("payrollEntityType")}</th>
+                  <th className="col-num">{t("payrollHours")}</th>
+                  <th className="col-num">{t("totalPay")}</th>
                 </tr>
               </thead>
               <tbody>
                 {detailSessions.map((s) => (
                   <tr key={`${s.session_id}-${s.session_date}`}>
-                    <td>{fmtDateDay(s.session_date)}</td>
-                    <td>{fmt_time(s.start_time)}</td>
-                    <td>{s.title}</td>
-                    <td>{labelFor(s.template_code)}</td>
-                    <td>{s.duration_hours}</td>
-                    <td>{s.pay_amount != null ? `₪${s.pay_amount}` : "—"}</td>
+                    <td className="col-date">{fmtDateDay(s.session_date)}</td>
+                    <td className="col-date" dir="ltr">{fmt_time(s.start_time)}</td>
+                    <td className="col-text">{s.title}</td>
+                    <td className="col-text col-text--mid">{labelFor(s.template_code)}</td>
+                    <td className="col-num">{s.duration_hours}</td>
+                    <td className="col-num">{s.pay_amount != null ? `₪${s.pay_amount}` : "—"}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </Card>
       )}

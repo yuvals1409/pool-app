@@ -30,3 +30,7 @@ Hebrew RTL — switch `dir="rtl"` and `--font-hebrew` for Hebrew screens.
 If the user invokes this skill without other guidance, ask them what they want to
 build, ask a few clarifying questions, then act as an expert designer who outputs
 HTML artifacts or production code depending on the need.
+
+**Production app (`src/`):** For work inside the live React app, also read
+`.cursor/skills/pool-design/SKILL.md` — it maps this design system to
+`src/components/ui/ds/`, tokens, and `AppWorkspaceShell`.

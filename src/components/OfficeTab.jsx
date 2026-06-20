@@ -231,21 +231,21 @@ export default function OfficeTab({ toast }) {
           <table className="data-table">
             <thead>
               <tr>
-                <th>{t("child")}</th>
-                <th>{t("sectionClass")}</th>
-                <th>{t("paymentStatus")}</th>
-                <th>{t("validUntil")}</th>
-                <th></th>
+                <th className="col-text">{t("child")}</th>
+                <th className="col-text">{t("sectionClass")}</th>
+                <th className="col-badge">{t("paymentStatus")}</th>
+                <th className="col-date">{t("validUntil")}</th>
+                <th className="col-actions"></th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row) => (
                 <tr key={row.id}>
-                  <td>{row.participant?.full_name}</td>
-                  <td>{formatProductLabel(row.product, days, row.product?.product_templates?.code)}</td>
-                  <td><Badge variant={paymentBadgeVariant(row.payment_status)}>{paymentLabel(row.payment_status)}</Badge></td>
-                  <td>{fmtDateDay(row.valid_until)}</td>
-                  <td>{renderPaymentActions(row)}</td>
+                  <td className="col-text">{row.participant?.full_name}</td>
+                  <td className="col-text col-text--mid">{formatProductLabel(row.product, days, row.product?.product_templates?.code)}</td>
+                  <td className="col-badge"><Badge variant={paymentBadgeVariant(row.payment_status)}>{paymentLabel(row.payment_status)}</Badge></td>
+                  <td className="col-date">{fmtDateDay(row.valid_until)}</td>
+                  <td className="col-actions">{renderPaymentActions(row)}</td>
                 </tr>
               ))}
             </tbody>

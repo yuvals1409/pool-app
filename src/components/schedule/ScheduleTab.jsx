@@ -25,7 +25,12 @@ import { useIsDesktop } from "../../lib/useBreakpoint.js";
 import { Spinner, EmptyState } from "../ui/ds/index.js";
 import "./schedule.css";
 
-const ScheduleTab = forwardRef(function ScheduleTab({ profile, toast, onMarkAttendance }, ref) {
+const ScheduleTab = forwardRef(function ScheduleTab({
+  profile,
+  toast,
+  onMarkAttendance,
+  embedded = false,
+}, ref) {
   const i18n = useLang();
   const { t } = i18n;
   const isDesktop = useIsDesktop();
@@ -235,16 +240,22 @@ const ScheduleTab = forwardRef(function ScheduleTab({ profile, toast, onMarkAtte
     canEdit,
   };
 
-  const panelLayout = isDesktop ? "inline" : "sheet";
-  const hasRailPanel = isDesktop && (panel || sessionPanel);
-  const wrapClass = `schedule-wrap${hasRailPanel ? " schedule-wrap--with-rail" : ""}${isDesktop ? " schedule-wrap--desktop" : ""}`;
+  const panelLayout = isDesktop && !embedded ? "inline" : "sheet";
+  const hasRailPanel = isDesktop && !embedded && (panel || sessionPanel);
+  const wrapClass = `schedule-wrap${hasRailPanel ? " schedule-wrap--with-rail" : ""}${isDesktop && !embedded ? " schedule-wrap--desktop" : ""}${embedded ? " schedule-wrap--embedded" : ""}`;
 
   return (
     <div className={wrapClass}>
-      {!isDesktop && (
+      {!isDesktop && !embedded && (
         <>
           <div className="section-title">{t("schedule")}</div>
           <div className="section-sub">{t("scheduleSub")}</div>
+        </>
+      )}
+      {embedded && (
+        <>
+          <div className="section-title">{t("personalSectionSchedule")}</div>
+          <div className="section-sub">{t("personalSectionScheduleSub")}</div>
         </>
       )}
 

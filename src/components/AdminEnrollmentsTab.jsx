@@ -30,26 +30,6 @@ const PAYMENT_STATUSES = ["unpaid", "paid", "waived"];
 const HISTORY_FILTERS = ["active", "all", "cancelled"];
 const PAYMENT_BADGE_VARIANT = { paid: "success", unpaid: "warn", waived: "neutral" };
 
-const TABLE_TH = {
-  textAlign: "start",
-  padding: "10px 14px",
-  fontSize: 11,
-  fontWeight: 600,
-  letterSpacing: "0.04em",
-  textTransform: "uppercase",
-  color: "var(--ink-soft)",
-  borderBottom: "1px solid var(--border)",
-  whiteSpace: "nowrap",
-};
-
-const TABLE_TD = {
-  padding: "11px 14px",
-  fontSize: 14,
-  color: "var(--ink)",
-  borderBottom: "1px solid var(--border)",
-  verticalAlign: "middle",
-};
-
 function normalizePhone(phone) {
   return phone.replace(/\s/g, "").trim();
 }
@@ -533,24 +513,22 @@ export default function AdminEnrollmentsTab({ toast }) {
     </div>
   );
 
-  const renderTableRow = (row, index, total) => {
+  const renderTableRow = (row) => {
     const isEditing = editingId === row.id;
     if (isEditing) {
       return (
         <tr key={row.id} className="data-table-edit-row">
-          <td colSpan={7} style={{ padding: 16 }}>{renderEditFields(row)}</td>
+          <td colSpan={7}>{renderEditFields(row)}</td>
         </tr>
       );
     }
-    const last = index === total - 1;
-    const cell = last ? { ...TABLE_TD, borderBottom: "none" } : TABLE_TD;
     const childName = row.participant?.full_name || "—";
     return (
       <tr key={row.id}>
-        <td style={cell}>
-          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+        <td className="col-text">
+          <div className="cell-primary">
             <Avatar name={childName} size={28} />
-            <span style={{ fontWeight: 500 }}>
+            <span>
               {childName}
               {!row.active && (
                 <Badge variant="neutral" style={{ marginInlineStart: 8 }}>{t("cancelled")}</Badge>
@@ -558,9 +536,9 @@ export default function AdminEnrollmentsTab({ toast }) {
             </span>
           </div>
         </td>
-        <td style={{ ...cell, color: "var(--ink-mid)" }} dir="ltr">{row.participant?.family?.phone || "—"}</td>
-        <td style={{ ...cell, color: "var(--ink-mid)" }}>{productLabel(row.product)}</td>
-        <td style={cell}>
+        <td className="col-phone" dir="ltr">{row.participant?.family?.phone || "—"}</td>
+        <td className="col-text col-text--mid">{productLabel(row.product)}</td>
+        <td className="col-badge">
           <Badge
             variant={PAYMENT_BADGE_VARIANT[row.payment_status] || "neutral"}
             dot={row.payment_status !== "waived"}
@@ -568,9 +546,9 @@ export default function AdminEnrollmentsTab({ toast }) {
             {paymentLabel(row.payment_status)}
           </Badge>
         </td>
-        <td style={{ ...cell, color: "var(--ink-mid)" }}>{renderUtilization(row)}</td>
-        <td style={{ ...cell, color: "var(--ink-mid)" }}>{fmtDateDay(row.valid_until)}</td>
-        <td style={cell}><div className="actions-cell">{renderRowActions(row)}</div></td>
+        <td className="col-num">{renderUtilization(row)}</td>
+        <td className="col-date">{fmtDateDay(row.valid_until)}</td>
+        <td className="col-actions"><div className="actions-cell">{renderRowActions(row)}</div></td>
       </tr>
     );
   };
@@ -738,33 +716,26 @@ export default function AdminEnrollmentsTab({ toast }) {
           {searchMode && searchQuery.trim() ? t("noEnrollmentsFound") : t("noEnrollmentsInClass")}
         </div>
       ) : isDesktop ? (
-        <div
-          style={{
-            border: "1px solid var(--border)",
-            borderRadius: "var(--radius-md)",
-            overflow: "hidden",
-            background: "var(--surface)",
-          }}
-        >
+        <div className="data-table-wrap">
           {!searchMode && selectedProductId && (
-            <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)", fontSize: 13, fontWeight: 500, color: "var(--ink-mid)" }}>
+            <div className="data-table-header">
               {historyFilter === "active" ? t("activeEnrollments") : t("enrollmentHistory")} ({displayRows.length})
             </div>
           )}
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <table className="data-table">
             <thead>
               <tr>
-                <th style={TABLE_TH}>{t("child")}</th>
-                <th style={TABLE_TH}>{t("parentPhone")}</th>
-                <th style={TABLE_TH}>{t("sectionClass")}</th>
-                <th style={TABLE_TH}>{t("paymentStatus")}</th>
-                <th style={TABLE_TH}>{t("utilizationBalance")}</th>
-                <th style={TABLE_TH}>{t("validUntil")}</th>
-                <th style={TABLE_TH}></th>
+                <th className="col-text">{t("child")}</th>
+                <th className="col-phone">{t("parentPhone")}</th>
+                <th className="col-text">{t("sectionClass")}</th>
+                <th className="col-badge">{t("paymentStatus")}</th>
+                <th className="col-num">{t("utilizationBalance")}</th>
+                <th className="col-date">{t("validUntil")}</th>
+                <th className="col-actions"></th>
               </tr>
             </thead>
             <tbody>
-              {displayRows.map((row, i) => renderTableRow(row, i, displayRows.length))}
+              {displayRows.map((row) => renderTableRow(row))}
             </tbody>
           </table>
         </div>

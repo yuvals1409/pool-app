@@ -1,4 +1,4 @@
-import { Waves, ScanLine, Calendar, Settings, ClipboardList } from "lucide-react";
+import { Waves, ScanLine, Calendar, Settings, ClipboardList, UserRound } from "lucide-react";
 
 const TAB_ICON_MAP = {
   instructor: Waves,
@@ -7,6 +7,7 @@ const TAB_ICON_MAP = {
   schedule: Calendar,
   admin: Settings,
   office: Settings,
+  personal: UserRound,
 };
 
 export function TabIcon({ id, active = false }) {
