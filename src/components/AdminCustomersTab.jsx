@@ -3,6 +3,8 @@ import { supabase } from "../lib/supabase.js";
 import { useLang } from "../i18n.jsx";
 import { formatProductLabel } from "../lib/productLabel.js";
 import { useIsDesktop } from "../lib/useBreakpoint.js";
+import { PARTICIPANT_GRADES, genderLabel } from "../lib/participantFields.js";
+import { useStudentProfile } from "../lib/StudentProfileContext.jsx";
 import {
   Badge,
   Button,
@@ -113,6 +115,7 @@ function matchesCreatedRange(createdAt, from, to) {
 
 export default function AdminCustomersTab({ toast }) {
   const { t, days, fmtDateDay } = useLang();
+  const { openProfile } = useStudentProfile();
   const isDesktop = useIsDesktop();
   const [families, setFamilies] = useState([]);
   const [seasons, setSeasons] = useState([]);
@@ -136,6 +139,11 @@ export default function AdminCustomersTab({ toast }) {
   const [ageMin, setAgeMin] = useState("");
   const [ageMax, setAgeMax] = useState("");
   const [sortBy, setSortBy] = useState("newest");
+  const [editingParticipantId, setEditingParticipantId] = useState(null);
+  const [editGender, setEditGender] = useState("");
+  const [editGrade, setEditGrade] = useState("");
+  const [editBirthDate, setEditBirthDate] = useState("");
+  const [savingParticipantId, setSavingParticipantId] = useState(null);
 
   const paymentLabel = (status) => ({
     paid: t("paymentPaid"),
@@ -146,7 +154,7 @@ export default function AdminCustomersTab({ toast }) {
   const familySelect = `
     id, phone, email, parent_name, created_at,
     participants(
-      id, full_name, birth_date, gender, external_client_id, created_at,
+      id, full_name, birth_date, gender, grade, external_client_id, created_at, first_enrolled_at,
       enrollments(
         id, payment_status, valid_from, valid_until, active, created_at,
         product:products(
@@ -183,6 +191,45 @@ export default function AdminCustomersTab({ toast }) {
   }, [toast, t]);
 
   useEffect(() => { load(); }, [load]);
+
+  const startEditParticipant = (participant) => {
+    setEditingParticipantId(participant.id);
+    setEditGender(participant.gender || "");
+    setEditGrade(participant.grade || "");
+    setEditBirthDate(participant.birth_date || "");
+  };
+
+  const cancelEditParticipant = () => {
+    setEditingParticipantId(null);
+    setEditGender("");
+    setEditGrade("");
+    setEditBirthDate("");
+  };
+
+  const saveParticipant = async (participantId) => {
+    setSavingParticipantId(participantId);
+    try {
+      let prevGender = null;
+      for (const fam of families) {
+        const p = (fam.participants || []).find((row) => row.id === participantId);
+        if (p) { prevGender = p.gender; break; }
+      }
+      const genderChanged = editGender && editGender !== prevGender;
+      const { error } = await supabase.from("participants").update({
+        gender: editGender || null,
+        grade: editGrade || null,
+        birth_date: editBirthDate || null,
+        ...(genderChanged ? { gender_manual_at: new Date().toISOString() } : {}),
+      }).eq("id", participantId);
+      if (error) throw error;
+      toast.show(t("save"));
+      cancelEditParticipant();
+      await load();
+    } catch (e) {
+      toast.show(e.message || t("systemError"));
+    }
+    setSavingParticipantId(null);
+  };
 
   useEffect(() => {
     if (!seasonId) {
@@ -572,10 +619,55 @@ export default function AdminCustomersTab({ toast }) {
                             <div style={{ fontWeight: 600, marginBottom: 8 }}>{participant.full_name}</div>
                             <div style={{ fontSize: 13, color: "var(--ink-soft)", marginBottom: 8 }}>
                               {age != null ? `${t("childAge")}: ${age}` : t("customersAgeUnknown")}
-                              {participant.gender ? ` · ${t(`customersGender_${participant.gender}`) || participant.gender}` : ""}
+                              {participant.gender ? ` · ${genderLabel(t, participant.gender)}` : ""}
+                              {participant.grade ? ` · ${t("participantGradeLabel")}: ${participant.grade}` : ""}
                               {participant.external_client_id ? ` · ${t("customersExternalId")}: ${participant.external_client_id}` : ""}
                               {participant.birth_date ? ` · ${fmtDateDay(participant.birth_date)}` : ""}
+                              {participant.first_enrolled_at ? ` · ${t("customersFirstEnrolled")}: ${fmtDateDay(participant.first_enrolled_at)}` : ""}
                             </div>
+                            {editingParticipantId === participant.id ? (
+                              <div style={{ display: "grid", gap: 8, maxWidth: 360, marginBottom: 12 }}>
+                                <Field label={t("participantGenderLabel")}>
+                                  <Select value={editGender} onChange={(e) => setEditGender(e.target.value)}>
+                                    <option value="">{t("participantGenderLabel")}</option>
+                                    <option value="male">{t("participantGender_male")}</option>
+                                    <option value="female">{t("participantGender_female")}</option>
+                                  </Select>
+                                </Field>
+                                <Field label={t("participantBirthDateLabel")}>
+                                  <Input type="date" dir="ltr" value={editBirthDate} onChange={(e) => setEditBirthDate(e.target.value)} />
+                                </Field>
+                                <Field label={t("participantGradeLabel")}>
+                                  <Select value={editGrade} onChange={(e) => setEditGrade(e.target.value)}>
+                                    <option value="">{t("participantGradeLabel")}</option>
+                                    {PARTICIPANT_GRADES.map((g) => (
+                                      <option key={g} value={g}>{g}</option>
+                                    ))}
+                                  </Select>
+                                </Field>
+                                <div style={{ display: "flex", gap: 8 }}>
+                                  <Button
+                                    size="sm"
+                                    disabled={savingParticipantId === participant.id}
+                                    onClick={() => saveParticipant(participant.id)}
+                                  >
+                                    {t("save")}
+                                  </Button>
+                                  <Button size="sm" variant="secondary" onClick={cancelEditParticipant}>
+                                    {t("cancel")}
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div style={{ marginBottom: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                                <Button size="sm" variant="outline" onClick={() => startEditParticipant(participant)}>
+                                  {t("edit")}
+                                </Button>
+                                <Button size="sm" variant="secondary" onClick={() => openProfile(participant.id)}>
+                                  {t("openFullProfile")}
+                                </Button>
+                              </div>
+                            )}
                             {enrollments.length === 0 ? (
                               <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>{t("customersNoEnrollments")}</div>
                             ) : (

@@ -36,13 +36,15 @@ import AdminSeasonsTab from "./components/AdminSeasonsTab.jsx";
 import AdminAttendanceTab from "./components/AdminAttendanceTab.jsx";
 import AdminUtilizationTab from "./components/AdminUtilizationTab.jsx";
 import AdminDashboardTab from "./components/AdminDashboardTab.jsx";
+import AdminStudentsTab from "./components/AdminStudentsTab.jsx";
 import AdminSheetSyncTab from "./components/AdminSheetSyncTab.jsx";
 import AdminWaitlistTab from "./components/AdminWaitlistTab.jsx";
 import AdminInstructorPayrollTab from "./components/AdminInstructorPayrollTab.jsx";
 import AdminCustomersTab from "./components/AdminCustomersTab.jsx";
 import InstructorAttendanceTab from "./components/InstructorAttendanceTab.jsx";
 import InstructorPersonalTab from "./components/InstructorPersonalTab.jsx";
-import PlatformGatePage from "./components/PlatformGatePage.jsx";
+import { StudentProfileProvider, useStudentProfile } from "./lib/StudentProfileContext.jsx";
+import StudentProfilePanel from "./components/StudentProfilePanel.jsx";
 import AssessmentRegisterPage from "./components/AssessmentRegisterPage.jsx";
 import SummerRegisterPage from "./components/SummerRegisterPage.jsx";
 import { parseAssessmentRegisterPath } from "./lib/assessment.js";
@@ -387,7 +389,15 @@ function PendingPage({ user, onLogout }) {
 function InstructorTab({ profile, toast }) {
   const i18n = useLang();
   const { t, fmtDateDay, dir } = i18n;
-  const blank = { child_name:"", lesson_date:"", start_time:"09:00", parent_phone:"", lesson_type:"once" };
+  const blank = {
+    child_name: "",
+    lesson_date: "",
+    start_time: "09:00",
+    parent_phone: "",
+    lesson_type: "once",
+    price: "",
+    payment_status: "unpaid",
+  };
   const [form, setForm]       = useState(blank);
   const [created, setCreated] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -397,10 +407,19 @@ function InstructorTab({ profile, toast }) {
   useEffect(() => { ensureWeeklyLessonsGenerated(); }, []);
 
   const create = async () => {
-    const { child_name, lesson_date, start_time, parent_phone, lesson_type } = form;
+    const { child_name, lesson_date, start_time, parent_phone, lesson_type, price, payment_status } = form;
     if (!child_name || !lesson_date || !start_time || !parent_phone) return toast.show(t("fillAllFields"));
     if (!isValidStartTime(start_time)) return toast.show(t("invalidTime"));
+    const lessonPrice = price.trim() ? Number(price) : null;
+    const payStatus = payment_status || "unpaid";
     setLoading(true);
+
+    const lessonPayload = {
+      child_name, lesson_date, start_time, end_time: start_time,
+      instructor_name: profile.full_name, instructor_id: profile.id, parent_phone,
+      price: lessonPrice,
+      payment_status: payStatus,
+    };
 
     if (lesson_type === "recurring") {
       const day_of_week = dateToDayOfWeek(lesson_date);
@@ -416,11 +435,7 @@ function InstructorTab({ profile, toast }) {
         return;
       }
       const { data, error } = await supabase.from("lessons")
-        .insert([{
-          child_name, lesson_date, start_time, end_time: start_time,
-          instructor_name: profile.full_name, instructor_id: profile.id, parent_phone,
-          recurring_lesson_id: recurring.id,
-        }])
+        .insert([{ ...lessonPayload, recurring_lesson_id: recurring.id }])
         .select().single();
       if (error) {
         toast.show(`${t("createError")}: ${error.message}`);
@@ -430,10 +445,7 @@ function InstructorTab({ profile, toast }) {
       setCreated({ ...data, parent_phone, isRecurring: true });
     } else {
       const { data, error } = await supabase.from("lessons")
-        .insert([{
-          child_name, lesson_date, start_time, end_time: start_time,
-          instructor_name: profile.full_name, instructor_id: profile.id, parent_phone,
-        }])
+        .insert([lessonPayload])
         .select().single();
       if (error) {
         toast.show(`${t("createError")}: ${error.message}`);
@@ -468,6 +480,19 @@ function InstructorTab({ profile, toast }) {
         <div className="lesson-info-row"><span className="li-key">{t("date")}</span><span className="li-val">{fmtDateDay(created.lesson_date)}</span></div>
         <div className="lesson-info-row"><span className="li-key">{t("startTime")}</span><span className="li-val">{fmt_time(created.start_time)}</span></div>
         <div className="lesson-info-row"><span className="li-key">{t("instructor")}</span><span className="li-val">{created.instructor_name}</span></div>
+        {created.payment_status && (
+          <div className="lesson-info-row">
+            <span className="li-key">{t("lessonPaymentStatus")}</span>
+            <span className="li-val">{{
+              paid: t("paymentPaid"),
+              unpaid: t("paymentUnpaid"),
+              waived: t("paymentWaived"),
+            }[created.payment_status] || created.payment_status}</span>
+          </div>
+        )}
+        {created.price != null && (
+          <div className="lesson-info-row"><span className="li-key">{t("lessonPrice")}</span><span className="li-val" dir="ltr">{created.price}</span></div>
+        )}
       </div>
       <div className="gap-8">
         <Button
@@ -523,6 +548,27 @@ function InstructorTab({ profile, toast }) {
               {t("recurringFirstLessonHint")}
             </div>
           )}
+        </div>
+        <div className="field">
+          <label className="label">{t("lessonPrice")}</label>
+          <input
+            className="input"
+            type="number"
+            min={0}
+            step="0.01"
+            dir="ltr"
+            value={form.price}
+            onChange={upd("price")}
+            placeholder="0"
+          />
+        </div>
+        <div className="field">
+          <label className="label">{t("lessonPaymentStatus")}</label>
+          <select className="input" value={form.payment_status} onChange={upd("payment_status")}>
+            <option value="unpaid">{t("paymentUnpaid")}</option>
+            <option value="paid">{t("paymentPaid")}</option>
+            <option value="waived">{t("paymentWaived")}</option>
+          </select>
         </div>
         <div className="field"><label className="label">{t("parentPhone")}</label>
           <ParentContactPicker
@@ -815,6 +861,18 @@ function roleBadgeVariant(role) {
   return "neutral";
 }
 
+function AdminStudentProfileHost({ toast }) {
+  const { participantId, closeProfile } = useStudentProfile();
+  return (
+    <StudentProfilePanel
+      participantId={participantId}
+      open={!!participantId}
+      onClose={closeProfile}
+      toast={toast}
+    />
+  );
+}
+
 function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
   const { t, roleLabel } = useLang();
   const isDesktop = useIsDesktop();
@@ -826,6 +884,8 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
   const [email,      setEmail]      = useState("");
   const [role,       setRole]       = useState("instructor");
   const [openRoles,  setOpenRoles]  = useState(() => new Set());
+  const [hiredAtEdits, setHiredAtEdits] = useState({});
+  const [savingHiredAtId, setSavingHiredAtId] = useState(null);
 
   const roles = assignableRoles(profile);
 
@@ -846,6 +906,11 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
     ]);
     setUsers(usersData || []);
     setInvites(invitesData || []);
+    const hiredMap = {};
+    for (const u of usersData || []) {
+      if (u.hired_at) hiredMap[u.id] = u.hired_at;
+    }
+    setHiredAtEdits(hiredMap);
     setLoading(false);
   };
 
@@ -900,6 +965,17 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
     load();
   };
 
+  const saveHiredAt = async (user) => {
+    if (!canManage(profile)) return;
+    const value = hiredAtEdits[user.id] || null;
+    setSavingHiredAtId(user.id);
+    const { error } = await supabase.from("profiles").update({ hired_at: value || null }).eq("id", user.id);
+    if (error) toast.show(error.message);
+    else toast.show(t("hiredAtUpdated"));
+    setSavingHiredAtId(null);
+    load();
+  };
+
   const approved = users.filter(u => u.status === "approved" && u.role);
   const approvedEmails = new Set(approved.map(u => u.email?.toLowerCase()));
   const waitingInvites = invites.filter(i => !approvedEmails.has(i.email?.toLowerCase()));
@@ -921,6 +997,26 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
           )}
         </div>
         <div style={{ fontSize: 13, color: "var(--ink-soft)" }} dir="ltr">{u.email}</div>
+        {u.role === "instructor" && canManage(profile) && (
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{t("hiredAt")}</span>
+            <Input
+              type="date"
+              dir="ltr"
+              value={hiredAtEdits[u.id] || ""}
+              onChange={(e) => setHiredAtEdits((prev) => ({ ...prev, [u.id]: e.target.value }))}
+              style={{ width: 150, minHeight: 32, height: 32 }}
+            />
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={savingHiredAtId === u.id}
+              onClick={() => saveHiredAt(u)}
+            >
+              {t("save")}
+            </Button>
+          </div>
+        )}
       </div>
       {canRevokeUser(profile, u) && (
         <Button variant="danger" size="sm" onClick={() => revoke(u)}>{t("revoke")}</Button>
@@ -939,11 +1035,13 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
     { id: "utilization", label: t("tabUtilization") },
     { id: "waitlist", label: t("tabWaitlist") },
     { id: "dashboard", label: t("tabDashboard") },
+    { id: "students", label: t("tabStudents") },
     { id: "payroll", label: t("tabPayroll") },
     { id: "sheets", label: t("tabSheetSync") },
   ].filter((section) => getAdminSections(profile, isDesktop).includes(section.id));
 
   return (
+    <StudentProfileProvider>
     <div>
       <div className="admin-shell">
         {isDesktop && (
@@ -992,6 +1090,8 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
         <AdminUtilizationTab toast={toast} />
       ) : adminSection === "dashboard" ? (
         <AdminDashboardTab toast={toast} />
+      ) : adminSection === "students" ? (
+        <AdminStudentsTab toast={toast} />
       ) : adminSection === "payroll" ? (
         <AdminInstructorPayrollTab toast={toast} />
       ) : adminSection === "waitlist" ? (
@@ -1101,6 +1201,8 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
         </div>
       </div>
     </div>
+    <AdminStudentProfileHost toast={toast} />
+    </StudentProfileProvider>
   );
 }
 
@@ -1592,6 +1694,7 @@ export default function App() {
     utilization: t("tabUtilization"),
     waitlist: t("tabWaitlist"),
     dashboard: t("tabDashboard"),
+    students: t("tabStudents"),
     payroll: t("tabPayroll"),
     sheets: t("tabSheetSync"),
   };

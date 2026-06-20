@@ -19,6 +19,7 @@ export const ADMIN_SECTION_IDS = [
   "utilization",
   "waitlist",
   "dashboard",
+  "students",
   "payroll",
   "sheets",
 ];

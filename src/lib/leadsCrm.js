@@ -9,7 +9,14 @@ export const LEAD_FUNNEL_STATUSES = [
   "abandoned",
 ];
 
-export const LEAD_SOURCES = ["recommendation", "facebook", "website", "import"];
+export const LEAD_SOURCES = [
+  "facebook",
+  "instagram",
+  "recommendation",
+  "website",
+  "signage",
+  "import",
+];
 
 export function leadStatusBadgeClass(status) {
   if (status === "new") return "badge-pending";
@@ -21,7 +28,17 @@ export function leadStatusBadgeClass(status) {
   return "badge-pending";
 }
 
-export async function createAssessmentLead({ phone, childName, parentName, source, notes, childAge }) {
+export async function createAssessmentLead({
+  phone,
+  childName,
+  parentName,
+  source,
+  notes,
+  childAge,
+  gender,
+  grade,
+  birthDate,
+}) {
   const { data, error } = await supabase.rpc("create_assessment_lead", {
     p_phone: phone,
     p_child_name: childName,
@@ -29,6 +46,9 @@ export async function createAssessmentLead({ phone, childName, parentName, sourc
     p_source: source ?? "website",
     p_notes: notes ?? null,
     p_child_age: childAge ?? null,
+    p_gender: gender ?? null,
+    p_grade: grade ?? null,
+    p_birth_date: birthDate ?? null,
   });
   if (error) throw error;
   return data;

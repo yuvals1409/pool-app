@@ -9,9 +9,16 @@ import { copyEnrollmentTicketLink } from "../lib/accessPass.js";
 import { regenerateEnrollmentPasses } from "../lib/summerCourse.js";
 import { formatProductLabel } from "../lib/productLabel.js";
 import { useLang } from "../i18n.jsx";
+import { useStudentProfile } from "../lib/StudentProfileContext.jsx";
 import { fmt_time } from "../lib/lessonDates.js";
 import { cancelEnrollment as cancelEnrollmentRpc } from "../lib/waitlist.js";
 import { useIsDesktop } from "../lib/useBreakpoint.js";
+import {
+  PARTICIPANT_GRADES,
+  gradeRequired,
+  resolveBirthDate,
+  validateParticipantFields,
+} from "../lib/participantFields.js";
 import { getEnrollmentUtilization, listUtilizationReport } from "../lib/utilization.js";
 import MakeupBookingModal from "./MakeupBookingModal.jsx";
 import {
@@ -36,6 +43,7 @@ function normalizePhone(phone) {
 
 export default function AdminEnrollmentsTab({ toast }) {
   const { t, days, fmtDateDay } = useLang();
+  const { openProfile } = useStudentProfile();
   const isDesktop = useIsDesktop();
   const [products, setProducts] = useState([]);
   const [season, setSeason] = useState(null);
@@ -55,6 +63,9 @@ export default function AdminEnrollmentsTab({ toast }) {
   const [parentPhone, setParentPhone] = useState("");
   const [parentName, setParentName] = useState("");
   const [childName, setChildName] = useState("");
+  const [addGender, setAddGender] = useState("");
+  const [addGrade, setAddGrade] = useState("");
+  const [addBirthDate, setAddBirthDate] = useState("");
   const [addProductId, setAddProductId] = useState("");
   const [addPaymentStatus, setAddPaymentStatus] = useState("unpaid");
 
@@ -65,6 +76,9 @@ export default function AdminEnrollmentsTab({ toast }) {
   const [editPaymentStatus, setEditPaymentStatus] = useState("unpaid");
   const [editValidFrom, setEditValidFrom] = useState("");
   const [editValidUntil, setEditValidUntil] = useState("");
+  const [editGender, setEditGender] = useState("");
+  const [editGrade, setEditGrade] = useState("");
+  const [editBirthDate, setEditBirthDate] = useState("");
   const [utilizationMap, setUtilizationMap] = useState({});
   const [makeupRow, setMakeupRow] = useState(null);
   const [makeupUtil, setMakeupUtil] = useState(null);
@@ -79,7 +93,7 @@ export default function AdminEnrollmentsTab({ toast }) {
 
   const enrollmentSelect = `
     id, payment_status, valid_from, valid_until, active,
-    participant:participants(id, full_name, family:families(id, phone, parent_name)),
+    participant:participants(id, full_name, birth_date, gender, grade, family:families(id, phone, parent_name)),
     product:products(id, name, day_of_week, start_time, end_time, instructor_name, level, level_label, target_audience, gender, schedule_pattern, product_templates(code))
   `;
 
@@ -275,6 +289,9 @@ export default function AdminEnrollmentsTab({ toast }) {
     setEditPaymentStatus(row.payment_status);
     setEditValidFrom(row.valid_from || "");
     setEditValidUntil(row.valid_until || "");
+    setEditGender(row.participant?.gender || "");
+    setEditGrade(row.participant?.grade || "");
+    setEditBirthDate(row.participant?.birth_date || "");
   };
 
   const cancelEdit = () => setEditingId(null);
@@ -287,7 +304,12 @@ export default function AdminEnrollmentsTab({ toast }) {
         await supabase.from("families").update({ phone: normalizePhone(editParentPhone) }).eq("id", familyId);
       }
       if (row.participant?.id && editChildName.trim()) {
-        await supabase.from("participants").update({ full_name: editChildName.trim() }).eq("id", row.participant.id);
+        await supabase.from("participants").update({
+          full_name: editChildName.trim(),
+          gender: editGender || null,
+          grade: editGrade || null,
+          birth_date: editBirthDate || null,
+        }).eq("id", row.participant.id);
       }
       const productChanged = editProductId && editProductId !== row.product?.id;
       const { error } = await supabase.from("enrollments").update({
@@ -344,7 +366,7 @@ export default function AdminEnrollmentsTab({ toast }) {
     return created.id;
   };
 
-  const findOrCreateParticipant = async (familyId, fullName) => {
+  const findOrCreateParticipant = async (familyId, fullName, { gender, grade, birthDate } = {}) => {
     const trimmed = fullName.trim();
     const { data: siblings } = await supabase
       .from("participants")
@@ -353,10 +375,25 @@ export default function AdminEnrollmentsTab({ toast }) {
     const match = (siblings || []).find(
       (p) => p.full_name.trim().toLowerCase() === trimmed.toLowerCase(),
     );
-    if (match) return match.id;
+    if (match) {
+      if (gender || grade || birthDate) {
+        await supabase.from("participants").update({
+          ...(gender ? { gender } : {}),
+          ...(grade ? { grade } : {}),
+          ...(birthDate ? { birth_date: birthDate } : {}),
+        }).eq("id", match.id);
+      }
+      return match.id;
+    }
     const { data: created, error } = await supabase
       .from("participants")
-      .insert({ family_id: familyId, full_name: trimmed })
+      .insert({
+        family_id: familyId,
+        full_name: trimmed,
+        gender: gender || null,
+        grade: grade || null,
+        birth_date: birthDate || null,
+      })
       .select("id")
       .single();
     if (error) throw error;
@@ -372,10 +409,21 @@ export default function AdminEnrollmentsTab({ toast }) {
     if (!productId) return toast.show(t("selectClassRequired"));
     if (!season) return toast.show(t("systemError"));
 
+    const fieldErr = validateParticipantFields({
+      gender: addGender,
+      grade: addGrade || null,
+      birthDate: addBirthDate || null,
+    }, { t });
+    if (fieldErr) return toast.show(fieldErr);
+
     setAddSaving(true);
     try {
       const familyId = await findOrCreateFamily(phone, parentName.trim());
-      const participantId = await findOrCreateParticipant(familyId, child);
+      const participantId = await findOrCreateParticipant(familyId, child, {
+        gender: addGender,
+        grade: addGrade || null,
+        birthDate: addBirthDate || null,
+      });
 
       const { data: existingEnr } = await supabase
         .from("enrollments")
@@ -411,6 +459,9 @@ export default function AdminEnrollmentsTab({ toast }) {
       setParentPhone("");
       setParentName("");
       setChildName("");
+      setAddGender("");
+      setAddGrade("");
+      setAddBirthDate("");
       setShowAddForm(false);
       if (searchMode) await runSearch();
       else if (productId === selectedProductId) await loadByProduct(selectedProductId, historyFilter);
@@ -425,11 +476,44 @@ export default function AdminEnrollmentsTab({ toast }) {
 
   const productLabel = (p) => formatProductLabel(p, days, p?.product_templates?.code);
 
+  const renderParticipantFields = (gender, setGender, grade, setGrade, birthDate, setBirthDate) => {
+    const needsGrade = gradeRequired({ birthDate: birthDate || null });
+    return (
+      <>
+        <Field label={t("participantGenderLabel")}>
+          <Select value={gender} onChange={(e) => setGender(e.target.value)}>
+            <option value="">{t("participantGenderLabel")}</option>
+            <option value="male">{t("participantGender_male")}</option>
+            <option value="female">{t("participantGender_female")}</option>
+          </Select>
+        </Field>
+        <Field label={t("participantBirthDateLabel")}>
+          <Input type="date" dir="ltr" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+        </Field>
+        <Field label={t("participantGradeLabel")}>
+          <Select
+            value={grade}
+            onChange={(e) => setGrade(e.target.value)}
+            disabled={!needsGrade}
+          >
+            <option value="">{needsGrade ? t("participantGradeLabel") : t("participantGradeOptionalAdult")}</option>
+            {PARTICIPANT_GRADES.map((g) => (
+              <option key={g} value={g}>{g}</option>
+            ))}
+          </Select>
+        </Field>
+      </>
+    );
+  };
+
   const renderEditFields = (row) => (
     <>
       <Field label={t("childName")}>
         <Input value={editChildName} onChange={(e) => setEditChildName(e.target.value)} />
       </Field>
+      {renderParticipantFields(
+        editGender, setEditGender, editGrade, setEditGrade, editBirthDate, setEditBirthDate,
+      )}
       <Field label={t("parentPhone")}>
         <Input type="tel" dir="ltr" value={editParentPhone} onChange={(e) => setEditParentPhone(e.target.value)} />
       </Field>
@@ -523,12 +607,19 @@ export default function AdminEnrollmentsTab({ toast }) {
       );
     }
     const childName = row.participant?.full_name || "—";
+    const participantId = row.participant?.id;
     return (
       <tr key={row.id}>
         <td className="col-text">
           <div className="cell-primary">
             <Avatar name={childName} size={28} />
-            <span>
+            <span
+              role={participantId ? "button" : undefined}
+              tabIndex={participantId ? 0 : undefined}
+              onClick={participantId ? () => openProfile(participantId) : undefined}
+              onKeyDown={participantId ? (e) => { if (e.key === "Enter") openProfile(participantId); } : undefined}
+              style={participantId ? { cursor: "pointer", textDecoration: "underline" } : undefined}
+            >
               {childName}
               {!row.active && (
                 <Badge variant="neutral" style={{ marginInlineStart: 8 }}>{t("cancelled")}</Badge>
@@ -556,6 +647,7 @@ export default function AdminEnrollmentsTab({ toast }) {
   const renderRow = (row) => {
     const isEditing = editingId === row.id;
     const childName = row.participant?.full_name || "—";
+    const participantId = row.participant?.id;
     return (
       <div className="log-item" key={row.id} style={{ flexDirection: "column", alignItems: "stretch", gap: 8 }}>
         {isEditing ? renderEditFields(row) : (
@@ -563,7 +655,11 @@ export default function AdminEnrollmentsTab({ toast }) {
             <div>
               <div className="log-name" style={{ display: "flex", alignItems: "center", gap: 9 }}>
                 <Avatar name={childName} size={28} />
-                <span>
+                <span
+                  role={participantId ? "button" : undefined}
+                  onClick={participantId ? () => openProfile(participantId) : undefined}
+                  style={participantId ? { cursor: "pointer", textDecoration: "underline" } : undefined}
+                >
                   {childName}
                   {!row.active && (
                     <Badge variant="neutral" style={{ marginInlineStart: 8 }}>{t("cancelled")}</Badge>
@@ -688,6 +784,9 @@ export default function AdminEnrollmentsTab({ toast }) {
           <Field label={t("childName")}>
             <Input value={childName} onChange={(e) => setChildName(e.target.value)} />
           </Field>
+          {renderParticipantFields(
+            addGender, setAddGender, addGrade, setAddGrade, addBirthDate, setAddBirthDate,
+          )}
           <Field label={t("selectClass")}>
             <Select value={addProductId} onChange={(e) => setAddProductId(e.target.value)}>
               <option value="">{t("selectClassPlaceholder")}</option>

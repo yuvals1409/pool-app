@@ -2,6 +2,57 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const MONTHLY_TABS = ["מאי", "יוני", "יולי"];
+const ANNUAL_DAY_TABS = ["שני", "שלישי", "רביעי", "חמישי", "שישי"];
+const SUMMER_TABS = ["לימוד (מאי)", "לימוד (יוני)", "לימוד (יולי)"];
+
+function normalizeSheetGender(raw: string) {
+  const s = String(raw ?? "").trim().toLowerCase();
+  if (!s) return null;
+  if (["male", "m", "ז'", "זכר", "ז"].includes(s)) return "male";
+  if (["female", "f", "נ'", "נקבה", "נ"].includes(s)) return "female";
+  return null;
+}
+
+function paymentStatusFromSheet(val: string) {
+  const s = String(val ?? "").trim();
+  if (/^(1|כן|שולם|paid|true)$/i.test(s)) return "paid";
+  if (/פטור|waived/i.test(s)) return "waived";
+  return "unpaid";
+}
+
+async function findParticipantForRow(
+  supabase: ReturnType<typeof createClient>,
+  { clientId, childName, phone }: { clientId: string; childName: string; phone: string },
+) {
+  if (clientId) {
+    const { data } = await supabase
+      .from("participants")
+      .select("id, gender_manual_at, family_id, full_name")
+      .eq("external_client_id", clientId)
+      .maybeSingle();
+    if (data) return data;
+  }
+  if (phone && childName) {
+    const { data: fam } = await supabase.from("families").select("id").eq("phone", phone).maybeSingle();
+    if (fam) {
+      const { data: parts } = await supabase
+        .from("participants")
+        .select("id, gender_manual_at, family_id, full_name")
+        .eq("family_id", fam.id);
+      const match = (parts || []).find(
+        (p) => p.full_name?.trim().toLowerCase() === childName.trim().toLowerCase(),
+      );
+      if (match) return match;
+    }
+  }
+  const { data: byName } = await supabase
+    .from("participants")
+    .select("id, gender_manual_at, family_id, full_name")
+    .eq("full_name", childName)
+    .limit(1)
+    .maybeSingle();
+  return byName;
+}
 
 function base64url(data: Uint8Array | string) {
   const str = typeof data === "string" ? data : String.fromCharCode(...data);
@@ -83,6 +134,8 @@ async function syncTabPull(supabase: ReturnType<typeof createClient>, tab: strin
   const header = rows[0].map((h) => String(h).trim().toLowerCase());
   const phoneIdx = header.findIndex((h) => h.includes("טלפון") || h.includes("phone"));
   const childIdx = header.findIndex((h) => h.includes("ילד") || h.includes("שם"));
+  const clientIdx = header.findIndex((h) => h.includes("לקוח") || h.includes("client"));
+  const genderIdx = header.findIndex((h) => h.includes("מין") || h.includes("gender"));
   const paidIdx = header.findIndex((h) => h.includes("שולם") || h.includes("paid"));
   const attendIdx = header.findIndex((h) => h.includes("נוכחות") || h.includes("attendance"));
   const assessIdx = header.findIndex((h) => h.includes("מבדק") || h.includes("assessment"));
@@ -96,10 +149,38 @@ async function syncTabPull(supabase: ReturnType<typeof createClient>, tab: strin
     const contentHash = hashRow(row);
     const phone = phoneIdx >= 0 ? String(row[phoneIdx] || "").replace(/\s/g, "") : "";
     const childName = childIdx >= 0 ? String(row[childIdx] || "").trim() : "";
+    const clientId = clientIdx >= 0 ? String(row[clientIdx] || "").trim() : "";
 
-    if (paidIdx >= 0 && phone && childName) {
+    const part = childName
+      ? await findParticipantForRow(supabase, { clientId, childName, phone })
+      : null;
+
+    if (genderIdx >= 0 && part?.id) {
+      const gender = normalizeSheetGender(String(row[genderIdx] || ""));
+      if (gender && !part.gender_manual_at) {
+        await supabase.from("participants").update({ gender }).eq("id", part.id);
+        rowsIn++;
+      }
+    }
+
+    if (paidIdx >= 0 && part?.id) {
+      const status = paymentStatusFromSheet(String(row[paidIdx] || ""));
+      const { data: enrs } = await supabase
+        .from("enrollments")
+        .select("id")
+        .eq("participant_id", part.id)
+        .eq("active", true)
+        .limit(1);
+      const enrollmentId = enrs?.[0]?.id;
+      if (enrollmentId) {
+        await supabase.from("enrollments").update({ payment_status: status }).eq("id", enrollmentId);
+        rowsIn++;
+      }
+    }
+
+    if (paidIdx >= 0 && phone && childName && !part) {
       const paidVal = String(row[paidIdx] || "").trim();
-      const status = /^(1|כן|שולם|paid|true)$/i.test(paidVal) ? "paid" : "unpaid";
+      const status = paymentStatusFromSheet(paidVal);
       const { data: parts } = await supabase
         .from("participants")
         .select("id, enrollments(id, active)")
@@ -191,7 +272,13 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401 });
   }
 
-  const { direction = "both", tabs = MONTHLY_TABS } = await req.json().catch(() => ({}));
+  const { direction = "both", tabs, mode = "monthly" } = await req.json().catch(() => ({}));
+  const defaultTabs = mode === "annual"
+    ? ANNUAL_DAY_TABS
+    : mode === "summer"
+      ? SUMMER_TABS
+      : MONTHLY_TABS;
+  const syncTabs: string[] = tabs?.length ? tabs : defaultTabs;
   const spreadsheetId = Deno.env.get("SHEETS_SPREADSHEET_ID");
   const saJson = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_JSON");
 
@@ -206,7 +293,7 @@ Deno.serve(async (req) => {
   const token = await getGoogleAccessToken(serviceAccount);
   const results = [];
 
-  for (const tab of tabs) {
+  for (const tab of syncTabs) {
     const { data: run } = await supabase.from("sheet_sync_runs").insert({
       direction,
       sheet_tab: tab,

@@ -64,6 +64,7 @@ export default function AdminSheetSyncTab({ toast }) {
           ))}
         </div>
         <p className="schedule-session-hint" style={{ marginTop: 12 }}>{t("sheetSyncCliHint")}</p>
+        <p className="schedule-session-hint" style={{ marginTop: 8 }}>{t("sheetResyncHint")}</p>
       </Card>
 
       {loading ? (

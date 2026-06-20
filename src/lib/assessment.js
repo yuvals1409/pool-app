@@ -17,7 +17,17 @@ export async function listAssessmentSlots() {
   return Array.isArray(data) ? data : [];
 }
 
-export async function registerForAssessment({ slotId, childName, childAge, parentName, phone, source }) {
+export async function registerForAssessment({
+  slotId,
+  childName,
+  childAge,
+  parentName,
+  phone,
+  source,
+  gender,
+  grade,
+  birthDate,
+}) {
   const { data, error } = await supabase.rpc("register_assessment", {
     p_slot_id: slotId,
     p_child_name: childName,
@@ -25,6 +35,9 @@ export async function registerForAssessment({ slotId, childName, childAge, paren
     p_parent_name: parentName ?? null,
     p_phone: phone,
     p_source: source ?? "website",
+    p_gender: gender ?? null,
+    p_grade: grade ?? null,
+    p_birth_date: birthDate ?? null,
   });
   if (error) throw error;
   return data;

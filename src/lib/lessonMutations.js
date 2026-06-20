@@ -27,8 +27,18 @@ function shiftDateByWeeks(baseDateStr, targetDateStr, lessonDateStr) {
 }
 
 export async function createLesson({ profile, instructor, form }) {
-  const { child_name, lesson_date, start_time, parent_phone, lesson_type } = form;
+  const {
+    child_name, lesson_date, start_time, parent_phone, lesson_type, price, payment_status,
+  } = form;
   const inst = instructor || profile;
+  const lessonPrice = price != null && String(price).trim() !== "" ? Number(price) : null;
+  const payStatus = payment_status || "unpaid";
+  const lessonBase = {
+    child_name, lesson_date, start_time, end_time: start_time,
+    instructor_name: inst.full_name, instructor_id: inst.id, parent_phone,
+    price: lessonPrice,
+    payment_status: payStatus,
+  };
 
   if (lesson_type === "recurring") {
     const day_of_week = dateToDayOfWeek(lesson_date);
@@ -41,21 +51,14 @@ export async function createLesson({ profile, instructor, form }) {
     if (recErr) return { error: recErr };
 
     const { data, error } = await supabase.from("lessons")
-      .insert([{
-        child_name, lesson_date, start_time, end_time: start_time,
-        instructor_name: inst.full_name, instructor_id: inst.id, parent_phone,
-        recurring_lesson_id: recurring.id,
-      }])
+      .insert([{ ...lessonBase, recurring_lesson_id: recurring.id }])
       .select().single();
     if (error) return { error };
     return { data: { ...data, parent_phone, isRecurring: true } };
   }
 
   const { data, error } = await supabase.from("lessons")
-    .insert([{
-      child_name, lesson_date, start_time, end_time: start_time,
-      instructor_name: inst.full_name, instructor_id: inst.id, parent_phone,
-    }])
+    .insert([lessonBase])
     .select().single();
   if (error) return { error };
   return { data: { ...data, parent_phone } };

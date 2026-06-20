@@ -15,6 +15,12 @@ import {
   addDays,
   todayDateStr,
 } from "../lib/leadsCrm.js";
+import {
+  PARTICIPANT_GRADES,
+  gradeRequired,
+  resolveBirthDate,
+  validateParticipantFields,
+} from "../lib/participantFields.js";
 import { AnimatedSheetOverlay, AnimatedSheetPanel } from "./ui/AnimatedSheet.jsx";
 import { useLang } from "../i18n.jsx";
 import { fmt_time } from "../lib/lessonDates.js";
@@ -60,6 +66,9 @@ export default function AdminAssessmentTab({ toast }) {
   const [newParentName, setNewParentName] = useState("");
   const [newChildName, setNewChildName] = useState("");
   const [newChildAge, setNewChildAge] = useState("");
+  const [newGender, setNewGender] = useState("");
+  const [newGrade, setNewGrade] = useState("");
+  const [newBirthDate, setNewBirthDate] = useState("");
   const [newSource, setNewSource] = useState("website");
   const [newNotes, setNewNotes] = useState("");
 
@@ -145,7 +154,9 @@ export default function AdminAssessmentTab({ toast }) {
   const leadSourceLabel = (source) => ({
     recommendation: t("leadSourceRecommendation"),
     facebook: t("leadSourceFacebook"),
+    instagram: t("leadSourceInstagram"),
     website: t("leadSourceWebsite"),
+    signage: t("leadSourceSignage"),
     import: t("leadSourceImport"),
     web: t("leadSourceWebsite"),
   }[source] || source);
@@ -274,6 +285,19 @@ export default function AdminAssessmentTab({ toast }) {
     if (!newPhone.trim() || !newChildName.trim()) {
       return toast.show(t("phoneRequired"));
     }
+    const ageNum = newChildAge ? Number(newChildAge) : null;
+    const resolvedBirth = resolveBirthDate({
+      birthDate: newBirthDate || null,
+      childAge: Number.isInteger(ageNum) ? ageNum : null,
+    });
+    const fieldErr = validateParticipantFields({
+      gender: newGender,
+      grade: newGrade || null,
+      birthDate: resolvedBirth,
+      childAge: ageNum,
+    }, { t });
+    if (fieldErr) return toast.show(fieldErr);
+
     setSaving(true);
     try {
       const data = await createAssessmentLead({
@@ -282,7 +306,10 @@ export default function AdminAssessmentTab({ toast }) {
         parentName: newParentName.trim() || null,
         source: newSource,
         notes: newNotes.trim() || null,
-        childAge: newChildAge ? Number(newChildAge) : null,
+        childAge: ageNum,
+        gender: newGender,
+        grade: newGrade || null,
+        birthDate: resolvedBirth,
       });
       if (data?.result !== "ok") {
         toast.show(t("systemError"));
@@ -292,6 +319,9 @@ export default function AdminAssessmentTab({ toast }) {
         setNewParentName("");
         setNewChildName("");
         setNewChildAge("");
+        setNewGender("");
+        setNewGrade("");
+        setNewBirthDate("");
         setNewNotes("");
         setNewSource("website");
         await loadLeads();
@@ -528,6 +558,22 @@ export default function AdminAssessmentTab({ toast }) {
               <Input value={newParentName} onChange={(e) => setNewParentName(e.target.value)} placeholder={t("parentName")} />
               <Input value={newChildName} onChange={(e) => setNewChildName(e.target.value)} placeholder={t("childName")} />
               <Input type="number" min={1} max={120} value={newChildAge} onChange={(e) => setNewChildAge(e.target.value)} placeholder={t("childAge")} dir="ltr" />
+              <Select value={newGender} onChange={(e) => setNewGender(e.target.value)}>
+                <option value="">{t("participantGenderLabel")}</option>
+                <option value="male">{t("participantGender_male")}</option>
+                <option value="female">{t("participantGender_female")}</option>
+              </Select>
+              <Input type="date" dir="ltr" value={newBirthDate} onChange={(e) => setNewBirthDate(e.target.value)} placeholder={t("participantBirthDateLabel")} />
+              <Select
+                value={newGrade}
+                onChange={(e) => setNewGrade(e.target.value)}
+                disabled={!gradeRequired({ birthDate: newBirthDate || null, childAge: newChildAge ? Number(newChildAge) : null })}
+              >
+                <option value="">{t("participantGradeLabel")}</option>
+                {PARTICIPANT_GRADES.map((g) => (
+                  <option key={g} value={g}>{g}</option>
+                ))}
+              </Select>
               <Select value={newSource} onChange={(e) => setNewSource(e.target.value)}>
                 {LEAD_SOURCES.filter((s) => s !== "import").map((src) => (
                   <option key={src} value={src}>{leadSourceLabel(src)}</option>

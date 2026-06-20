@@ -4,6 +4,12 @@ import { fmt_time } from "../lib/lessonDates.js";
 import { listAssessmentSlots, registerForAssessment } from "../lib/assessment.js";
 import { getPublicPassUrl } from "../lib/accessPass.js";
 import {
+  PARTICIPANT_GRADES,
+  gradeRequired,
+  resolveBirthDate,
+  validateParticipantFields,
+} from "../lib/participantFields.js";
+import {
   getWaitlistOfferToken,
   getWaitlistOffer,
   joinWaitlist,
@@ -44,6 +50,9 @@ export default function AssessmentRegisterPage({ toast }) {
   const [selectedSlotId, setSelectedSlotId] = useState("");
   const [childName, setChildName] = useState("");
   const [childAge, setChildAge] = useState("");
+  const [childGender, setChildGender] = useState("");
+  const [childGrade, setChildGrade] = useState("");
+  const [birthDate, setBirthDate] = useState("");
   const [parentName, setParentName] = useState("");
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -107,6 +116,11 @@ export default function AssessmentRegisterPage({ toast }) {
 
   const selectedSlot = slots.find((s) => s.id === selectedSlotId);
   const isFull = selectedSlot?.is_full;
+  const ageNumPreview = childAge.trim() ? Number(childAge) : null;
+  const showGrade = gradeRequired({
+    birthDate: birthDate || null,
+    childAge: Number.isInteger(ageNumPreview) ? ageNumPreview : null,
+  });
 
   const resultMessage = (result) => ({
     invalid_input: t("assessmentInvalidInput"),
@@ -114,6 +128,7 @@ export default function AssessmentRegisterPage({ toast }) {
     slot_unavailable: t("assessmentSlotUnavailable"),
     slot_full: t("slotFull"),
     duplicate_enrollment: t("duplicateEnrollment"),
+    invalid_gender: t("participantGenderRequired"),
     not_full: t("waitlistNotFull"),
     already_on_waitlist: t("waitlistAlreadyJoined"),
     target_unavailable: t("assessmentSlotUnavailable"),
@@ -144,6 +159,18 @@ export default function AssessmentRegisterPage({ toast }) {
       return;
     }
 
+    const resolvedBirth = resolveBirthDate({ birthDate: birthDate || null, childAge: ageNum });
+    const fieldErr = validateParticipantFields({
+      gender: childGender,
+      grade: childGrade || null,
+      birthDate: resolvedBirth,
+      childAge: ageNum,
+    }, { t });
+    if (fieldErr) {
+      setErrorMsg(fieldErr);
+      return;
+    }
+
     setSubmitting(true);
     try {
       if (isFull) {
@@ -168,7 +195,10 @@ export default function AssessmentRegisterPage({ toast }) {
           childAge: ageNum,
           parentName: parentName.trim() || null,
           phone: normalizedPhone,
-          source: "landing",
+          source: "website",
+          gender: childGender,
+          grade: childGrade || null,
+          birthDate: resolvedBirth,
         });
 
         if (data?.result === "ok" && data.public_token) {
@@ -510,15 +540,66 @@ export default function AssessmentRegisterPage({ toast }) {
                 </div>
 
                 <div className="field">
-                  <label className="label" htmlFor="parent-name">{t("parentNameOptional")}</label>
+                  <label className="label" htmlFor="birth-date">{t("participantBirthDateLabel")}</label>
                   <input
-                    id="parent-name"
+                    id="birth-date"
                     className="input"
-                    value={parentName}
-                    onChange={(e) => setParentName(e.target.value)}
-                    autoComplete="name"
+                    type="date"
+                    value={birthDate}
+                    onChange={(e) => setBirthDate(e.target.value)}
+                    dir="ltr"
                   />
                 </div>
+              </div>
+
+              <div className="landing-form-fields-row">
+                <div className="field">
+                  <label className="label" htmlFor="child-gender">{t("participantGenderLabel")}</label>
+                  <select
+                    id="child-gender"
+                    className="input"
+                    value={childGender}
+                    onChange={(e) => setChildGender(e.target.value)}
+                  >
+                    <option value="">{t("participantGenderLabel")}</option>
+                    <option value="male">{t("participantGender_male")}</option>
+                    <option value="female">{t("participantGender_female")}</option>
+                  </select>
+                </div>
+
+                <div className="field">
+                  <label className="label" htmlFor="child-grade">
+                    {t("participantGradeLabel")}
+                    {!showGrade && (
+                      <span style={{ fontSize: 12, color: "var(--ink-soft)", marginInlineStart: 6 }}>
+                        ({t("participantGradeOptionalAdult")})
+                      </span>
+                    )}
+                  </label>
+                  <select
+                    id="child-grade"
+                    className="input"
+                    value={childGrade}
+                    onChange={(e) => setChildGrade(e.target.value)}
+                    disabled={!showGrade}
+                  >
+                    <option value="">{showGrade ? t("participantGradeLabel") : "—"}</option>
+                    {PARTICIPANT_GRADES.map((g) => (
+                      <option key={g} value={g}>{g}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="field">
+                <label className="label" htmlFor="parent-name">{t("parentNameOptional")}</label>
+                <input
+                  id="parent-name"
+                  className="input"
+                  value={parentName}
+                  onChange={(e) => setParentName(e.target.value)}
+                  autoComplete="name"
+                />
               </div>
 
               <div className="field">
