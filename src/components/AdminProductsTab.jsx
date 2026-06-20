@@ -4,6 +4,7 @@ import { generateCourseSeriesSessions } from "../lib/summerCourse.js";
 import { formatProductLabel } from "../lib/productLabel.js";
 import { useLang } from "../i18n.jsx";
 import { useIsDesktop } from "../lib/useBreakpoint.js";
+import { seasonOptionLabel } from "../lib/bidi.js";
 import {
   Button,
   Card,
@@ -196,7 +197,7 @@ export default function AdminProductsTab({ toast }) {
       <div className="filter-bar">
         <Select value={seasonId} onChange={(e) => setSeasonId(e.target.value)} style={{ minWidth: 160 }}>
           {seasons.map((s) => (
-            <option key={s.id} value={s.id}>{s.name}{s.active ? ` (${t("active")})` : ""}</option>
+            <option key={s.id} value={s.id}>{seasonOptionLabel(s.name, { active: s.active, activeLabel: t("active") })}</option>
           ))}
         </Select>
         <Button type="button" variant="primary" size="sm" onClick={() => { resetForm(); setShowForm(true); }}>

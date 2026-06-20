@@ -274,6 +274,32 @@
 
 select.input { cursor: pointer; }
 
+/* Select — chevron on inline-end so text does not overlap in RTL */
+.sl-select,
+select.input {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: var(--surface);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B675F' stroke-width='2.5'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-size: 12px;
+  padding-block: 0;
+  padding-inline-start: 12px;
+  padding-inline-end: 32px;
+  text-align: start;
+  cursor: pointer;
+}
+
+[dir="rtl"] .sl-select,
+[dir="rtl"] select.input {
+  background-position: left 12px center;
+}
+
+[dir="ltr"] .sl-select,
+[dir="ltr"] select.input {
+  background-position: right 12px center;
+}
+
 /* TIME SCROLL PICKER */
 .time-picker {
   display: flex;

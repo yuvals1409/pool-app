@@ -25,7 +25,7 @@ const baseControl = {
   fontFamily: "var(--font-sans)",
   fontSize: "var(--text-base)",
   color: "var(--ink)",
-  background: "var(--surface)",
+  backgroundColor: "var(--surface)",
   border: "1px solid var(--border-strong)",
   borderRadius: "var(--radius)",
   outline: "none",
@@ -51,19 +51,16 @@ export function Textarea({ style = {}, rows = 3, ...rest }) {
   return <textarea rows={rows} {...bind} style={{ ...baseControl, height: "auto", padding: "9px 12px", resize: "vertical", lineHeight: 1.5, ...ring, ...style }} {...rest} />;
 }
 
-export function Select({ children, style = {}, ...rest }) {
+export function Select({ children, className = "", style = {}, ...rest }) {
   const { bind, ring } = useFocusRing();
   return (
     <select
       {...bind}
+      className={["sl-select", className].filter(Boolean).join(" ")}
       style={{
         ...baseControl,
-        appearance: "none",
-        cursor: "pointer",
-        backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B675F' stroke-width='2.5'><polyline points='6 9 12 15 18 9'/></svg>\")",
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "right 12px center",
-        paddingInlineEnd: 32,
+        padding: undefined,
+        backgroundColor: undefined,
         ...ring,
         ...style,
       }}

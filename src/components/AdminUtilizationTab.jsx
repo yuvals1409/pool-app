@@ -6,6 +6,7 @@ import { templateLabel } from "../lib/attendance.js";
 import { useLang } from "../i18n.jsx";
 import { fmt_time } from "../lib/lessonDates.js";
 import { useIsDesktop } from "../lib/useBreakpoint.js";
+import { seasonOptionLabel } from "../lib/bidi.js";
 import MakeupBookingModal from "./MakeupBookingModal.jsx";
 import { Badge, Button, EmptyState, Field, Input, Select, Spinner } from "./ui/ds/index.js";
 
@@ -155,7 +156,7 @@ export default function AdminUtilizationTab({ toast }) {
           <Select value={seasonId} onChange={(e) => { setSeasonId(e.target.value); setProductId(""); }}>
             <option value="">{t("allSeasons")}</option>
             {seasons.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}{s.active ? ` (${t("active")})` : ""}</option>
+              <option key={s.id} value={s.id}>{seasonOptionLabel(s.name, { active: s.active, activeLabel: t("active") })}</option>
             ))}
           </Select>
         </Field>
