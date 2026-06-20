@@ -23,21 +23,20 @@ export default function OfficeTab({ toast }) {
   const [rows, setRows] = useState([]);
   const [savingId, setSavingId] = useState(null);
   const [dueTasks, setDueTasks] = useState([]);
-  const [tasksLoading, setTasksLoading] = useState(true);
 
   const loadDueTasks = useCallback(async () => {
-    setTasksLoading(true);
     try {
       const data = await listDueLeadTasks();
       setDueTasks(data);
-    } catch (e) {
-      toast.show(e.message || t("systemError"));
+    } catch {
+      // Background refresh — keep current list, no toast
     }
-    setTasksLoading(false);
-  }, [toast, t]);
+  }, []);
 
   useEffect(() => {
     loadDueTasks();
+    const intervalId = setInterval(loadDueTasks, 20000);
+    return () => clearInterval(intervalId);
   }, [loadDueTasks]);
 
   const search = async () => {
@@ -167,12 +166,7 @@ export default function OfficeTab({ toast }) {
 
       <Card style={{ marginTop: 12, marginBottom: 20 }}>
         <div className="crm-card-title">{t("dueToday")}</div>
-        {tasksLoading ? (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--ink-soft)" }}>
-            <Spinner size={16} />
-            {t("loading")}
-          </div>
-        ) : dueTasks.length === 0 ? (
+        {dueTasks.length === 0 ? (
           <EmptyState title={t("noDueTasks")} style={{ padding: "24px 16px" }} />
         ) : (
           <div className="grouped-list">

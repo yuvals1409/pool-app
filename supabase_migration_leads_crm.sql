@@ -539,12 +539,13 @@ BEGIN
 
   RETURN COALESCE(
     (
-      SELECT json_agg(row_to_json(t) ORDER BY t.due_date, t.created_at)
+      SELECT json_agg(row_to_json(sub) ORDER BY sub.due_date, sub.created_at)
       FROM (
         SELECT
           t.id AS task_id,
           t.title,
           t.due_date,
+          t.created_at,
           t.lead_id,
           p.full_name AS child_name,
           f.phone AS parent_phone,
@@ -556,7 +557,7 @@ BEGIN
         LEFT JOIN families f ON f.id = p.family_id
         WHERE t.completed_at IS NULL
           AND t.due_date <= CURRENT_DATE
-      ) t
+      ) sub
     ),
     '[]'::json
   );
