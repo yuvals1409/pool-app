@@ -39,6 +39,7 @@ import AdminDashboardTab from "./components/AdminDashboardTab.jsx";
 import AdminSheetSyncTab from "./components/AdminSheetSyncTab.jsx";
 import AdminWaitlistTab from "./components/AdminWaitlistTab.jsx";
 import AdminInstructorPayrollTab from "./components/AdminInstructorPayrollTab.jsx";
+import AdminCustomersTab from "./components/AdminCustomersTab.jsx";
 import InstructorAttendanceTab from "./components/InstructorAttendanceTab.jsx";
 import InstructorPersonalTab from "./components/InstructorPersonalTab.jsx";
 import PlatformGatePage from "./components/PlatformGatePage.jsx";
@@ -71,6 +72,7 @@ import {
   Input,
   NavItem,
   Select,
+  SegmentedControl,
   Spinner,
 } from "./components/ui/ds/index.js";
 
@@ -814,10 +816,11 @@ function roleBadgeVariant(role) {
   return "neutral";
 }
 
-function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
+function AdminTab({ profile, toast, adminSection, onAdminSectionChange, usersSubSection, onUsersSubSectionChange }) {
   const { t, roleLabel } = useLang();
   const isDesktop = useIsDesktop();
   const setAdminSection = onAdminSectionChange;
+  const setUsersSubSection = onUsersSubSectionChange;
   const [users,    setUsers]    = useState([]);
   const [invites,  setInvites]  = useState([]);
   const [loading,  setLoading]  = useState(true);
@@ -996,9 +999,25 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
         <AdminSheetSyncTab toast={toast} />
       ) : (
         <>
+      <div style={{ marginBottom: 16 }}>
+        <SegmentedControl
+          options={[
+            { value: "employees", label: t("adminSubTabEmployees") },
+            { value: "customers", label: t("adminSubTabCustomers") },
+          ]}
+          value={usersSubSection}
+          onChange={setUsersSubSection}
+          size="sm"
+        />
+      </div>
+
+      {usersSubSection === "customers" ? (
+        <AdminCustomersTab toast={toast} />
+      ) : (
+        <>
       {!isDesktop && (
         <div className="page-header">
-          <h1 className="page-title">{t("adminSectionUsers")}</h1>
+          <h1 className="page-title">{t("adminSubTabEmployees")}</h1>
           <p className="page-sub">
             {isOwner(profile) ? t("manageSubOwner") : t("manageSubAdmin")}
           </p>
@@ -1090,6 +1109,8 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
               })}
             </div>
           )}
+        </>
+      )}
         </>
       )}
         </>
@@ -1290,6 +1311,7 @@ export default function App() {
   const [profile,  setProfile]  = useState(null);
   const [tab,      setTab]      = useState("instructor");
   const [adminSection, setAdminSection] = useState("users");
+  const [usersSubSection, setUsersSubSection] = useState("employees");
   const [personalSection, setPersonalSection] = useState("schedule");
   const [tabDirection, setTabDirection] = useState(0);
   const [attendanceFocus, setAttendanceFocus] = useState(null);
@@ -1559,6 +1581,8 @@ export default function App() {
           toast={toast}
           adminSection={adminSection}
           onAdminSectionChange={setAdminSection}
+          usersSubSection={usersSubSection}
+          onUsersSubSectionChange={setUsersSubSection}
         />
       );
       case "personal":   return (
@@ -1591,14 +1615,18 @@ export default function App() {
     sheets: t("tabSheetSync"),
   };
   const topBarTitle = tab === "admin"
-    ? (adminSectionTitles[adminSection] || activeTabMeta?.label || t("tabAdmin"))
+    ? (adminSection === "users"
+      ? (usersSubSection === "customers" ? t("adminSubTabCustomers") : t("adminSectionUsers"))
+      : (adminSectionTitles[adminSection] || activeTabMeta?.label || t("tabAdmin")))
     : tab === "personal"
       ? personalSectionLabel(personalSection, t)
       : (activeTabMeta?.label || t("tabSchedule"));
   const topBarSubtitle = tab === "schedule"
     ? t("scheduleSub")
     : tab === "admin" && adminSection === "users"
-      ? (isOwner(profile) ? t("manageSubOwner") : t("manageSubAdmin"))
+      ? (usersSubSection === "customers"
+        ? t("customersSub")
+        : (isOwner(profile) ? t("manageSubOwner") : t("manageSubAdmin")))
       : null;
 
   const scheduleTopBarActions = tab === "schedule" && isDesktop ? (
