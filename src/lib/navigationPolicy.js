@@ -13,6 +13,7 @@ export const ADMIN_SECTION_IDS = [
   "users",
   "enrollments",
   "products",
+  "pricelist",
   "seasons",
   "assessment",
   "marketing",

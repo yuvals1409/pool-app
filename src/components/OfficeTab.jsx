@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase.js";
 import { useLang } from "../i18n.jsx";
 import { copyEnrollmentTicketLink } from "../lib/accessPass.js";
+import BillingPaymentModal from "./BillingPaymentModal.jsx";
+import { billingTypeForTemplate } from "../lib/billing.js";
 import { formatProductLabel } from "../lib/productLabel.js";
 import { useIsDesktop } from "../lib/useBreakpoint.js";
 import { listDueLeadTasks, completeLeadTask, updateLeadCrm } from "../lib/leadsCrm.js";
@@ -26,6 +28,7 @@ export default function OfficeTab({ toast }) {
   const [dueTasks, setDueTasks] = useState([]);
   const [openAlerts, setOpenAlerts] = useState([]);
   const [ackAlertId, setAckAlertId] = useState(null);
+  const [billingRow, setBillingRow] = useState(null);
 
   const loadOpenAlerts = useCallback(async () => {
     try {
@@ -105,7 +108,7 @@ export default function OfficeTab({ toast }) {
         .select(`
           id, payment_status, valid_until, active,
           participant:participants(id, full_name),
-          product:products(id, name, day_of_week, start_time, end_time, instructor_name, level, level_label, target_audience, gender, schedule_pattern, product_templates(code))
+          product:products(id, name, day_of_week, start_time, end_time, instructor_name, level, level_label, target_audience, gender, schedule_pattern, season_id, product_templates(code))
         `)
         .in("participant_id", [...participantIds])
         .eq("active", true)
@@ -119,6 +122,13 @@ export default function OfficeTab({ toast }) {
   };
 
   const setPayment = async (enrollmentId, paymentStatus) => {
+    if (paymentStatus === "paid" || paymentStatus === "waived") {
+      const row = rows.find((r) => r.id === enrollmentId);
+      if (row && billingTypeForTemplate(row.product?.product_templates?.code)) {
+        setBillingRow({ ...row, targetStatus: paymentStatus });
+        return;
+      }
+    }
     setSavingId(enrollmentId);
     const { error } = await supabase
       .from("enrollments")
@@ -319,6 +329,24 @@ export default function OfficeTab({ toast }) {
             </div>
           ))}
         </div>
+      )}
+      {billingRow && (
+        <BillingPaymentModal
+          open
+          toast={toast}
+          participantId={billingRow.participant?.id}
+          enrollmentId={billingRow.id}
+          templateCode={billingRow.product?.product_templates?.code}
+          initialPaymentStatus={billingRow.targetStatus || "paid"}
+          seasonId={billingRow.product?.season_id}
+          onSaved={async () => {
+            const id = billingRow.id;
+            setBillingRow(null);
+            setRows((prev) => prev.map((r) => (
+              r.id === id ? { ...r, payment_status: billingRow.targetStatus || "paid" } : r
+            )));
+          }}
+        />
       )}
     </div>
   );

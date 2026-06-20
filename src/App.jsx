@@ -25,7 +25,7 @@ import {
   getLessonQrValue,
   shareTicketViaWhatsApp, shareCancellationViaWhatsApp,
 } from "./lib/lessonNotify.js";
-import TimeScrollPicker from "./components/TimeScrollPicker.jsx";
+import { createAndNotify } from "./lib/lessonMutations.js";
 import ParentContactPicker from "./components/ParentContactPicker.jsx";
 import ScheduleTab from "./components/schedule/ScheduleTab.jsx";
 import OfficeTab from "./components/OfficeTab.jsx";
@@ -42,6 +42,7 @@ import AdminUtilizationTab from "./components/AdminUtilizationTab.jsx";
 import AdminDashboardTab from "./components/AdminDashboardTab.jsx";
 import AdminStudentsTab from "./components/AdminStudentsTab.jsx";
 import AdminFinanceTab from "./components/AdminFinanceTab.jsx";
+import AdminPriceListTab from "./components/AdminPriceListTab.jsx";
 import AdminInstructorsTab from "./components/AdminInstructorsTab.jsx";
 import AdminSheetSyncTab from "./components/AdminSheetSyncTab.jsx";
 import AdminWaitlistTab from "./components/AdminWaitlistTab.jsx";
@@ -401,7 +402,7 @@ function InstructorTab({ profile, toast }) {
     start_time: "09:00",
     parent_phone: "",
     lesson_type: "once",
-    price: "",
+    lesson_format: "single",
     payment_status: "unpaid",
   };
   const [form, setForm]       = useState(blank);
@@ -413,55 +414,22 @@ function InstructorTab({ profile, toast }) {
   useEffect(() => { ensureWeeklyLessonsGenerated(); }, []);
 
   const create = async () => {
-    const { child_name, lesson_date, start_time, parent_phone, lesson_type, price, payment_status } = form;
+    const { child_name, lesson_date, start_time, parent_phone, lesson_type } = form;
     if (!child_name || !lesson_date || !start_time || !parent_phone) return toast.show(t("fillAllFields"));
     if (!isValidStartTime(start_time)) return toast.show(t("invalidTime"));
-    const lessonPrice = price.trim() ? Number(price) : null;
-    const payStatus = payment_status || "unpaid";
     setLoading(true);
-
-    const lessonPayload = {
-      child_name, lesson_date, start_time, end_time: start_time,
-      instructor_name: profile.full_name, instructor_id: profile.id, parent_phone,
-      price: lessonPrice,
-      payment_status: payStatus,
-    };
-
-    if (lesson_type === "recurring") {
-      const day_of_week = dateToDayOfWeek(lesson_date);
-      const { data: recurring, error: recErr } = await supabase.from("recurring_lessons")
-        .insert([{
-          child_name, day_of_week, start_time, parent_phone,
-          instructor_name: profile.full_name, instructor_id: profile.id,
-        }])
-        .select().single();
-      if (recErr) {
-        toast.show(`${t("recurringError")}: ${recErr.message}`);
-        setLoading(false);
-        return;
-      }
-      const { data, error } = await supabase.from("lessons")
-        .insert([{ ...lessonPayload, recurring_lesson_id: recurring.id }])
-        .select().single();
-      if (error) {
-        toast.show(`${t("createError")}: ${error.message}`);
-        setLoading(false);
-        return;
-      }
-      setCreated({ ...data, parent_phone, isRecurring: true });
+    const result = await createAndNotify({
+      profile,
+      form,
+      toast,
+      i18n,
+    });
+    if (result.error) {
+      toast.show(`${t("createError")}: ${result.error.message}`);
     } else {
-      const { data, error } = await supabase.from("lessons")
-        .insert([lessonPayload])
-        .select().single();
-      if (error) {
-        toast.show(`${t("createError")}: ${error.message}`);
-        setLoading(false);
-        return;
-      }
-      setCreated({ ...data, parent_phone });
+      setCreated(result.data);
+      setForm(blank);
     }
-
-    setForm(blank);
     setLoading(false);
   };
 
@@ -556,17 +524,17 @@ function InstructorTab({ profile, toast }) {
           )}
         </div>
         <div className="field">
-          <label className="label">{t("lessonPrice")}</label>
-          <input
-            className="input"
-            type="number"
-            min={0}
-            step="0.01"
-            dir="ltr"
-            value={form.price}
-            onChange={upd("price")}
-            placeholder="0"
-          />
+          <label className="label">{t("privateLessonFormat")}</label>
+          <div className="mode-switch" style={{ marginBottom: 0 }}>
+            <button type="button" className={`mode-btn ${form.lesson_format === "single" ? "active" : ""}`}
+              onClick={() => setForm(f => ({ ...f, lesson_format: "single" }))}>
+              {t("privateLessonSingle")}
+            </button>
+            <button type="button" className={`mode-btn ${form.lesson_format === "double" ? "active" : ""}`}
+              onClick={() => setForm(f => ({ ...f, lesson_format: "double" }))}>
+              {t("privateLessonDouble")}
+            </button>
+          </div>
         </div>
         <div className="field">
           <label className="label">{t("lessonPaymentStatus")}</label>
@@ -1035,6 +1003,7 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
     { id: "users", label: t("adminSectionUsers") },
     { id: "enrollments", label: t("tabEnrollments") },
     { id: "products", label: t("tabProducts") },
+    { id: "pricelist", label: t("tabPriceList") },
     { id: "seasons", label: t("tabSeasons") },
     { id: "assessment", label: t("tabAssessment") },
     { id: "marketing", label: t("tabMarketing") },
@@ -1092,6 +1061,8 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
         <AdminEnrollmentsTab toast={toast} />
       ) : adminSection === "products" ? (
         <AdminProductsTab toast={toast} />
+      ) : adminSection === "pricelist" ? (
+        <AdminPriceListTab toast={toast} profile={profile} />
       ) : adminSection === "seasons" ? (
         <AdminSeasonsTab toast={toast} />
       ) : adminSection === "assessment" ? (
@@ -1712,6 +1683,7 @@ export default function App() {
     users: t("adminSectionUsers"),
     enrollments: t("tabEnrollments"),
     products: t("tabProducts"),
+    pricelist: t("tabPriceList"),
     seasons: t("tabSeasons"),
     assessment: t("tabAssessment"),
     marketing: t("tabMarketing"),

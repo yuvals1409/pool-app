@@ -2,6 +2,9 @@ import { supabase } from "./supabase.js";
 import { dateToDayOfWeek, toLocalDateStr, parseDateStr } from "./lessonDates.js";
 import { notifyLessonCancel, notifyLessonUpdate, notifyNewLesson } from "./lessonNotify.js";
 import { markLessonNotified } from "./supabase.js";
+import { suggestPrivateLessonPrice } from "./pricing.js";
+import { consumePackageSession } from "./privatePackages.js";
+import { recordBillingPayment } from "./billing.js";
 
 export const RECURRING_SCOPE = { SINGLE: "single", FORWARD: "forward" };
 
@@ -26,18 +29,89 @@ function shiftDateByWeeks(baseDateStr, targetDateStr, lessonDateStr) {
   return toLocalDateStr(result);
 }
 
+export async function resolveParticipantId(parentPhone, childName) {
+  const phone = String(parentPhone || "").replace(/\s/g, "").trim();
+  const name = String(childName || "").trim();
+  if (!phone || !name) return null;
+
+  const { data: family } = await supabase
+    .from("families")
+    .select("id")
+    .eq("phone", phone)
+    .maybeSingle();
+  if (!family) return null;
+
+  const { data: siblings } = await supabase
+    .from("participants")
+    .select("id, full_name")
+    .eq("family_id", family.id);
+
+  const match = (siblings || []).find(
+    (p) => p.full_name.trim().toLowerCase() === name.toLowerCase(),
+  );
+  return match?.id || null;
+}
+
+async function resolveLessonPricing(form) {
+  const {
+    child_name, parent_phone, lesson_format = "single",
+    private_package_id, payment_status,
+  } = form;
+
+  if (lesson_format === "package_session" && private_package_id) {
+    return {
+      price: 0,
+      payment_status: payment_status || "paid",
+      lesson_format: "package_session",
+      private_package_id,
+      pricing: null,
+      participantId: await resolveParticipantId(parent_phone, child_name),
+    };
+  }
+
+  const participantId = await resolveParticipantId(parent_phone, child_name);
+  if (!participantId) {
+    return {
+      price: null,
+      payment_status: payment_status || "unpaid",
+      lesson_format: lesson_format === "double" ? "double" : "single",
+      private_package_id: null,
+      pricing: null,
+      participantId: null,
+    };
+  }
+
+  const format = lesson_format === "double" ? "double" : "single";
+  const pricing = await suggestPrivateLessonPrice(participantId, format);
+  return {
+    price: pricing?.suggested_amount != null ? Number(pricing.suggested_amount) : null,
+    payment_status: payment_status || "unpaid",
+    lesson_format: format,
+    private_package_id: null,
+    pricing,
+    participantId,
+  };
+}
+
 export async function createLesson({ profile, instructor, form }) {
   const {
-    child_name, lesson_date, start_time, parent_phone, lesson_type, price, payment_status,
+    child_name, lesson_date, start_time, parent_phone, lesson_type,
   } = form;
   const inst = instructor || profile;
-  const lessonPrice = price != null && String(price).trim() !== "" ? Number(price) : null;
-  const payStatus = payment_status || "unpaid";
+
+  const pricingInfo = await resolveLessonPricing(form);
   const lessonBase = {
-    child_name, lesson_date, start_time, end_time: start_time,
-    instructor_name: inst.full_name, instructor_id: inst.id, parent_phone,
-    price: lessonPrice,
-    payment_status: payStatus,
+    child_name,
+    lesson_date,
+    start_time,
+    end_time: start_time,
+    instructor_name: inst.full_name,
+    instructor_id: inst.id,
+    parent_phone,
+    price: pricingInfo.price,
+    payment_status: pricingInfo.payment_status,
+    lesson_format: pricingInfo.lesson_format,
+    private_package_id: pricingInfo.private_package_id,
   };
 
   if (lesson_type === "recurring") {
@@ -54,6 +128,22 @@ export async function createLesson({ profile, instructor, form }) {
       .insert([{ ...lessonBase, recurring_lesson_id: recurring.id }])
       .select().single();
     if (error) return { error };
+
+    if (pricingInfo.private_package_id) {
+      await consumePackageSession(pricingInfo.private_package_id);
+    } else if (pricingInfo.participantId && pricingInfo.price != null && pricingInfo.payment_status === "paid") {
+      await recordBillingPayment({
+        participantId: pricingInfo.participantId,
+        billingType: "private_lesson",
+        amount: pricingInfo.price,
+        paymentStatus: "paid",
+        lessonId: data.id,
+        productCode: pricingInfo.pricing?.product_code,
+        tier: pricingInfo.pricing?.tier,
+        priceListVersionId: pricingInfo.pricing?.price_list_version_id,
+      });
+    }
+
     return { data: { ...data, parent_phone, isRecurring: true } };
   }
 
@@ -61,6 +151,22 @@ export async function createLesson({ profile, instructor, form }) {
     .insert([lessonBase])
     .select().single();
   if (error) return { error };
+
+  if (pricingInfo.private_package_id) {
+    await consumePackageSession(pricingInfo.private_package_id);
+  } else if (pricingInfo.participantId && pricingInfo.price != null && pricingInfo.payment_status === "paid") {
+    await recordBillingPayment({
+      participantId: pricingInfo.participantId,
+      billingType: "private_lesson",
+      amount: pricingInfo.price,
+      paymentStatus: "paid",
+      lessonId: data.id,
+      productCode: pricingInfo.pricing?.product_code,
+      tier: pricingInfo.pricing?.tier,
+      priceListVersionId: pricingInfo.pricing?.price_list_version_id,
+    });
+  }
+
   return { data: { ...data, parent_phone } };
 }
 

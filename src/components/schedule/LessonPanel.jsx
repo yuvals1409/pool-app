@@ -13,6 +13,7 @@ const blankForm = () => ({
   start_time: "09:00",
   parent_phone: "",
   lesson_type: "once",
+  lesson_format: "single",
   instructor_id: "",
 });
 
@@ -147,6 +148,16 @@ export default function LessonPanel({
               value={form.parent_phone}
               onChange={phone => setForm(f => ({ ...f, parent_phone: phone }))}
               onError={msg => toast?.show(msg)}
+            />
+          </Field>
+          <Field label={t("privateLessonFormat")}>
+            <SegmentedControl
+              options={[
+                { value: "single", label: t("privateLessonSingle") },
+                { value: "double", label: t("privateLessonDouble") },
+              ]}
+              value={form.lesson_format || "single"}
+              onChange={(v) => setForm(f => ({ ...f, lesson_format: v }))}
             />
           </Field>
           <Field label={t("lessonType")}>

@@ -9,12 +9,12 @@ import {
   resolveBirthDate,
   validateParticipantFields,
 } from "../lib/participantFields.js";
-import {
-  getWaitlistOfferToken,
+import { getWaitlistOfferToken,
   getWaitlistOffer,
   joinWaitlist,
   registerFromWaitlistOffer,
 } from "../lib/waitlist.js";
+import { getLandingCoursePrices } from "../lib/pricing.js";
 import "../styles/assessment-landing.css";
 
 const LOGO_SRC = "/stream-line-logo.jpeg";
@@ -48,6 +48,7 @@ export default function AssessmentRegisterPage({ toast }) {
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSlotId, setSelectedSlotId] = useState("");
+  const [coursePrices, setCoursePrices] = useState({ external: 1600, subscriber: 1400, shareholder: 1250 });
   const [childName, setChildName] = useState("");
   const [childAge, setChildAge] = useState("");
   const [childGender, setChildGender] = useState("");
@@ -60,6 +61,12 @@ export default function AssessmentRegisterPage({ toast }) {
   const [waitlistSuccess, setWaitlistSuccess] = useState(null);
   const [offer, setOffer] = useState(null);
   const [showStickyCta, setShowStickyCta] = useState(false);
+
+  useEffect(() => {
+    getLandingCoursePrices()
+      .then(setCoursePrices)
+      .catch(() => {});
+  }, []);
 
   const loadSlots = async () => {
     setLoading(true);
@@ -432,15 +439,15 @@ export default function AssessmentRegisterPage({ toast }) {
         <div className="landing-pricing">
           <div className="landing-price-card">
             <div className="landing-price-tier">{t("landingPricingExternal")}</div>
-            <div className="landing-price-amount">1,600 <span>₪</span></div>
+            <div className="landing-price-amount">{coursePrices.external.toLocaleString("he-IL")} <span>₪</span></div>
           </div>
           <div className="landing-price-card featured">
             <div className="landing-price-tier">{t("landingPricingMember")}</div>
-            <div className="landing-price-amount">1,400 <span>₪</span></div>
+            <div className="landing-price-amount">{coursePrices.subscriber.toLocaleString("he-IL")} <span>₪</span></div>
           </div>
           <div className="landing-price-card">
             <div className="landing-price-tier">{t("landingPricingShareholder")}</div>
-            <div className="landing-price-amount">1,250 <span>₪</span></div>
+            <div className="landing-price-amount">{coursePrices.shareholder.toLocaleString("he-IL")} <span>₪</span></div>
           </div>
         </div>
       </section>

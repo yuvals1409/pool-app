@@ -265,18 +265,6 @@ export default function GroupFormCard({
         />
       </Field>
 
-      <Field label={t("productPrice")}>
-        <Input
-          type="number"
-          min={0}
-          step="0.01"
-          value={formState.price}
-          onChange={(e) => patchForm(setFormState, { price: e.target.value })}
-          dir="ltr"
-          placeholder={t("productPriceOptional")}
-        />
-      </Field>
-
       <div style={{ display: "flex", gap: 8 }}>
         <Button type="button" variant="primary" onClick={onSave} disabled={saving}>
           {saving ? <><Spinner size={14} color="var(--on-primary)" /> {t("saving")}</> : t("saveProduct")}

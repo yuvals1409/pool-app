@@ -5,6 +5,8 @@ import { formatProductLabel } from "../lib/productLabel.js";
 import { useIsDesktop } from "../lib/useBreakpoint.js";
 import { PARTICIPANT_GRADES, genderLabel } from "../lib/participantFields.js";
 import { useStudentProfile } from "../lib/StudentProfileContext.jsx";
+import { upsertAnnualPackage } from "../lib/annualPackage.js";
+import { purchasePrivatePackage, listPackagesForFamily } from "../lib/privatePackages.js";
 import {
   Badge,
   Button,
@@ -143,6 +145,11 @@ export default function AdminCustomersTab({ toast }) {
   const [editGender, setEditGender] = useState("");
   const [editGrade, setEditGrade] = useState("");
   const [editBirthDate, setEditBirthDate] = useState("");
+  const [editMembershipTier, setEditMembershipTier] = useState("external");
+  const [activeSeasonId, setActiveSeasonId] = useState("");
+  const [savingShareholderId, setSavingShareholderId] = useState(null);
+  const [packageSavingId, setPackageSavingId] = useState(null);
+  const [familyPackages, setFamilyPackages] = useState({});
   const [savingParticipantId, setSavingParticipantId] = useState(null);
 
   const paymentLabel = (status) => ({
@@ -152,9 +159,9 @@ export default function AdminCustomersTab({ toast }) {
   }[status] || status);
 
   const familySelect = `
-    id, phone, email, parent_name, created_at,
+    id, phone, email, parent_name, created_at, is_shareholder,
     participants(
-      id, full_name, birth_date, gender, grade, external_client_id, created_at, first_enrolled_at,
+      id, full_name, birth_date, gender, grade, external_client_id, created_at, first_enrolled_at, membership_tier,
       enrollments(
         id, payment_status, valid_from, valid_until, active, created_at,
         product:products(
@@ -180,6 +187,8 @@ export default function AdminCustomersTab({ toast }) {
       if (error) throw error;
       setFamilies(familyRows || []);
       setSeasons(seasonRows || []);
+      const active = (seasonRows || []).find((s) => s.active);
+      if (active) setActiveSeasonId(active.id);
       const phones = new Set(
         (waitlistRows || []).map((row) => normalizePhone(row.phone)).filter(Boolean),
       );
@@ -197,6 +206,7 @@ export default function AdminCustomersTab({ toast }) {
     setEditGender(participant.gender || "");
     setEditGrade(participant.grade || "");
     setEditBirthDate(participant.birth_date || "");
+    setEditMembershipTier(participant.membership_tier || "external");
   };
 
   const cancelEditParticipant = () => {
@@ -219,6 +229,7 @@ export default function AdminCustomersTab({ toast }) {
         gender: editGender || null,
         grade: editGrade || null,
         birth_date: editBirthDate || null,
+        membership_tier: editMembershipTier || "external",
         ...(genderChanged ? { gender_manual_at: new Date().toISOString() } : {}),
       }).eq("id", participantId);
       if (error) throw error;
@@ -229,6 +240,54 @@ export default function AdminCustomersTab({ toast }) {
       toast.show(e.message || t("systemError"));
     }
     setSavingParticipantId(null);
+  };
+
+  const toggleShareholder = async (family) => {
+    setSavingShareholderId(family.id);
+    try {
+      const { error } = await supabase.from("families")
+        .update({ is_shareholder: !family.is_shareholder })
+        .eq("id", family.id);
+      if (error) throw error;
+      await load();
+    } catch (e) {
+      toast.show(e.message || t("systemError"));
+    }
+    setSavingShareholderId(null);
+  };
+
+  const setAnnualPackageSlots = async (participantId, weeklySlots) => {
+    if (!activeSeasonId) return toast.show(t("systemError"));
+    setPackageSavingId(participantId);
+    try {
+      await upsertAnnualPackage(participantId, activeSeasonId, weeklySlots);
+      toast.show(t("annualPackageSaved"));
+    } catch (e) {
+      toast.show(e.message || t("systemError"));
+    }
+    setPackageSavingId(null);
+  };
+
+  const handlePurchasePackage = async (familyId, participantId, packageCode) => {
+    setPackageSavingId(`${familyId}_${packageCode}`);
+    try {
+      await purchasePrivatePackage(familyId, packageCode, participantId);
+      toast.show(t("privatePackagePurchased"));
+      const pkgs = await listPackagesForFamily(familyId);
+      setFamilyPackages((prev) => ({ ...prev, [familyId]: pkgs }));
+    } catch (e) {
+      toast.show(e.message || t("systemError"));
+    }
+    setPackageSavingId(null);
+  };
+
+  const loadFamilyPackages = async (familyId) => {
+    try {
+      const pkgs = await listPackagesForFamily(familyId);
+      setFamilyPackages((prev) => ({ ...prev, [familyId]: pkgs }));
+    } catch {
+      // optional
+    }
   };
 
   useEffect(() => {
@@ -604,6 +663,51 @@ export default function AdminCustomersTab({ toast }) {
                           {family.created_at ? fmtDateDay(family.created_at.slice(0, 10)) : "—"}
                         </span>
                       </div>
+                      <div className="lesson-info-row">
+                        <span className="li-key">{t("familyShareholder")}</span>
+                        <span className="li-val">
+                          <Button
+                            size="sm"
+                            variant={family.is_shareholder ? "primary" : "outline"}
+                            disabled={savingShareholderId === family.id}
+                            onClick={() => toggleShareholder(family)}
+                          >
+                            {family.is_shareholder ? t("tier_shareholder") : t("membership_external")}
+                          </Button>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ fontWeight: 600, marginBottom: 8 }}>{t("privatePackagesTitle")}</div>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+                        <Button size="sm" variant="outline" onClick={() => loadFamilyPackages(family.id)}>
+                          {t("refresh")}
+                        </Button>
+                        {(family.participants || []).slice(0, 1).map((p) => (
+                          <span key={p.id} style={{ display: "flex", gap: 6 }}>
+                            <Button
+                              size="sm"
+                              disabled={packageSavingId === `${family.id}_private_5pack`}
+                              onClick={() => handlePurchasePackage(family.id, p.id, "private_5pack")}
+                            >
+                              {t("purchasePrivate5")}
+                            </Button>
+                            <Button
+                              size="sm"
+                              disabled={packageSavingId === `${family.id}_private_10pack`}
+                              onClick={() => handlePurchasePackage(family.id, p.id, "private_10pack")}
+                            >
+                              {t("purchasePrivate10")}
+                            </Button>
+                          </span>
+                        ))}
+                      </div>
+                      {(familyPackages[family.id] || []).map((pkg) => (
+                        <div key={pkg.id} style={{ fontSize: 13, color: "var(--ink-soft)" }}>
+                          {pkg.package_code}: {t("sessionsRemaining", { n: pkg.sessions_remaining })}
+                        </div>
+                      ))}
                     </div>
 
                     {(family.participants || []).length === 0 ? (
@@ -624,7 +728,29 @@ export default function AdminCustomersTab({ toast }) {
                               {participant.external_client_id ? ` · ${t("customersExternalId")}: ${participant.external_client_id}` : ""}
                               {participant.birth_date ? ` · ${fmtDateDay(participant.birth_date)}` : ""}
                               {participant.first_enrolled_at ? ` · ${t("customersFirstEnrolled")}: ${fmtDateDay(participant.first_enrolled_at)}` : ""}
+                              {` · ${t("membershipTier")}: ${t(`membership_${participant.membership_tier || "external"}`)}`}
                             </div>
+                            {activeSeasonId && (
+                              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+                                <span style={{ fontSize: 13, alignSelf: "center" }}>{t("annualPackage")}:</span>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={packageSavingId === participant.id}
+                                  onClick={() => setAnnualPackageSlots(participant.id, 1)}
+                                >
+                                  {t("annualPackage1x")}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={packageSavingId === participant.id}
+                                  onClick={() => setAnnualPackageSlots(participant.id, 2)}
+                                >
+                                  {t("annualPackage2x")}
+                                </Button>
+                              </div>
+                            )}
                             {editingParticipantId === participant.id ? (
                               <div style={{ display: "grid", gap: 8, maxWidth: 360, marginBottom: 12 }}>
                                 <Field label={t("participantGenderLabel")}>
@@ -636,6 +762,12 @@ export default function AdminCustomersTab({ toast }) {
                                 </Field>
                                 <Field label={t("participantBirthDateLabel")}>
                                   <Input type="date" dir="ltr" value={editBirthDate} onChange={(e) => setEditBirthDate(e.target.value)} />
+                                </Field>
+                                <Field label={t("membershipTier")}>
+                                  <Select value={editMembershipTier} onChange={(e) => setEditMembershipTier(e.target.value)}>
+                                    <option value="external">{t("membership_external")}</option>
+                                    <option value="subscriber">{t("membership_subscriber")}</option>
+                                  </Select>
                                 </Field>
                                 <Field label={t("participantGradeLabel")}>
                                   <Select value={editGrade} onChange={(e) => setEditGrade(e.target.value)}>

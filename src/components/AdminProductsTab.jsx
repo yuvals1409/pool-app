@@ -114,7 +114,7 @@ export default function AdminProductsTab({ toast }) {
     setLoading(true);
     const { data, error } = await supabase
       .from("products")
-      .select("id, name, day_of_week, start_time, end_time, instructor_name, instructor_id, capacity, price, level, level_label, target_audience, gender, schedule_pattern, template_id, product_templates(code)")
+      .select("id, name, day_of_week, start_time, end_time, instructor_name, instructor_id, capacity, level, level_label, target_audience, gender, schedule_pattern, template_id, product_templates(code)")
       .eq("season_id", sid)
       .order("name");
     if (error) toast.show(error.message);
@@ -319,7 +319,6 @@ export default function AdminProductsTab({ toast }) {
                 <div className="user-email">
                   {p.instructor_name}
                   {p.capacity != null ? ` · ${t("assessmentCapacity")}: ${p.capacity}` : ""}
-                  {p.price != null ? ` · ${t("productPrice")}: ₪${p.price}` : ""}
                 </div>
               </div>
               <Button type="button" variant="secondary" size="sm" onClick={() => startEdit(p)}>{t("editProduct")}</Button>

@@ -69,7 +69,6 @@ export function createEmptyFormState() {
     instructorId: "",
     instructorName: "",
     capacity: "",
-    price: "",
     courseStart: "",
     courseEnd: "",
   };
@@ -94,7 +93,6 @@ export function productToFormState(product) {
     instructorId: product.instructor_id || "",
     instructorName: product.instructor_name || "",
     capacity: product.capacity != null ? String(product.capacity) : "",
-    price: product.price != null ? String(product.price) : "",
     courseStart: pattern.course_start || "",
     courseEnd: pattern.course_end || "",
   };
@@ -148,7 +146,6 @@ export function formStateToProductPayload(form, opts = {}) {
   }
 
   const cap = String(form.capacity || "").trim() ? Number(form.capacity) : null;
-  const priceVal = String(form.price || "").trim() ? Number(form.price) : null;
   const first = schedule[0];
   const level = form.type === GROUP_TYPE_ANNUAL ? Number(form.level) : null;
 
@@ -187,7 +184,6 @@ export function formStateToProductPayload(form, opts = {}) {
     instructor_id: form.instructorId,
     instructor_name: String(form.instructorName || "").trim(),
     capacity: Number.isInteger(cap) ? cap : null,
-    price: priceVal != null && priceVal >= 0 ? priceVal : null,
     level,
     level_label: level != null ? `רמה ${level}` : null,
     target_audience: String(form.targetAudience).trim(),

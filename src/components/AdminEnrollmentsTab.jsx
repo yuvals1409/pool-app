@@ -21,6 +21,8 @@ import {
 } from "../lib/participantFields.js";
 import { getEnrollmentUtilization, listUtilizationReport } from "../lib/utilization.js";
 import MakeupBookingModal from "./MakeupBookingModal.jsx";
+import BillingPaymentModal from "./BillingPaymentModal.jsx";
+import { billingTypeForTemplate } from "../lib/billing.js";
 import {
   Avatar,
   Badge,
@@ -82,6 +84,7 @@ export default function AdminEnrollmentsTab({ toast }) {
   const [utilizationMap, setUtilizationMap] = useState({});
   const [makeupRow, setMakeupRow] = useState(null);
   const [makeupUtil, setMakeupUtil] = useState(null);
+  const [billingRow, setBillingRow] = useState(null);
 
   const todayStr = () => new Date().toISOString().slice(0, 10);
 
@@ -583,6 +586,11 @@ export default function AdminEnrollmentsTab({ toast }) {
             </Button>
           )}
           <Button variant="secondary" size="sm" onClick={() => startEdit(row)}>{t("editEnrollment")}</Button>
+          {billingTypeForTemplate(row.product?.product_templates?.code) && (
+            <Button variant="primary" size="sm" onClick={() => setBillingRow(row)}>
+              {t("billingRecordPayment")}
+            </Button>
+          )}
           <Button variant="secondary" size="sm" onClick={() => copyEnrollmentTicketLink(row.id, { toast, t })}>
             {t("copyTicketLink")}
           </Button>
@@ -862,6 +870,23 @@ export default function AdminEnrollmentsTab({ toast }) {
           toast={toast}
           onClose={() => { setMakeupRow(null); setMakeupUtil(null); }}
           onBooked={refreshUtilization}
+        />
+      )}
+
+      {billingRow && (
+        <BillingPaymentModal
+          open
+          toast={toast}
+          participantId={billingRow.participant?.id}
+          enrollmentId={billingRow.id}
+          templateCode={billingRow.product?.product_templates?.code}
+          seasonId={season?.id}
+          onClose={() => setBillingRow(null)}
+          onSaved={async () => {
+            setBillingRow(null);
+            if (searchMode) await runSearch();
+            else if (selectedProductId) await loadByProduct(selectedProductId, historyFilter);
+          }}
         />
       )}
     </div>
