@@ -34,9 +34,13 @@ import AdminAssessmentTab from "./components/AdminAssessmentTab.jsx";
 import AdminProductsTab from "./components/AdminProductsTab.jsx";
 import AdminSeasonsTab from "./components/AdminSeasonsTab.jsx";
 import AdminAttendanceTab from "./components/AdminAttendanceTab.jsx";
+import AdminAlertsTab from "./components/AdminAlertsTab.jsx";
+import AdminMarketingTab from "./components/AdminMarketingTab.jsx";
 import AdminUtilizationTab from "./components/AdminUtilizationTab.jsx";
 import AdminDashboardTab from "./components/AdminDashboardTab.jsx";
 import AdminStudentsTab from "./components/AdminStudentsTab.jsx";
+import AdminFinanceTab from "./components/AdminFinanceTab.jsx";
+import AdminInstructorsTab from "./components/AdminInstructorsTab.jsx";
 import AdminSheetSyncTab from "./components/AdminSheetSyncTab.jsx";
 import AdminWaitlistTab from "./components/AdminWaitlistTab.jsx";
 import AdminInstructorPayrollTab from "./components/AdminInstructorPayrollTab.jsx";
@@ -1031,11 +1035,15 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
     { id: "products", label: t("tabProducts") },
     { id: "seasons", label: t("tabSeasons") },
     { id: "assessment", label: t("tabAssessment") },
+    { id: "marketing", label: t("tabMarketing") },
     { id: "attendance", label: t("tabAttendance") },
+    { id: "alerts", label: t("tabAlerts") },
     { id: "utilization", label: t("tabUtilization") },
     { id: "waitlist", label: t("tabWaitlist") },
     { id: "dashboard", label: t("tabDashboard") },
     { id: "students", label: t("tabStudents") },
+    { id: "finance", label: t("tabFinance") },
+    { id: "instructors", label: t("tabInstructorsAnalytics") },
     { id: "payroll", label: t("tabPayroll") },
     { id: "sheets", label: t("tabSheetSync") },
   ].filter((section) => getAdminSections(profile, isDesktop).includes(section.id));
@@ -1084,14 +1092,22 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
         <AdminSeasonsTab toast={toast} />
       ) : adminSection === "assessment" ? (
         <AdminAssessmentTab toast={toast} />
+      ) : adminSection === "marketing" ? (
+        <AdminMarketingTab toast={toast} />
       ) : adminSection === "attendance" ? (
         <AdminAttendanceTab toast={toast} />
+      ) : adminSection === "alerts" ? (
+        <AdminAlertsTab toast={toast} />
       ) : adminSection === "utilization" ? (
         <AdminUtilizationTab toast={toast} />
       ) : adminSection === "dashboard" ? (
         <AdminDashboardTab toast={toast} />
       ) : adminSection === "students" ? (
         <AdminStudentsTab toast={toast} />
+      ) : adminSection === "finance" ? (
+        <AdminFinanceTab toast={toast} />
+      ) : adminSection === "instructors" ? (
+        <AdminInstructorsTab toast={toast} />
       ) : adminSection === "payroll" ? (
         <AdminInstructorPayrollTab toast={toast} />
       ) : adminSection === "waitlist" ? (
@@ -1690,11 +1706,15 @@ export default function App() {
     products: t("tabProducts"),
     seasons: t("tabSeasons"),
     assessment: t("tabAssessment"),
+    marketing: t("tabMarketing"),
     attendance: t("tabAttendance"),
+    alerts: t("tabAlerts"),
     utilization: t("tabUtilization"),
     waitlist: t("tabWaitlist"),
     dashboard: t("tabDashboard"),
     students: t("tabStudents"),
+    finance: t("tabFinance"),
+    instructors: t("tabInstructorsAnalytics"),
     payroll: t("tabPayroll"),
     sheets: t("tabSheetSync"),
   };

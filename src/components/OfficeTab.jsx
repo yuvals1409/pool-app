@@ -5,6 +5,7 @@ import { copyEnrollmentTicketLink } from "../lib/accessPass.js";
 import { formatProductLabel } from "../lib/productLabel.js";
 import { useIsDesktop } from "../lib/useBreakpoint.js";
 import { listDueLeadTasks, completeLeadTask, updateLeadCrm } from "../lib/leadsCrm.js";
+import { listOpenAlerts, acknowledgeAlert } from "../lib/operationalAlerts.js";
 import { Button, Input, Card, Badge, EmptyState, Spinner } from "./ui/ds/index.js";
 
 const PAYMENT_STATUSES = ["paid", "unpaid", "waived"];
@@ -23,6 +24,17 @@ export default function OfficeTab({ toast }) {
   const [rows, setRows] = useState([]);
   const [savingId, setSavingId] = useState(null);
   const [dueTasks, setDueTasks] = useState([]);
+  const [openAlerts, setOpenAlerts] = useState([]);
+  const [ackAlertId, setAckAlertId] = useState(null);
+
+  const loadOpenAlerts = useCallback(async () => {
+    try {
+      const data = await listOpenAlerts(5);
+      setOpenAlerts(data);
+    } catch {
+      // Background refresh — keep current list
+    }
+  }, []);
 
   const loadDueTasks = useCallback(async () => {
     try {
@@ -35,9 +47,25 @@ export default function OfficeTab({ toast }) {
 
   useEffect(() => {
     loadDueTasks();
-    const intervalId = setInterval(loadDueTasks, 20000);
+    loadOpenAlerts();
+    const intervalId = setInterval(() => {
+      loadDueTasks();
+      loadOpenAlerts();
+    }, 20000);
     return () => clearInterval(intervalId);
-  }, [loadDueTasks]);
+  }, [loadDueTasks, loadOpenAlerts]);
+
+  const handleAckAlert = async (alertId) => {
+    setAckAlertId(alertId);
+    try {
+      await acknowledgeAlert(alertId);
+      toast.show(t("alertsAcknowledged"));
+      await loadOpenAlerts();
+    } catch (e) {
+      toast.show(e.message || t("systemError"));
+    }
+    setAckAlertId(null);
+  };
 
   const search = async () => {
     const q = query.trim();
@@ -165,6 +193,36 @@ export default function OfficeTab({ toast }) {
       </div>
 
       <Card style={{ marginTop: 12, marginBottom: 20 }}>
+        <div className="crm-card-title">{t("officeAlertsTitle")}</div>
+        {openAlerts.length === 0 ? (
+          <EmptyState title={t("alertsEmpty")} style={{ padding: "16px 16px 24px" }} />
+        ) : (
+          <div className="grouped-list">
+            {openAlerts.map((alert) => (
+              <div className="user-row" key={alert.id}>
+                <div className="user-info">
+                  <div className="user-display">{alert.title}</div>
+                  <div className="user-email">
+                    <Badge variant={alert.severity === "warn" ? "warn" : "info"}>{alert.severity}</Badge>
+                    {alert.created_at ? ` · ${fmtDateDay(String(alert.created_at).slice(0, 10))}` : ""}
+                  </div>
+                </div>
+                <div className="user-actions-row">
+                  <Button
+                    size="sm"
+                    disabled={ackAlertId === alert.id}
+                    onClick={() => handleAckAlert(alert.id)}
+                  >
+                    {ackAlertId === alert.id ? <Spinner size={14} /> : t("alertsAcknowledge")}
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <Card style={{ marginBottom: 20 }}>
         <div className="crm-card-title">{t("dueToday")}</div>
         {dueTasks.length === 0 ? (
           <EmptyState title={t("noDueTasks")} style={{ padding: "24px 16px" }} />
