@@ -27,6 +27,7 @@ import {
 } from "./lib/lessonNotify.js";
 import { createAndNotify } from "./lib/lessonMutations.js";
 import ParentContactPicker from "./components/ParentContactPicker.jsx";
+import TimeScrollPicker from "./components/TimeScrollPicker.jsx";
 import ScheduleTab from "./components/schedule/ScheduleTab.jsx";
 import OfficeTab from "./components/OfficeTab.jsx";
 import AdminEnrollmentsTab from "./components/AdminEnrollmentsTab.jsx";
