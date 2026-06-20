@@ -54,7 +54,18 @@ import { markLessonScanAttendance } from "./lib/attendance.js";
 import { getOAuthRedirectUrl } from "./lib/authRedirect.js";
 import { useIsDesktop } from "./lib/useBreakpoint.js";
 import AppWorkspaceShell from "./components/layout/AppWorkspaceShell.jsx";
-import { Button } from "./components/ui/ds/index.js";
+import {
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  Field,
+  Input,
+  NavItem,
+  Select,
+  Spinner,
+} from "./components/ui/ds/index.js";
 
 const PRIORITY_TABS = new Set(["schedule", "office", "admin"]);
 
@@ -231,12 +242,12 @@ function QRCanvas({ value, size = 220 }) {
 function TicketCard({ lesson, qrSize = 200, label }) {
   const { t } = useLang();
   return (
-    <div className="qr-wrap">
+    <Card style={{ display: "flex", flexDirection: "column", alignItems: "center", margin: "var(--space-4) 0" }}>
       <BrandLogo height={52} />
       <div className="ticket-title">{t("ticketTitle")}</div>
       <QRCanvas value={getLessonQrValue(lesson)} size={qrSize} />
       <div className="qr-label">{label || t("ticketOneTime")}</div>
-    </div>
+    </Card>
   );
 }
 
@@ -326,14 +337,20 @@ function LoginPage({ toast }) {
       <div className="login-logo"><BrandLogo height={72} /></div>
       <div className="login-title">{t("loginTitle")}</div>
       <div className="login-sub">{t("loginSub")}<br />{t("loginContinue")}</div>
-      <div className="login-card">
-        <button className="btn btn-google" onClick={signIn} disabled={loading}>
-          {loading ? <><div className="spinner" style={{borderTopColor:"var(--pool)"}}/> {t("signingIn")}</> : <><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style={{width:18,height:18}}/> {t("signInGoogle")}</>}
-        </button>
-        <div style={{marginTop:20,fontSize:12,color:"var(--ink-soft)",textAlign:"center",lineHeight:1.6}}>
+      <Card style={{ width: "100%", maxWidth: 360 }}>
+        <Button
+          variant="secondary"
+          fullWidth
+          onClick={signIn}
+          disabled={loading}
+          icon={loading ? <Spinner color="var(--pool)" /> : <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" style={{ width: 18, height: 18 }} />}
+        >
+          {loading ? t("signingIn") : t("signInGoogle")}
+        </Button>
+        <div style={{ marginTop: 20, fontSize: 12, color: "var(--ink-soft)", textAlign: "center", lineHeight: 1.6 }}>
           {t("loginNote")}
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
@@ -349,9 +366,9 @@ function PendingPage({ user, onLogout }) {
       <div className="pending-icon">⏳</div>
       <div className="pending-title">{t("pendingTitle")}</div>
       <div className="pending-sub">{t("pendingSub", { email: user.email })}</div>
-      <button className="btn btn-outline mt-16" style={{width:"auto",marginTop:32}} onClick={onLogout}>
+      <Button variant="outline" onClick={onLogout} style={{ marginTop: 32 }}>
         {t("logout")}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -424,9 +441,14 @@ function PendingWeeklyBarcodes({ profile, toast, onSent }) {
     <div className="pending-banner">
       <div className="pending-banner-title">📬 {t("pendingBarcodes")}</div>
       <div className="pending-banner-sub">{t("pendingBarcodesSub", { count: pending.length })}</div>
-      <button className="btn btn-whatsapp" onClick={sendAll} disabled={sending || !!sendingId}>
-        {sending ? <><div className="spinner" /> {t("preparingImage")}</> : t("sendAllBarcodes")}
-      </button>
+      <Button
+        fullWidth
+        onClick={sendAll}
+        disabled={sending || !!sendingId}
+        style={{ background: "#25D366", borderColor: "#25D366", color: "#fff" }}
+      >
+        {sending ? <><Spinner size={16} color="#fff" /> {t("preparingImage")}</> : t("sendAllBarcodes")}
+      </Button>
       <div style={{ marginTop: 14 }}>
         {pending.map(lesson => (
           <div className="pending-item" key={lesson.id}>
@@ -436,13 +458,14 @@ function PendingWeeklyBarcodes({ profile, toast, onSent }) {
                 {fmtDateDay(lesson.lesson_date)} · {fmt_time(lesson.start_time)}
               </div>
             </div>
-            <button
-              className="btn btn-outline btn-sm"
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => sendOne(lesson)}
               disabled={sending || sendingId === lesson.id}
             >
               {sendingId === lesson.id ? "..." : t("sendBarcode")}
-            </button>
+            </Button>
           </div>
         ))}
       </div>
@@ -541,13 +564,19 @@ function InstructorTab({ profile, toast }) {
         <div className="lesson-info-row"><span className="li-key">{t("instructor")}</span><span className="li-val">{created.instructor_name}</span></div>
       </div>
       <div className="gap-8">
-        <button className="btn btn-whatsapp" onClick={sendWhatsApp} disabled={sharing}>
-          {sharing ? <><div className="spinner"/> {t("preparingImage")}</> : t("sendWhatsApp")}
-        </button>
-        <button className="btn btn-outline" onClick={() => addToCalendar(created, "instructor", i18n)}>
+        <Button
+          fullWidth
+          onClick={sendWhatsApp}
+          disabled={sharing}
+          style={{ background: "#25D366", color: "#fff", border: "1px solid #25D366" }}
+          icon={sharing ? <Spinner color="#fff" /> : null}
+        >
+          {sharing ? t("preparingImage") : t("sendWhatsApp")}
+        </Button>
+        <Button variant="outline" fullWidth onClick={() => addToCalendar(created, "instructor", i18n)}>
           📅 {t("addToCalendar")}
-        </button>
-        <button className="btn btn-outline" onClick={() => setCreated(null)}>+ {t("createAnother")}</button>
+        </Button>
+        <Button variant="outline" fullWidth onClick={() => setCreated(null)}>+ {t("createAnother")}</Button>
       </div>
     </div>
   );
@@ -567,7 +596,7 @@ function InstructorTab({ profile, toast }) {
 
       <div className="section-title">{t("newLesson")}</div>
       <div className="section-sub">{t("newLessonSub")}</div>
-      <div className="card">
+      <Card style={{ marginBottom: "var(--space-4)" }}>
         <div className="field"><label className="label">{t("childName")}</label>
           <input className="input" placeholder={t("childPlaceholder")} value={form.child_name} onChange={upd("child_name")} dir={dir} /></div>
         <div className="field"><label className="label">{t("lessonDate")}</label>
@@ -607,10 +636,16 @@ function InstructorTab({ profile, toast }) {
             onError={msg => toast.show(msg)}
           />
         </div>
-        <button className="btn btn-primary mt-8" onClick={create} disabled={loading}>
-          {loading ? <><div className="spinner"/> {t("creating")}</> : t("createBarcode")}
-        </button>
-      </div>
+        <Button
+          fullWidth
+          onClick={create}
+          disabled={loading}
+          style={{ marginTop: "var(--space-2)" }}
+          icon={loading ? <Spinner color="#fff" /> : null}
+        >
+          {loading ? t("creating") : t("createBarcode")}
+        </Button>
+      </Card>
     </div>
   );
 }
@@ -821,7 +856,7 @@ function GuardTab({ toast }) {
       {loading && <div style={{ textAlign: "center", padding: 40, color: "var(--ink-mid)", fontWeight: 600 }}>⏳ {t("verifying")}</div>}
 
       {!scanning && !loading && !result && (
-        <button className="btn btn-primary btn-scan" onClick={startScan}>{t("scanBarcode")}</button>
+        <Button size="lg" fullWidth onClick={startScan}>{t("scanBarcode")}</Button>
       )}
 
       {scanning && (
@@ -832,21 +867,21 @@ function GuardTab({ toast }) {
             <div className="scan-overlay"><div className="scan-line" /></div>
           </div>
           <div className="scan-hint">{t("scanHint")}</div>
-          <button className="btn btn-outline mt-8" onClick={pauseScan}>{t("cancel")}</button>
+          <Button variant="outline" fullWidth onClick={pauseScan} style={{ marginTop: "var(--space-2)" }}>{t("cancel")}</Button>
         </>
       )}
 
       {result && !loading && (
         <>
           <ScanResultCard result={result} t={t} fmtDateDay={fmtDateDay} />
-          <button className="btn btn-outline" onClick={() => setResult(null)}>{t("scanAnother")}</button>
+          <Button variant="outline" fullWidth onClick={() => setResult(null)}>{t("scanAnother")}</Button>
         </>
       )}
 
       {log.length > 0 && (
-        <button type="button" className="btn btn-outline guard-log-toggle" onClick={() => setLogOpen(true)}>
+        <Button variant="outline" fullWidth className="guard-log-toggle" onClick={() => setLogOpen(true)}>
           {t("recentEntries")} ({log.length})
-        </button>
+        </Button>
       )}
 
       <AnimatePresence>
@@ -867,7 +902,7 @@ function GuardTab({ toast }) {
                   </div>
                 ))}
               </div>
-              <button type="button" className="btn btn-outline mt-16" onClick={() => setLogOpen(false)}>{t("cancel")}</button>
+              <Button variant="secondary" fullWidth style={{ marginTop: 16 }} onClick={() => setLogOpen(false)}>{t("cancel")}</Button>
             </AnimatedSheetPanel>
           </AnimatedSheetOverlay>
         )}
@@ -879,10 +914,16 @@ function GuardTab({ toast }) {
 // ─────────────────────────────────────────────────────────────
 //  ADMIN TAB
 // ─────────────────────────────────────────────────────────────
-function AdminTab({ profile, toast }) {
+function roleBadgeVariant(role) {
+  if (role === "admin") return "admin";
+  if (role === "instructor") return "instructor";
+  return "neutral";
+}
+
+function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
   const { t, roleLabel } = useLang();
   const isDesktop = useIsDesktop();
-  const [adminSection, setAdminSection] = useState("users");
+  const setAdminSection = onAdminSectionChange;
   const [users,    setUsers]    = useState([]);
   const [invites,  setInvites]  = useState([]);
   const [loading,  setLoading]  = useState(true);
@@ -971,29 +1012,25 @@ function AdminTab({ profile, toast }) {
     .map(r => ({ role: r, users: approved.filter(u => u.role === r) }))
     .filter(g => g.users.length > 0);
 
-  const roleBadgeClass = (r) =>
-    r === "admin" ? "badge-admin" : r === "instructor" ? "badge-active" : "badge-pending";
-
   const renderUserRow = (u, key) => (
-    <div className="user-row" key={key}>
-      <div className="user-avatar">
-        {u.avatar_url ? <img src={u.avatar_url} alt="" /> : initials(u.full_name || u.email)}
-      </div>
-      <div className="user-info">
-        <div className="user-display" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+    <Card
+      key={key}
+      style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}
+    >
+      <Avatar name={u.full_name || u.email} src={u.avatar_url} size={40} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 500, color: "var(--ink)" }}>
           {u.full_name || "—"}
           {isOwner(u) && (
-            <span className={`badge ${roleBadgeClass(u.role)}`}>
-              {roleLabel(u.role, true)}
-            </span>
+            <Badge variant={roleBadgeVariant(u.role)}>{roleLabel(u.role, true)}</Badge>
           )}
         </div>
-        <div className="user-email">{u.email}</div>
+        <div style={{ fontSize: 13, color: "var(--ink-soft)" }} dir="ltr">{u.email}</div>
       </div>
       {canRevokeUser(profile, u) && (
-        <button className="btn btn-danger btn-sm" onClick={() => revoke(u)}>{t("revoke")}</button>
+        <Button variant="danger" size="sm" onClick={() => revoke(u)}>{t("revoke")}</Button>
       )}
-    </div>
+    </Card>
   );
 
   const adminSections = [
@@ -1010,34 +1047,36 @@ function AdminTab({ profile, toast }) {
     { id: "sheets", label: t("tabSheetSync") },
   ];
 
-  const renderAdminNavBtn = (section, className) => (
-    <button
-      key={section.id}
-      type="button"
-      className={className}
-      onClick={() => setAdminSection(section.id)}
-    >
-      {section.label}
-    </button>
-  );
-
   return (
     <div>
       <div className="admin-shell">
         {isDesktop && (
-          <aside className="admin-rail">
-            {adminSections.map((section) =>
-              renderAdminNavBtn(section, `sidebar-btn${adminSection === section.id ? " active" : ""}`),
-            )}
+          <aside className="admin-rail" style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+            {adminSections.map((section) => (
+              <NavItem
+                key={section.id}
+                label={section.label}
+                active={adminSection === section.id}
+                onClick={() => setAdminSection(section.id)}
+              />
+            ))}
           </aside>
         )}
 
         <div className="admin-content">
           {!isDesktop && (
-            <div className="admin-nav-mobile">
-              {adminSections.map((section) =>
-                renderAdminNavBtn(section, `admin-chip${adminSection === section.id ? " active" : ""}`),
-              )}
+            <div className="admin-nav-mobile" style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, marginBottom: 12 }}>
+              {adminSections.map((section) => (
+                <Button
+                  key={section.id}
+                  size="sm"
+                  variant={adminSection === section.id ? "secondary" : "ghost"}
+                  onClick={() => setAdminSection(section.id)}
+                  style={{ flexShrink: 0 }}
+                >
+                  {section.label}
+                </Button>
+              ))}
             </div>
           )}
 
@@ -1063,56 +1102,66 @@ function AdminTab({ profile, toast }) {
         <AdminSheetSyncTab toast={toast} />
       ) : (
         <>
-      <div className="page-header">
-        <h1 className="page-title">{t("adminSectionUsers")}</h1>
-        <p className="page-sub">
-          {isOwner(profile) ? t("manageSubOwner") : t("manageSubAdmin")}
-        </p>
-      </div>
-
-      <div className="card">
-        <div className="search-bar">
-          <input
-            className="search-input"
-            type="email"
-            placeholder="name@example.com"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            dir="ltr"
-          />
-          <select className="input" value={role} onChange={e => setRole(e.target.value)} style={{ width: "auto", minWidth: 120 }}>
-            {roles.map(r => (
-              <option key={r} value={r}>{roleLabel(r)}</option>
-            ))}
-          </select>
-          <button className="btn btn-primary btn-sm" onClick={assignUser} disabled={saving}>
-            {saving ? <><div className="spinner" /> {t("saving")}</> : t("addUser")}
-          </button>
+      {!isDesktop && (
+        <div className="page-header">
+          <h1 className="page-title">{t("adminSectionUsers")}</h1>
+          <p className="page-sub">
+            {isOwner(profile) ? t("manageSubOwner") : t("manageSubAdmin")}
+          </p>
         </div>
-      </div>
+      )}
+
+      <Card style={{ marginBottom: 20 }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <Field style={{ flex: 1, minWidth: 200, marginBottom: 0 }}>
+            <Input
+              type="email"
+              placeholder="name@example.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              dir="ltr"
+            />
+          </Field>
+          <Field style={{ minWidth: 120, marginBottom: 0 }}>
+            <Select value={role} onChange={e => setRole(e.target.value)}>
+              {roles.map(r => (
+                <option key={r} value={r}>{roleLabel(r)}</option>
+              ))}
+            </Select>
+          </Field>
+          <Button variant="primary" size="sm" onClick={assignUser} disabled={saving}>
+            {saving ? <><Spinner size={14} color="var(--on-primary)" /> {t("saving")}</> : t("addUser")}
+          </Button>
+        </div>
+      </Card>
 
       {loading ? (
-        <div className="loading-center">{t("loading")}</div>
+        <div style={{ display: "flex", justifyContent: "center", padding: 32 }}>
+          <Spinner />
+        </div>
       ) : (
         <>
           {waitingInvites.length > 0 && (
             <>
               <div className="grouped-list-header">{t("waitingLogin")} ({waitingInvites.length})</div>
-              <div className="grouped-list" style={{ marginBottom: 24 }}>
+              <div style={{ marginBottom: 24 }}>
                 {waitingInvites.map(i => (
-                  <div className="user-row" key={i.email}>
-                    <div className="user-avatar">{initials(i.email)}</div>
-                    <div className="user-info">
-                      <div className="user-display" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        {i.email}
-                        <span className={`badge ${roleBadgeClass(i.role)}`}>{roleLabel(i.role)}</span>
+                  <Card
+                    key={i.email}
+                    style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}
+                  >
+                    <Avatar name={i.email} size={40} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 500, color: "var(--ink)" }}>
+                        <span dir="ltr">{i.email}</span>
+                        <Badge variant={roleBadgeVariant(i.role)}>{roleLabel(i.role)}</Badge>
                       </div>
-                      <div className="user-email">{t("notLoggedInYet")}</div>
+                      <div style={{ fontSize: 13, color: "var(--ink-soft)" }}>{t("notLoggedInYet")}</div>
                     </div>
                     {canRevokeUser(profile, { email: i.email, role: i.role }) && (
-                      <button className="btn btn-danger btn-sm" onClick={() => revoke({ email: i.email, role: i.role })}>{t("revoke")}</button>
+                      <Button variant="danger" size="sm" onClick={() => revoke({ email: i.email, role: i.role })}>{t("revoke")}</Button>
                     )}
-                  </div>
+                  </Card>
                 ))}
               </div>
             </>
@@ -1120,7 +1169,7 @@ function AdminTab({ profile, toast }) {
 
           <div className="grouped-list-header">{t("activeUsers")} ({approved.length})</div>
           {approved.length === 0 ? (
-            <div className="empty"><div className="empty-icon">👥</div><div className="empty-text">{t("noActiveUsers")}</div></div>
+            <EmptyState title={t("noActiveUsers")} />
           ) : (
             <div>
               {approvedByRole.map(({ role: roleKey, users: roleUsers }) => {
@@ -1134,7 +1183,7 @@ function AdminTab({ profile, toast }) {
                       aria-expanded={isOpen}
                     >
                       <span className="role-section-title">
-                        <span className={`badge ${roleBadgeClass(roleKey)}`}>{roleLabel(roleKey)}</span>
+                        <Badge variant={roleBadgeVariant(roleKey)}>{roleLabel(roleKey)}</Badge>
                         <span className="role-section-count">({roleUsers.length})</span>
                       </span>
                       <span className="role-section-chevron" aria-hidden="true">▼</span>
@@ -1265,12 +1314,14 @@ function ParentTicket({ id }) {
           {t("scannedOn")}: {new Date(lesson.used_at).toLocaleString(locale)}
         </div>
       )}
-      <button
-        className="btn btn-outline mt-8"
+      <Button
+        variant="outline"
+        fullWidth
+        style={{ marginTop: 8 }}
         onClick={() => addToCalendar(lesson, "parent", { t, fmtDateDay })}
       >
         📅 {t("addToCalendar")}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -1329,9 +1380,9 @@ function CalendarAddPage({ id }) {
         <div className="lesson-info-row"><span className="li-key">{t("duration")}</span><span className="li-val">{t("calDurationValue")}</span></div>
         <div className="lesson-info-row"><span className="li-key">{t("instructor")}</span><span className="li-val">{lesson.instructor_name}</span></div>
       </div>
-      <button className="btn btn-primary mt-8" onClick={() => addToCalendar(lesson, "parent", i18n)}>
+      <Button variant="primary" fullWidth style={{ marginTop: 8 }} onClick={() => addToCalendar(lesson, "parent", i18n)}>
         📅 {t("addToCalendar")}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -1344,6 +1395,7 @@ export default function App() {
   const [session,  setSession]  = useState(undefined); // undefined = loading
   const [profile,  setProfile]  = useState(null);
   const [tab,      setTab]      = useState("instructor");
+  const [adminSection, setAdminSection] = useState("users");
   const [tabDirection, setTabDirection] = useState(0);
   const [attendanceFocus, setAttendanceFocus] = useState(null);
   const reducedMotion = useReducedMotion();
@@ -1604,7 +1656,14 @@ export default function App() {
         />
       );
       case "office":     return <OfficeTab toast={toast} />;
-      case "admin":      return <AdminTab profile={profile} toast={toast} />;
+      case "admin":      return (
+        <AdminTab
+          profile={profile}
+          toast={toast}
+          adminSection={adminSection}
+          onAdminSectionChange={setAdminSection}
+        />
+      );
       default:           return null;
     }
   };
@@ -1612,8 +1671,27 @@ export default function App() {
   const useNarrowContent = isDesktop && !PRIORITY_TABS.has(tab);
 
   const activeTabMeta = allTabs.find(ti => ti.id === tab);
-  const topBarTitle = activeTabMeta?.label || t("tabSchedule");
-  const topBarSubtitle = tab === "schedule" ? t("scheduleSub") : null;
+  const adminSectionTitles = {
+    users: t("adminSectionUsers"),
+    enrollments: t("tabEnrollments"),
+    products: t("tabProducts"),
+    seasons: t("tabSeasons"),
+    assessment: t("tabAssessment"),
+    attendance: t("tabAttendance"),
+    utilization: t("tabUtilization"),
+    waitlist: t("tabWaitlist"),
+    dashboard: t("tabDashboard"),
+    payroll: t("tabPayroll"),
+    sheets: t("tabSheetSync"),
+  };
+  const topBarTitle = tab === "admin"
+    ? (adminSectionTitles[adminSection] || activeTabMeta?.label || t("tabAdmin"))
+    : (activeTabMeta?.label || t("tabSchedule"));
+  const topBarSubtitle = tab === "schedule"
+    ? t("scheduleSub")
+    : tab === "admin" && adminSection === "users"
+      ? (isOwner(profile) ? t("manageSubOwner") : t("manageSubAdmin"))
+      : null;
 
   const scheduleTopBarActions = tab === "schedule" && isDesktop ? (
     <>
@@ -1636,7 +1714,7 @@ export default function App() {
   const topBarTrailing = isDesktop ? (
     <>
       <LanguageSwitcher compact />
-      <button type="button" className="btn-logout" onClick={logout}>{t("logout")}</button>
+      <Button variant="ghost" size="sm" onClick={logout}>{t("logout")}</Button>
     </>
   ) : null;
 

@@ -1,22 +1,23 @@
 import { useLang } from "../../i18n.jsx";
+import { Button, Card } from "../ui/ds/index.js";
 
 export default function RecurringScopeDialog({ onChoose, onCancel }) {
   const { t } = useLang();
   return (
     <div className="schedule-panel-overlay" onClick={onCancel}>
-      <div className="schedule-panel" onClick={e => e.stopPropagation()}>
+      <Card className="schedule-panel" padded={false} onClick={e => e.stopPropagation()} style={{ borderRadius: "16px 16px 0 0" }}>
         <div className="schedule-panel-handle" />
         <div className="section-title" style={{ fontSize: 17 }}>{t("recurringScopeTitle")}</div>
         <div className="recurring-scope-btns">
-          <button type="button" className="btn btn-primary" onClick={() => onChoose("single")}>
+          <Button variant="primary" onClick={() => onChoose("single")}>
             {t("recurringScopeSingle")}
-          </button>
-          <button type="button" className="btn btn-outline" onClick={() => onChoose("forward")}>
+          </Button>
+          <Button variant="secondary" onClick={() => onChoose("forward")}>
             {t("recurringScopeForward")}
-          </button>
-          <button type="button" className="btn btn-outline" onClick={onCancel}>{t("cancel")}</button>
+          </Button>
+          <Button variant="secondary" onClick={onCancel}>{t("cancel")}</Button>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

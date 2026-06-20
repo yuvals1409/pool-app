@@ -8,6 +8,7 @@ import {
   setSessionInstructorOverride,
   clearSessionInstructorOverride,
 } from "../../lib/sessionSubstitutions.js";
+import { Button, Field, Input, Select, Spinner } from "../ui/ds/index.js";
 
 export default function SessionSchedulePanel({
   event,
@@ -117,10 +118,8 @@ export default function SessionSchedulePanel({
         {canSubstitute && !past && (
           <div className="substitute-form" style={{ marginTop: 16 }}>
             <div className="section-sub" style={{ marginBottom: 12 }}>{t("substituteInstructorHint")}</div>
-            <div className="field">
-              <label className="label">{t("substituteInstructor")}</label>
-              <select
-                className="input"
+            <Field label={t("substituteInstructor")}>
+              <Select
                 value={substituteId}
                 onChange={(e) => setSubstituteId(e.target.value)}
                 disabled={acting}
@@ -129,36 +128,32 @@ export default function SessionSchedulePanel({
                 {availableSubstitutes.map((inst) => (
                   <option key={inst.id} value={inst.id}>{inst.full_name}</option>
                 ))}
-              </select>
-            </div>
-            <div className="field">
-              <label className="label">{t("substituteReason")}</label>
-              <input
-                className="input"
+              </Select>
+            </Field>
+            <Field label={t("substituteReason")}>
+              <Input
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 disabled={acting}
                 placeholder={t("substituteReasonPlaceholder")}
               />
-            </div>
+            </Field>
             <div className="gap-8">
-              <button
-                type="button"
-                className="btn btn-primary"
+              <Button
+                variant="primary"
                 onClick={handleSaveSubstitute}
                 disabled={acting || !substituteId}
               >
-                {acting ? <><div className="spinner" /> {t("saving")}</> : t("saveSubstitute")}
-              </button>
+                {acting ? <><Spinner size={16} /> {t("saving")}</> : t("saveSubstitute")}
+              </Button>
               {event.is_substitute && (
-                <button
-                  type="button"
-                  className="btn btn-outline"
+                <Button
+                  variant="secondary"
                   onClick={handleClearSubstitute}
                   disabled={acting}
                 >
                   {t("clearSubstitute")}
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -168,9 +163,9 @@ export default function SessionSchedulePanel({
         )}
         <p className="schedule-session-hint">{t("scheduleGroupSessionHint")}</p>
         {showMarkAttendance && onMarkAttendance && (
-          <button type="button" className="btn btn-primary mt-8" style={{ width: "100%" }} onClick={() => onMarkAttendance(event)}>
+          <Button variant="primary" fullWidth onClick={() => onMarkAttendance(event)} style={{ marginTop: 8 }}>
             {t("markAttendance")}
-          </button>
+          </Button>
         )}
       </div>
   );

@@ -18,13 +18,33 @@ import {
 import { AnimatedSheetOverlay, AnimatedSheetPanel } from "./ui/AnimatedSheet.jsx";
 import { useLang } from "../i18n.jsx";
 import { fmt_time } from "../lib/lessonDates.js";
+import { useIsDesktop } from "../lib/useBreakpoint.js";
+import {
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  Field,
+  Input,
+  SegmentedControl,
+  Select,
+  Spinner,
+} from "./ui/ds/index.js";
 
 const ASSESSMENT_RESULTS = ["pending", "passed", "failed"];
 const DEFAULT_TIME = "16:00";
 const DEFAULT_CAPACITY = 10;
 
+function leadStatusBadgeVariant(status) {
+  const cls = leadStatusBadgeClass(status);
+  if (cls === "badge-active") return "success";
+  if (cls === "badge-used") return "neutral";
+  return "warn";
+}
+
 export default function AdminAssessmentTab({ toast }) {
   const { t, fmtDateDay } = useLang();
+  const isDesktop = useIsDesktop();
   const [view, setView] = useState("slots");
   const [slots, setSlots] = useState([]);
   const [leads, setLeads] = useState([]);
@@ -139,6 +159,11 @@ export default function AdminAssessmentTab({ toast }) {
   const futureSlots = slots.filter(
     (s) => s.active && s.slot_date >= todayDateStr() && s.enrolled_count < s.capacity,
   );
+
+  const viewOptions = [
+    { value: "slots", label: t("assessmentSlots") },
+    { value: "leads", label: t("assessmentLeads") },
+  ];
 
   const addSlot = async () => {
     if (!slotDate) return toast.show(t("assessmentDateRequired"));
@@ -392,88 +417,75 @@ export default function AdminAssessmentTab({ toast }) {
   };
 
   if (loading && view === "slots") {
-    return <div className="loading-center">{t("loading")}</div>;
+    return (
+      <div style={{ display: "flex", justifyContent: "center", padding: 32 }}>
+        <Spinner />
+      </div>
+    );
   }
 
   return (
     <div>
-      <div className="page-header">
-        <h1 className="page-title">{t("tabAssessment")}</h1>
-      </div>
+      {!isDesktop && (
+        <div className="page-header">
+          <h1 className="page-title">{t("tabAssessment")}</h1>
+        </div>
+      )}
 
-      <div className="filter-bar">
-        <button
-          type="button"
-          className={`btn btn-sm ${view === "slots" ? "btn-primary" : "btn-outline"}`}
-          onClick={() => setView("slots")}
-        >
-          {t("assessmentSlots")}
-        </button>
-        <button
-          type="button"
-          className={`btn btn-sm ${view === "leads" ? "btn-primary" : "btn-outline"}`}
-          onClick={() => setView("leads")}
-        >
-          {t("assessmentLeads")}
-        </button>
+      <div className="filter-bar" style={{ marginBottom: 16 }}>
+        <SegmentedControl options={viewOptions} value={view} onChange={setView} size="sm" />
       </div>
 
       {view === "slots" ? (
         <>
-          <div className="card" style={{ marginBottom: 20 }}>
+          <Card style={{ marginBottom: 20 }}>
             <div className="section-sub" style={{ marginBottom: 12 }}>{t("addAssessmentSlot")}</div>
-            <div className="field">
-              <label className="label">{t("date")}</label>
-              <input className="input" type="date" value={slotDate} onChange={(e) => setSlotDate(e.target.value)} dir="ltr" />
-            </div>
-            <div className="field">
-              <label className="label">{t("startTime")}</label>
-              <input className="input" type="time" value={slotTime} onChange={(e) => setSlotTime(e.target.value)} dir="ltr" />
-            </div>
-            <div className="field">
-              <label className="label">{t("assessmentCapacity")}</label>
-              <input className="input" type="number" min={1} value={slotCapacity} onChange={(e) => setSlotCapacity(e.target.value)} dir="ltr" />
-            </div>
-            <button className="btn btn-primary" onClick={addSlot} disabled={saving}>
-              {saving ? <><div className="spinner" /> {t("saving")}</> : t("saveAssessmentSlot")}
-            </button>
-          </div>
+            <Field label={t("date")}>
+              <Input type="date" value={slotDate} onChange={(e) => setSlotDate(e.target.value)} dir="ltr" />
+            </Field>
+            <Field label={t("startTime")}>
+              <Input type="time" value={slotTime} onChange={(e) => setSlotTime(e.target.value)} dir="ltr" />
+            </Field>
+            <Field label={t("assessmentCapacity")}>
+              <Input type="number" min={1} value={slotCapacity} onChange={(e) => setSlotCapacity(e.target.value)} dir="ltr" />
+            </Field>
+            <Button variant="primary" onClick={addSlot} disabled={saving}>
+              {saving ? <><Spinner size={14} color="var(--on-primary)" /> {t("saving")}</> : t("saveAssessmentSlot")}
+            </Button>
+          </Card>
 
           {slots.length === 0 ? (
-            <div className="empty"><div className="empty-icon">📅</div><div className="empty-text">{t("noAssessmentSlots")}</div></div>
+            <EmptyState title={t("noAssessmentSlots")} />
           ) : (
             <div className="grouped-list">
               {slots.map((slot) => (
                 <div className="user-row" key={slot.id} style={{ flexWrap: "wrap", gap: 8 }}>
                   {editingSlotId === slot.id ? (
                     <div style={{ flex: 1, width: "100%" }}>
-                      <div className="field">
-                        <label className="label">{t("date")}</label>
-                        <input className="input" type="date" value={editSlotDate} onChange={(e) => setEditSlotDate(e.target.value)} dir="ltr" />
-                      </div>
-                      <div className="field">
-                        <label className="label">{t("startTime")}</label>
-                        <input className="input" type="time" value={editSlotTime} onChange={(e) => setEditSlotTime(e.target.value)} dir="ltr" />
-                      </div>
-                      <div className="field">
-                        <label className="label">{t("assessmentCapacity")}</label>
-                        <input className="input" type="number" min={1} value={editSlotCapacity} onChange={(e) => setEditSlotCapacity(e.target.value)} dir="ltr" />
-                      </div>
+                      <Field label={t("date")}>
+                        <Input type="date" value={editSlotDate} onChange={(e) => setEditSlotDate(e.target.value)} dir="ltr" />
+                      </Field>
+                      <Field label={t("startTime")}>
+                        <Input type="time" value={editSlotTime} onChange={(e) => setEditSlotTime(e.target.value)} dir="ltr" />
+                      </Field>
+                      <Field label={t("assessmentCapacity")}>
+                        <Input type="number" min={1} value={editSlotCapacity} onChange={(e) => setEditSlotCapacity(e.target.value)} dir="ltr" />
+                      </Field>
                       <div style={{ display: "flex", gap: 6 }}>
-                        <button type="button" className="btn btn-primary btn-sm" onClick={() => saveSlotEdit(slot)} disabled={saving}>
+                        <Button type="button" variant="primary" size="sm" onClick={() => saveSlotEdit(slot)} disabled={saving}>
                           {t("saveChanges")}
-                        </button>
-                        <button type="button" className="btn btn-outline btn-sm" onClick={() => setEditingSlotId(null)}>{t("cancel")}</button>
+                        </Button>
+                        <Button type="button" variant="secondary" size="sm" onClick={() => setEditingSlotId(null)}>{t("cancel")}</Button>
                       </div>
                     </div>
                   ) : (
                     <>
                       <div className="user-info" style={{ flex: 1 }}>
-                        <div className="user-display">
+                        <div className="user-display" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                           {fmtDateDay(slot.slot_date)} · {fmt_time(slot.start_time)}
-                          <span className={`badge ${slot.active ? "badge-active" : "badge-used"}`} style={{ marginInlineStart: 8 }}>
+                          <Badge variant={slot.active ? "success" : "neutral"}>
                             {slot.active ? t("active") : t("cancelled")}
-                          </span>
+                          </Badge>
                         </div>
                         <div className="user-email">
                           {t("assessmentEnrolled", { n: slot.enrolled_count, cap: slot.capacity })}
@@ -481,12 +493,12 @@ export default function AdminAssessmentTab({ toast }) {
                       </div>
                       {slot.active && slot.slot_date >= todayDateStr() && (
                         <div style={{ display: "flex", gap: 6 }}>
-                          <button className="btn btn-outline btn-sm" onClick={() => startEditSlot(slot)} disabled={saving}>
+                          <Button variant="secondary" size="sm" onClick={() => startEditSlot(slot)} disabled={saving}>
                             {t("editAssessmentSlot")}
-                          </button>
-                          <button className="btn btn-danger btn-sm" onClick={() => cancelSlot(slot)} disabled={saving}>
+                          </Button>
+                          <Button variant="danger" size="sm" onClick={() => cancelSlot(slot)} disabled={saving}>
                             {t("cancelAssessmentSlot")}
-                          </button>
+                          </Button>
                         </div>
                       )}
                     </>
@@ -498,77 +510,77 @@ export default function AdminAssessmentTab({ toast }) {
         </>
       ) : (
         <>
-          <div className="card" style={{ marginBottom: 16 }}>
+          <Card style={{ marginBottom: 16 }}>
             <div className="section-sub" style={{ marginBottom: 8 }}>{t("leadFunnelTitle")}</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {LEAD_FUNNEL_STATUSES.map((st) => (
-                <span key={st} className={`badge ${leadStatusBadgeClass(st)}`} style={{ fontSize: 13 }}>
+                <Badge key={st} variant={leadStatusBadgeVariant(st)} style={{ fontSize: 13 }}>
                   {leadStatusLabel(st)}: {funnelCounts[st] ?? 0}
-                </span>
+                </Badge>
               ))}
             </div>
-          </div>
+          </Card>
 
-          <div className="card" style={{ marginBottom: 16 }}>
+          <Card style={{ marginBottom: 16 }}>
             <div className="section-sub" style={{ marginBottom: 12 }}>{t("createLead")}</div>
             <div style={{ display: "grid", gap: 8, gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))" }}>
-              <input className="input" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} placeholder={t("parentPhone")} dir="ltr" />
-              <input className="input" value={newParentName} onChange={(e) => setNewParentName(e.target.value)} placeholder={t("parentName")} />
-              <input className="input" value={newChildName} onChange={(e) => setNewChildName(e.target.value)} placeholder={t("childName")} />
-              <input className="input" type="number" min={1} max={120} value={newChildAge} onChange={(e) => setNewChildAge(e.target.value)} placeholder={t("childAge")} dir="ltr" />
-              <select className="input" value={newSource} onChange={(e) => setNewSource(e.target.value)}>
+              <Input value={newPhone} onChange={(e) => setNewPhone(e.target.value)} placeholder={t("parentPhone")} dir="ltr" />
+              <Input value={newParentName} onChange={(e) => setNewParentName(e.target.value)} placeholder={t("parentName")} />
+              <Input value={newChildName} onChange={(e) => setNewChildName(e.target.value)} placeholder={t("childName")} />
+              <Input type="number" min={1} max={120} value={newChildAge} onChange={(e) => setNewChildAge(e.target.value)} placeholder={t("childAge")} dir="ltr" />
+              <Select value={newSource} onChange={(e) => setNewSource(e.target.value)}>
                 {LEAD_SOURCES.filter((s) => s !== "import").map((src) => (
                   <option key={src} value={src}>{leadSourceLabel(src)}</option>
                 ))}
-              </select>
-              <input className="input" value={newNotes} onChange={(e) => setNewNotes(e.target.value)} placeholder={t("leadNotes")} />
+              </Select>
+              <Input value={newNotes} onChange={(e) => setNewNotes(e.target.value)} placeholder={t("leadNotes")} />
             </div>
-            <button className="btn btn-primary btn-sm" style={{ marginTop: 10 }} onClick={handleCreateLead} disabled={saving}>
+            <Button variant="primary" size="sm" style={{ marginTop: 10 }} onClick={handleCreateLead} disabled={saving}>
               {t("createLeadSave")}
-            </button>
-          </div>
+            </Button>
+          </Card>
 
           <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-            <select className="input" value={leadFilterSlot} onChange={(e) => setLeadFilterSlot(e.target.value)} style={{ flex: 1, minWidth: 140 }}>
+            <Select value={leadFilterSlot} onChange={(e) => setLeadFilterSlot(e.target.value)} style={{ flex: 1, minWidth: 140 }}>
               <option value="">{t("allSlots")}</option>
               {slots.map((s) => (
                 <option key={s.id} value={s.id}>
                   {fmtDateDay(s.slot_date)} {fmt_time(s.start_time)}
                 </option>
               ))}
-            </select>
-            <select className="input" value={leadFilterStatus} onChange={(e) => setLeadFilterStatus(e.target.value)} style={{ flex: 1, minWidth: 120 }}>
+            </Select>
+            <Select value={leadFilterStatus} onChange={(e) => setLeadFilterStatus(e.target.value)} style={{ flex: 1, minWidth: 120 }}>
               <option value="">{t("allStatuses")}</option>
               {LEAD_FUNNEL_STATUSES.map((st) => (
                 <option key={st} value={st}>{leadStatusLabel(st)}</option>
               ))}
-            </select>
-            <select className="input" value={leadFilterSource} onChange={(e) => setLeadFilterSource(e.target.value)} style={{ flex: 1, minWidth: 120 }}>
+            </Select>
+            <Select value={leadFilterSource} onChange={(e) => setLeadFilterSource(e.target.value)} style={{ flex: 1, minWidth: 120 }}>
               <option value="">{t("allSources")}</option>
               {LEAD_SOURCES.map((src) => (
                 <option key={src} value={src}>{leadSourceLabel(src)}</option>
               ))}
-            </select>
-            <select className="input" value={leadFilterResult} onChange={(e) => setLeadFilterResult(e.target.value)} style={{ flex: 1, minWidth: 120 }}>
+            </Select>
+            <Select value={leadFilterResult} onChange={(e) => setLeadFilterResult(e.target.value)} style={{ flex: 1, minWidth: 120 }}>
               <option value="">{t("allResults")}</option>
               {ASSESSMENT_RESULTS.map((r) => (
                 <option key={r} value={r}>{assessmentResultLabel(r)}</option>
               ))}
-            </select>
+            </Select>
           </div>
 
           {leads.length === 0 ? (
-            <div className="empty"><div className="empty-icon">📋</div><div className="empty-text">{t("noAssessmentLeads")}</div></div>
+            <EmptyState title={t("noAssessmentLeads")} />
           ) : (
             <div className="grouped-list">
               {leads.map((lead) => (
                 <div className="user-row" key={lead.id} style={{ flexWrap: "wrap", gap: 8 }}>
                   <div className="user-info" style={{ flex: 1, minWidth: 200 }}>
-                    <div className="user-display">
+                    <div className="user-display" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                       {lead.participant?.full_name || "—"}
-                      <span className={`badge ${leadStatusBadgeClass(lead.status)}`} style={{ marginInlineStart: 8 }}>
+                      <Badge variant={leadStatusBadgeVariant(lead.status)}>
                         {leadStatusLabel(lead.status)}
-                      </span>
+                      </Badge>
                     </div>
                     <div className="user-email">
                       {lead.participant?.family?.phone ? `${lead.participant.family.phone}` : ""}
@@ -583,8 +595,7 @@ export default function AdminAssessmentTab({ toast }) {
                   </div>
 
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-                    <select
-                      className="input"
+                    <Select
                       style={{ minWidth: 130 }}
                       value={lead.status}
                       disabled={saving || lead.status === "abandoned"}
@@ -593,9 +604,8 @@ export default function AdminAssessmentTab({ toast }) {
                       {LEAD_FUNNEL_STATUSES.map((st) => (
                         <option key={st} value={st}>{leadStatusLabel(st)}</option>
                       ))}
-                    </select>
-                    <select
-                      className="input"
+                    </Select>
+                    <Select
                       style={{ minWidth: 110 }}
                       value={lead.source || "website"}
                       disabled={saving}
@@ -604,14 +614,13 @@ export default function AdminAssessmentTab({ toast }) {
                       {LEAD_SOURCES.map((src) => (
                         <option key={src} value={src}>{leadSourceLabel(src)}</option>
                       ))}
-                    </select>
-                    <button type="button" className="btn btn-outline btn-sm" onClick={() => openTasks(lead)} disabled={saving}>
+                    </Select>
+                    <Button type="button" variant="secondary" size="sm" onClick={() => openTasks(lead)} disabled={saving}>
                       {t("followUpTasks")}
-                    </button>
+                    </Button>
                     {!lead.slot_id && ["new", "call"].includes(lead.status) && (
                       <>
-                        <select
-                          className="input"
+                        <Select
                           style={{ minWidth: 140 }}
                           value={assignSlotByLead[lead.id] || ""}
                           onChange={(e) => setAssignSlotByLead((prev) => ({ ...prev, [lead.id]: e.target.value }))}
@@ -622,16 +631,16 @@ export default function AdminAssessmentTab({ toast }) {
                               {fmtDateDay(s.slot_date)} {fmt_time(s.start_time)}
                             </option>
                           ))}
-                        </select>
-                        <button type="button" className="btn btn-primary btn-sm" disabled={saving || !assignSlotByLead[lead.id]} onClick={() => handleAssignSlot(lead)}>
+                        </Select>
+                        <Button type="button" variant="primary" size="sm" disabled={saving || !assignSlotByLead[lead.id]} onClick={() => handleAssignSlot(lead)}>
                           {t("assignSlotSave")}
-                        </button>
+                        </Button>
                       </>
                     )}
                     {lead.status !== "abandoned" && lead.status !== "registered_class" && (
-                      <button type="button" className="btn btn-danger btn-sm" onClick={() => handleAbandonLead(lead)} disabled={saving}>
+                      <Button type="button" variant="danger" size="sm" onClick={() => handleAbandonLead(lead)} disabled={saving}>
                         {t("markLeadAbandoned")}
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -649,25 +658,23 @@ export default function AdminAssessmentTab({ toast }) {
               <div className="section-sub" style={{ marginBottom: 12 }}>
                 {taskLead.participant?.full_name || "—"}
               </div>
-              <div className="field">
-                <label className="label">{t("followUpTaskTitle")}</label>
-                <input className="input" value={taskTitle} onChange={(e) => setTaskTitle(e.target.value)} placeholder={t("followUpTomorrow")} />
-              </div>
-              <div className="field">
-                <label className="label">{t("followUpDueDate")}</label>
-                <input className="input" type="date" value={taskDueDate} onChange={(e) => setTaskDueDate(e.target.value)} dir="ltr" />
-              </div>
+              <Field label={t("followUpTaskTitle")}>
+                <Input value={taskTitle} onChange={(e) => setTaskTitle(e.target.value)} placeholder={t("followUpTomorrow")} />
+              </Field>
+              <Field label={t("followUpDueDate")}>
+                <Input type="date" value={taskDueDate} onChange={(e) => setTaskDueDate(e.target.value)} dir="ltr" />
+              </Field>
               <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
-                <button type="button" className="btn btn-outline btn-sm" onClick={() => setTaskDueDate(addDays(todayDateStr(), 1))}>
+                <Button type="button" variant="secondary" size="sm" onClick={() => setTaskDueDate(addDays(todayDateStr(), 1))}>
                   {t("followUpTomorrow")}
-                </button>
-                <button type="button" className="btn btn-outline btn-sm" onClick={() => setTaskDueDate(addDays(todayDateStr(), 7))}>
+                </Button>
+                <Button type="button" variant="secondary" size="sm" onClick={() => setTaskDueDate(addDays(todayDateStr(), 7))}>
                   {t("followUpNextWeek")}
-                </button>
+                </Button>
               </div>
-              <button type="button" className="btn btn-primary btn-sm" onClick={handleAddTask} disabled={saving || !taskTitle.trim()}>
+              <Button type="button" variant="primary" size="sm" onClick={handleAddTask} disabled={saving || !taskTitle.trim()}>
                 {t("addFollowUpTask")}
-              </button>
+              </Button>
               <div style={{ marginTop: 16 }}>
                 {tasks.length === 0 ? (
                   <div className="empty-text">{t("noFollowUpTasks")}</div>
@@ -680,20 +687,20 @@ export default function AdminAssessmentTab({ toast }) {
                           <div className="user-email">{fmtDateDay(task.due_date)}</div>
                         </div>
                         {!task.completed_at ? (
-                          <button type="button" className="btn btn-primary btn-sm" onClick={() => handleCompleteTask(task.id)} disabled={saving}>
+                          <Button type="button" variant="primary" size="sm" onClick={() => handleCompleteTask(task.id)} disabled={saving}>
                             {t("taskComplete")}
-                          </button>
+                          </Button>
                         ) : (
-                          <span className="badge badge-active">{t("taskComplete")}</span>
+                          <Badge variant="success">{t("taskComplete")}</Badge>
                         )}
                       </div>
                     ))}
                   </div>
                 )}
               </div>
-              <button type="button" className="btn btn-outline" style={{ marginTop: 16, width: "100%" }} onClick={closeTasks}>
+              <Button type="button" variant="secondary" fullWidth style={{ marginTop: 16 }} onClick={closeTasks}>
                 {t("cancel")}
-              </button>
+              </Button>
             </AnimatedSheetPanel>
           </AnimatedSheetOverlay>
         )}

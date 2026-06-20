@@ -3,11 +3,22 @@ import { supabase } from "../lib/supabase.js";
 import { generateCourseSeriesSessions } from "../lib/summerCourse.js";
 import { formatProductLabel } from "../lib/productLabel.js";
 import { useLang } from "../i18n.jsx";
+import { useIsDesktop } from "../lib/useBreakpoint.js";
+import {
+  Button,
+  Card,
+  EmptyState,
+  Field,
+  Input,
+  Select,
+  Spinner,
+} from "./ui/ds/index.js";
 
 const TEMPLATE_CODES = ["annual_section", "summer_course"];
 
 export default function AdminProductsTab({ toast }) {
   const { t, days } = useLang();
+  const isDesktop = useIsDesktop();
   const [seasons, setSeasons] = useState([]);
   const [templates, setTemplates] = useState([]);
   const [seasonId, setSeasonId] = useState("");
@@ -176,103 +187,103 @@ export default function AdminProductsTab({ toast }) {
 
   return (
     <div>
-      <div className="page-header">
-        <h1 className="page-title">{t("tabProducts")}</h1>
-      </div>
+      {!isDesktop && (
+        <div className="page-header">
+          <h1 className="page-title">{t("tabProducts")}</h1>
+        </div>
+      )}
 
       <div className="filter-bar">
-        <select className="input" value={seasonId} onChange={(e) => setSeasonId(e.target.value)}>
+        <Select value={seasonId} onChange={(e) => setSeasonId(e.target.value)} style={{ minWidth: 160 }}>
           {seasons.map((s) => (
             <option key={s.id} value={s.id}>{s.name}{s.active ? ` (${t("active")})` : ""}</option>
           ))}
-        </select>
-        <button type="button" className="btn btn-primary btn-sm" onClick={() => { resetForm(); setShowForm(true); }}>
+        </Select>
+        <Button type="button" variant="primary" size="sm" onClick={() => { resetForm(); setShowForm(true); }}>
           {t("addProduct")}
-        </button>
+        </Button>
       </div>
 
       {showForm && (
-        <div className="card" style={{ marginBottom: 20 }}>
-          <div className="field">
-            <label className="label">{t("productType")}</label>
-            <select className="input" value={templateCode} onChange={(e) => setTemplateCode(e.target.value)}>
+        <Card style={{ marginBottom: 20 }}>
+          <Field label={t("productType")}>
+            <Select value={templateCode} onChange={(e) => setTemplateCode(e.target.value)}>
               <option value="annual_section">{t("productTypeAnnual")}</option>
               <option value="summer_course">{t("productTypeSummer")}</option>
-            </select>
-          </div>
-          <div className="field">
-            <label className="label">{t("productName")}</label>
-            <input className="input" value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
-          <div className="field">
-            <label className="label">{t("instructor")}</label>
-            <select className="input" value={instructorId} onChange={(e) => pickInstructor(e.target.value)}>
+            </Select>
+          </Field>
+          <Field label={t("productName")}>
+            <Input value={name} onChange={(e) => setName(e.target.value)} />
+          </Field>
+          <Field label={t("instructor")}>
+            <Select value={instructorId} onChange={(e) => pickInstructor(e.target.value)}>
               <option value="">{t("selectInstructor")}</option>
               {instructors.map((inst) => (
                 <option key={inst.id} value={inst.id}>{inst.full_name || inst.email}</option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </Field>
           {templateCode === "annual_section" ? (
-            <div className="field">
-              <label className="label">{t("dayOfWeek")}</label>
-              <select className="input" value={dayOfWeek} onChange={(e) => setDayOfWeek(e.target.value)}>
+            <Field label={t("dayOfWeek")}>
+              <Select value={dayOfWeek} onChange={(e) => setDayOfWeek(e.target.value)}>
                 {days.map((d, i) => <option key={d} value={i}>{d}</option>)}
-              </select>
-            </div>
+              </Select>
+            </Field>
           ) : (
             <>
-              <div className="field">
-                <label className="label">{t("courseWeekdays")}</label>
+              <Field label={t("courseWeekdays")}>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {days.map((d, i) => (
-                    <button key={d} type="button" className={`btn btn-sm ${weekdays.includes(i) ? "btn-primary" : "btn-outline"}`} onClick={() => toggleWeekday(i)}>
+                    <Button
+                      key={d}
+                      type="button"
+                      size="sm"
+                      variant={weekdays.includes(i) ? "primary" : "outline"}
+                      onClick={() => toggleWeekday(i)}
+                    >
                       {d}
-                    </button>
+                    </Button>
                   ))}
                 </div>
-              </div>
-              <div className="field">
-                <label className="label">{t("courseDateRange")}</label>
+              </Field>
+              <Field label={t("courseDateRange")}>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <input className="input" type="date" value={courseStart} onChange={(e) => setCourseStart(e.target.value)} dir="ltr" />
-                  <input className="input" type="date" value={courseEnd} onChange={(e) => setCourseEnd(e.target.value)} dir="ltr" />
+                  <Input type="date" value={courseStart} onChange={(e) => setCourseStart(e.target.value)} dir="ltr" />
+                  <Input type="date" value={courseEnd} onChange={(e) => setCourseEnd(e.target.value)} dir="ltr" />
                 </div>
-              </div>
+              </Field>
             </>
           )}
-          <div className="field">
-            <label className="label">{t("lessonStartTime")} / {t("endTime")}</label>
+          <Field label={`${t("lessonStartTime")} / ${t("endTime")}`}>
             <div style={{ display: "flex", gap: 8 }}>
-              <input className="input" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} dir="ltr" />
-              <input className="input" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} dir="ltr" />
+              <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} dir="ltr" />
+              <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} dir="ltr" />
             </div>
-          </div>
-          <div className="field">
-            <label className="label">{t("productLevelLabel")}</label>
-            <input className="input" value={levelLabel} onChange={(e) => setLevelLabel(e.target.value)} placeholder={t("productLevelLabelPlaceholder")} />
-          </div>
-          <div className="field">
-            <label className="label">{t("assessmentCapacity")}</label>
-            <input className="input" type="number" min={1} value={capacity} onChange={(e) => setCapacity(e.target.value)} dir="ltr" />
-          </div>
-          <div className="field">
-            <label className="label">{t("productPrice")}</label>
-            <input className="input" type="number" min={0} step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} dir="ltr" placeholder={t("productPriceOptional")} />
-          </div>
+          </Field>
+          <Field label={t("productLevelLabel")}>
+            <Input value={levelLabel} onChange={(e) => setLevelLabel(e.target.value)} placeholder={t("productLevelLabelPlaceholder")} />
+          </Field>
+          <Field label={t("assessmentCapacity")}>
+            <Input type="number" min={1} value={capacity} onChange={(e) => setCapacity(e.target.value)} dir="ltr" />
+          </Field>
+          <Field label={t("productPrice")}>
+            <Input type="number" min={0} step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} dir="ltr" placeholder={t("productPriceOptional")} />
+          </Field>
           <div style={{ display: "flex", gap: 8 }}>
-            <button type="button" className="btn btn-primary" onClick={save} disabled={saving}>
-              {saving ? <><div className="spinner" /> {t("saving")}</> : t("saveProduct")}
-            </button>
-            <button type="button" className="btn btn-outline" onClick={resetForm}>{t("cancel")}</button>
+            <Button type="button" variant="primary" onClick={save} disabled={saving}>
+              {saving ? <><Spinner size={14} color="var(--on-primary)" /> {t("saving")}</> : t("saveProduct")}
+            </Button>
+            <Button type="button" variant="secondary" onClick={resetForm}>{t("cancel")}</Button>
           </div>
-        </div>
+        </Card>
       )}
 
       {loading ? (
-        <div style={{ textAlign: "center", padding: 24, color: "var(--ink-soft)" }}>{t("loading")}</div>
+        <div style={{ display: "flex", justifyContent: "center", padding: 24 }}>
+          <Spinner />
+        </div>
       ) : products.length === 0 ? (
-        <div className="empty"><div className="empty-icon">📚</div><div className="empty-text">{t("noProducts")}</div></div>
+        <EmptyState title={t("noProducts")} />
       ) : (
         <div className="grouped-list">
           {products.map((p) => (
@@ -281,7 +292,7 @@ export default function AdminProductsTab({ toast }) {
                 <div className="user-display">{formatProductLabel({ ...p, schedule_pattern: p.schedule_pattern }, days, p.product_templates?.code)}</div>
                 <div className="user-email">{p.instructor_name}{p.capacity != null ? ` · ${t("assessmentCapacity")}: ${p.capacity}` : ""}{p.price != null ? ` · ${t("productPrice")}: ₪${p.price}` : ""}</div>
               </div>
-              <button type="button" className="btn btn-outline btn-sm" onClick={() => startEdit(p)}>{t("editProduct")}</button>
+              <Button type="button" variant="secondary" size="sm" onClick={() => startEdit(p)}>{t("editProduct")}</Button>
             </div>
           ))}
         </div>

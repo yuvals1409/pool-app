@@ -7,6 +7,7 @@ import { useLang } from "../i18n.jsx";
 import { fmt_time } from "../lib/lessonDates.js";
 import { useIsDesktop } from "../lib/useBreakpoint.js";
 import MakeupBookingModal from "./MakeupBookingModal.jsx";
+import { Badge, Button, EmptyState, Field, Input, Select, Spinner } from "./ui/ds/index.js";
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
@@ -139,63 +140,63 @@ export default function AdminUtilizationTab({ toast }) {
 
   return (
     <div>
-      <div className="page-header">
-        <h1 className="page-title">{t("tabUtilization")}</h1>
-        <p className="page-sub">{t("utilizationSub")}</p>
-      </div>
+      {!isDesktop && (
+        <div className="page-header">
+          <h1 className="page-title">{t("tabUtilization")}</h1>
+          <p className="page-sub">{t("utilizationSub")}</p>
+        </div>
+      )}
 
       <div className="filter-bar">
-        <div className="field">
-          <label className="label">{t("utilizationAsOf")}</label>
-          <input className="input" type="date" dir="ltr" value={asOf} onChange={(e) => setAsOf(e.target.value)} />
-        </div>
-        <div className="field">
-          <label className="label">{t("tabSeasons")}</label>
-          <select className="input" value={seasonId} onChange={(e) => { setSeasonId(e.target.value); setProductId(""); }}>
+        <Field label={t("utilizationAsOf")} style={{ marginBottom: 0 }}>
+          <Input type="date" dir="ltr" value={asOf} onChange={(e) => setAsOf(e.target.value)} />
+        </Field>
+        <Field label={t("tabSeasons")} style={{ marginBottom: 0 }}>
+          <Select value={seasonId} onChange={(e) => { setSeasonId(e.target.value); setProductId(""); }}>
             <option value="">{t("allSeasons")}</option>
             {seasons.map((s) => (
               <option key={s.id} value={s.id}>{s.name}{s.active ? ` (${t("active")})` : ""}</option>
             ))}
-          </select>
-        </div>
-        <div className="field">
-          <label className="label">{t("sectionClass")}</label>
-          <select className="input" value={productId} onChange={(e) => setProductId(e.target.value)}>
+          </Select>
+        </Field>
+        <Field label={t("sectionClass")} style={{ marginBottom: 0 }}>
+          <Select value={productId} onChange={(e) => setProductId(e.target.value)}>
             <option value="">{t("allProducts")}</option>
             {products.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
-          </select>
-        </div>
-        <div className="field">
-          <label className="label">{t("productType")}</label>
-          <select className="input" value={templateCode} onChange={(e) => setTemplateCode(e.target.value)}>
+          </Select>
+        </Field>
+        <Field label={t("productType")} style={{ marginBottom: 0 }}>
+          <Select value={templateCode} onChange={(e) => setTemplateCode(e.target.value)}>
             <option value="">{t("allTypes")}</option>
             <option value="annual_section">{t("productTypeAnnual")}</option>
             <option value="summer_course">{t("productTypeSummer")}</option>
-          </select>
-        </div>
-        <div className="field" style={{ display: "flex", alignItems: "flex-end" }}>
+          </Select>
+        </Field>
+        <Field style={{ marginBottom: 0, display: "flex", alignItems: "flex-end" }}>
           <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
             <input type="checkbox" checked={onlyShortfall} onChange={(e) => setOnlyShortfall(e.target.checked)} />
             {t("utilizationOnlyShortfall")}
           </label>
-        </div>
+        </Field>
       </div>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        <button type="button" className="btn btn-outline btn-sm" onClick={load} disabled={loading}>
+        <Button type="button" variant="secondary" size="sm" onClick={load} disabled={loading}>
           {loading ? t("loading") : t("refresh")}
-        </button>
-        <button type="button" className="btn btn-outline btn-sm" onClick={() => exportCsv(rows, t)} disabled={!rows.length}>
+        </Button>
+        <Button type="button" variant="secondary" size="sm" onClick={() => exportCsv(rows, t)} disabled={!rows.length}>
           {t("exportCsv")}
-        </button>
+        </Button>
       </div>
 
       {loading ? (
-        <div style={{ textAlign: "center", padding: 32, color: "var(--ink-soft)" }}>{t("loading")}</div>
+        <div style={{ display: "flex", justifyContent: "center", padding: 32 }}>
+          <Spinner />
+        </div>
       ) : rows.length === 0 ? (
-        <div style={{ color: "var(--ink-soft)", textAlign: "center", padding: 24 }}>{t("noUtilizationRows")}</div>
+        <EmptyState title={t("noUtilizationRows")} />
       ) : isDesktop ? (
         <div className="data-table-wrap">
           <table className="data-table">
@@ -223,13 +224,13 @@ export default function AdminUtilizationTab({ toast }) {
                   <td>{row.makeup_scheduled}</td>
                   <td>
                     <div className="actions-cell">
-                      <button type="button" className="btn btn-sm btn-outline" onClick={() => openDetail(row)}>
+                      <Button type="button" size="sm" variant="secondary" onClick={() => openDetail(row)}>
                         {t("utilizationDetail")}
-                      </button>
+                      </Button>
                       {row.shortfall > 0 && (
-                        <button type="button" className="btn btn-sm btn-primary" onClick={() => openMakeup(row)}>
+                        <Button type="button" size="sm" variant="primary" onClick={() => openMakeup(row)}>
                           {t("bookMakeup")}
-                        </button>
+                        </Button>
                       )}
                     </div>
                   </td>
@@ -246,21 +247,21 @@ export default function AdminUtilizationTab({ toast }) {
               <div className="log-meta">{row.product_name} · {templateLabel(t, row.template_code)}</div>
               <div className="log-meta" dir="ltr">{row.parent_phone}</div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <span className="badge badge-pending">{t("utilizationEntitled")}: {row.entitled}</span>
-                <span className="badge badge-active">{t("utilizationUsed")}: {row.utilized}</span>
-                <span className="badge badge-used">{t("utilizationShortfall")}: {row.shortfall}</span>
+                <Badge variant="warn">{t("utilizationEntitled")}: {row.entitled}</Badge>
+                <Badge variant="success">{t("utilizationUsed")}: {row.utilized}</Badge>
+                <Badge variant="danger">{t("utilizationShortfall")}: {row.shortfall}</Badge>
                 {row.makeup_scheduled > 0 && (
-                  <span className="badge badge-outline">{t("makeupScheduled")}: {row.makeup_scheduled}</span>
+                  <Badge variant="neutral">{t("makeupScheduled")}: {row.makeup_scheduled}</Badge>
                 )}
               </div>
               <div style={{ display: "flex", gap: 6 }}>
-                <button type="button" className="btn btn-sm btn-outline" onClick={() => openDetail(row)}>
+                <Button type="button" size="sm" variant="secondary" onClick={() => openDetail(row)}>
                   {t("utilizationDetail")}
-                </button>
+                </Button>
                 {row.shortfall > 0 && (
-                  <button type="button" className="btn btn-sm btn-primary" onClick={() => openMakeup(row)}>
+                  <Button type="button" size="sm" variant="primary" onClick={() => openMakeup(row)}>
                     {t("bookMakeup")}
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>
@@ -274,23 +275,23 @@ export default function AdminUtilizationTab({ toast }) {
             <div className="schedule-panel-handle" />
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
               <div className="section-title" style={{ margin: 0 }}>{detailRow.child_name}</div>
-              <button type="button" className="btn btn-outline btn-sm" onClick={() => setDetailRow(null)}>{t("close")}</button>
+              <Button type="button" variant="secondary" size="sm" onClick={() => setDetailRow(null)}>{t("close")}</Button>
             </div>
             <div className="log-meta" style={{ marginBottom: 12 }}>
               {detailRow.product_name} · {t("utilizationAsOf")}: {fmtDateDay(asOf)}
             </div>
             {detailLoading ? (
-              <div style={{ textAlign: "center", padding: 24 }}>{t("loading")}</div>
+              <div style={{ display: "flex", justifyContent: "center", padding: 24 }}>
+                <Spinner />
+              </div>
             ) : (
               <div className="grouped-list" style={{ maxHeight: 400, overflowY: "auto" }}>
                 {detailSessions.map((s) => (
                   <div className="user-row" key={`${s.session_id}-${s.attendee_id}`}>
                     <div className="user-info">
-                      <div className="user-display">
+                      <div className="user-display" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                         {fmtDateDay(s.session_date)} · {fmt_time(s.start_time)}
-                        {s.is_makeup && (
-                          <span className="badge badge-active" style={{ marginInlineStart: 8 }}>{t("makeupBadge")}</span>
-                        )}
+                        {s.is_makeup && <Badge variant="success">{t("makeupBadge")}</Badge>}
                       </div>
                       <div className="user-email">
                         {s.product_name} · {statusLabel(s.attendance_status)}
@@ -301,14 +302,15 @@ export default function AdminUtilizationTab({ toast }) {
               </div>
             )}
             {detailRow.shortfall > 0 && (
-              <button
+              <Button
                 type="button"
-                className="btn btn-primary btn-sm"
+                variant="primary"
+                size="sm"
                 style={{ marginTop: 12 }}
                 onClick={() => { setDetailRow(null); openMakeup(detailRow); }}
               >
                 {t("bookMakeup")}
-              </button>
+              </Button>
             )}
           </div>
         </div>

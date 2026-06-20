@@ -14,9 +14,41 @@ import { cancelEnrollment as cancelEnrollmentRpc } from "../lib/waitlist.js";
 import { useIsDesktop } from "../lib/useBreakpoint.js";
 import { getEnrollmentUtilization, listUtilizationReport } from "../lib/utilization.js";
 import MakeupBookingModal from "./MakeupBookingModal.jsx";
+import {
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  Field,
+  Input,
+  SegmentedControl,
+  Select,
+  Spinner,
+} from "./ui/ds/index.js";
 
 const PAYMENT_STATUSES = ["unpaid", "paid", "waived"];
 const HISTORY_FILTERS = ["active", "all", "cancelled"];
+const PAYMENT_BADGE_VARIANT = { paid: "success", unpaid: "warn", waived: "neutral" };
+
+const TABLE_TH = {
+  textAlign: "start",
+  padding: "10px 14px",
+  fontSize: 11,
+  fontWeight: 600,
+  letterSpacing: "0.04em",
+  textTransform: "uppercase",
+  color: "var(--ink-soft)",
+  borderBottom: "1px solid var(--border)",
+  whiteSpace: "nowrap",
+};
+
+const TABLE_TD = {
+  padding: "11px 14px",
+  fontSize: 14,
+  color: "var(--ink)",
+  borderBottom: "1px solid var(--border)",
+  verticalAlign: "middle",
+};
 
 function normalizePhone(phone) {
   return phone.replace(/\s/g, "").trim();
@@ -415,42 +447,37 @@ export default function AdminEnrollmentsTab({ toast }) {
 
   const renderEditFields = (row) => (
     <>
-      <div className="field">
-        <label className="label">{t("childName")}</label>
-        <input className="input" value={editChildName} onChange={(e) => setEditChildName(e.target.value)} />
-      </div>
-      <div className="field">
-        <label className="label">{t("parentPhone")}</label>
-        <input className="input" type="tel" dir="ltr" value={editParentPhone} onChange={(e) => setEditParentPhone(e.target.value)} />
-      </div>
-      <div className="field">
-        <label className="label">{t("selectClass")}</label>
-        <select className="input" value={editProductId} onChange={(e) => setEditProductId(e.target.value)}>
+      <Field label={t("childName")}>
+        <Input value={editChildName} onChange={(e) => setEditChildName(e.target.value)} />
+      </Field>
+      <Field label={t("parentPhone")}>
+        <Input type="tel" dir="ltr" value={editParentPhone} onChange={(e) => setEditParentPhone(e.target.value)} />
+      </Field>
+      <Field label={t("selectClass")}>
+        <Select value={editProductId} onChange={(e) => setEditProductId(e.target.value)}>
           {products.map((p) => (
             <option key={p.id} value={p.id}>{productLabel(p)}</option>
           ))}
-        </select>
-      </div>
-      <div className="field">
-        <label className="label">{t("paymentStatus")}</label>
-        <select className="input" value={editPaymentStatus} onChange={(e) => setEditPaymentStatus(e.target.value)}>
+        </Select>
+      </Field>
+      <Field label={t("paymentStatus")}>
+        <Select value={editPaymentStatus} onChange={(e) => setEditPaymentStatus(e.target.value)}>
           {PAYMENT_STATUSES.map((s) => (
             <option key={s} value={s}>{paymentLabel(s)}</option>
           ))}
-        </select>
-      </div>
-      <div className="field">
-        <label className="label">{t("validFrom")} / {t("validUntil")}</label>
+        </Select>
+      </Field>
+      <Field label={`${t("validFrom")} / ${t("validUntil")}`}>
         <div style={{ display: "flex", gap: 8 }}>
-          <input className="input" type="date" dir="ltr" value={editValidFrom} onChange={(e) => setEditValidFrom(e.target.value)} />
-          <input className="input" type="date" dir="ltr" value={editValidUntil} onChange={(e) => setEditValidUntil(e.target.value)} />
+          <Input type="date" dir="ltr" value={editValidFrom} onChange={(e) => setEditValidFrom(e.target.value)} />
+          <Input type="date" dir="ltr" value={editValidUntil} onChange={(e) => setEditValidUntil(e.target.value)} />
         </div>
-      </div>
+      </Field>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-        <button type="button" className="btn btn-primary btn-sm" disabled={savingId === row.id} onClick={() => saveEdit(row)}>
+        <Button variant="primary" size="sm" disabled={savingId === row.id} onClick={() => saveEdit(row)}>
           {savingId === row.id ? "..." : t("saveChanges")}
-        </button>
-        <button type="button" className="btn btn-outline btn-sm" onClick={cancelEdit}>{t("cancel")}</button>
+        </Button>
+        <Button variant="secondary" size="sm" onClick={cancelEdit}>{t("cancel")}</Button>
       </div>
     </>
   );
@@ -487,60 +514,83 @@ export default function AdminEnrollmentsTab({ toast }) {
       {row.active && (
         <>
           {utilizationMap[row.id]?.shortfall > 0 && (
-            <button type="button" className="btn btn-sm btn-primary" onClick={() => openMakeup(row)}>
+            <Button variant="primary" size="sm" onClick={() => openMakeup(row)}>
               {t("bookMakeup")}
-            </button>
+            </Button>
           )}
-          <button type="button" className="btn btn-sm btn-outline" onClick={() => startEdit(row)}>{t("editEnrollment")}</button>
-          <button type="button" className="btn btn-sm btn-outline" onClick={() => copyEnrollmentTicketLink(row.id, { toast, t })}>
+          <Button variant="secondary" size="sm" onClick={() => startEdit(row)}>{t("editEnrollment")}</Button>
+          <Button variant="secondary" size="sm" onClick={() => copyEnrollmentTicketLink(row.id, { toast, t })}>
             {t("copyTicketLink")}
-          </button>
-          <button type="button" className="btn btn-sm btn-outline" disabled={savingId === row.id} onClick={() => handleRegeneratePasses(row)}>
+          </Button>
+          <Button variant="secondary" size="sm" disabled={savingId === row.id} onClick={() => handleRegeneratePasses(row)}>
             {t("regeneratePasses")}
-          </button>
-          <button type="button" className="btn btn-sm btn-danger" disabled={savingId === row.id} onClick={() => cancelEnrollment(row)}>
+          </Button>
+          <Button variant="danger" size="sm" disabled={savingId === row.id} onClick={() => cancelEnrollment(row)}>
             {savingId === row.id ? "..." : t("cancelEnrollment")}
-          </button>
+          </Button>
         </>
       )}
     </div>
   );
 
-  const renderTableRow = (row) => {
+  const renderTableRow = (row, index, total) => {
     const isEditing = editingId === row.id;
     if (isEditing) {
       return (
         <tr key={row.id} className="data-table-edit-row">
-          <td colSpan={7}>{renderEditFields(row)}</td>
+          <td colSpan={7} style={{ padding: 16 }}>{renderEditFields(row)}</td>
         </tr>
       );
     }
+    const last = index === total - 1;
+    const cell = last ? { ...TABLE_TD, borderBottom: "none" } : TABLE_TD;
+    const childName = row.participant?.full_name || "—";
     return (
       <tr key={row.id}>
-        <td>
-          {row.participant?.full_name}
-          {!row.active && <span className="badge badge-used" style={{ marginInlineStart: 8 }}>{t("cancelled")}</span>}
+        <td style={cell}>
+          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+            <Avatar name={childName} size={28} />
+            <span style={{ fontWeight: 500 }}>
+              {childName}
+              {!row.active && (
+                <Badge variant="neutral" style={{ marginInlineStart: 8 }}>{t("cancelled")}</Badge>
+              )}
+            </span>
+          </div>
         </td>
-        <td dir="ltr">{row.participant?.family?.phone || "—"}</td>
-        <td>{productLabel(row.product)}</td>
-        <td>{paymentLabel(row.payment_status)}</td>
-        <td>{renderUtilization(row)}</td>
-        <td>{fmtDateDay(row.valid_until)}</td>
-        <td><div className="actions-cell">{renderRowActions(row)}</div></td>
+        <td style={{ ...cell, color: "var(--ink-mid)" }} dir="ltr">{row.participant?.family?.phone || "—"}</td>
+        <td style={{ ...cell, color: "var(--ink-mid)" }}>{productLabel(row.product)}</td>
+        <td style={cell}>
+          <Badge
+            variant={PAYMENT_BADGE_VARIANT[row.payment_status] || "neutral"}
+            dot={row.payment_status !== "waived"}
+          >
+            {paymentLabel(row.payment_status)}
+          </Badge>
+        </td>
+        <td style={{ ...cell, color: "var(--ink-mid)" }}>{renderUtilization(row)}</td>
+        <td style={{ ...cell, color: "var(--ink-mid)" }}>{fmtDateDay(row.valid_until)}</td>
+        <td style={cell}><div className="actions-cell">{renderRowActions(row)}</div></td>
       </tr>
     );
   };
 
   const renderRow = (row) => {
     const isEditing = editingId === row.id;
+    const childName = row.participant?.full_name || "—";
     return (
       <div className="log-item" key={row.id} style={{ flexDirection: "column", alignItems: "stretch", gap: 8 }}>
         {isEditing ? renderEditFields(row) : (
           <>
             <div>
-              <div className="log-name">
-                {row.participant?.full_name}
-                {!row.active && <span className="badge badge-used" style={{ marginInlineStart: 8 }}>{t("cancelled")}</span>}
+              <div className="log-name" style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                <Avatar name={childName} size={28} />
+                <span>
+                  {childName}
+                  {!row.active && (
+                    <Badge variant="neutral" style={{ marginInlineStart: 8 }}>{t("cancelled")}</Badge>
+                  )}
+                </span>
               </div>
               {(searchMode || historyFilter !== "active") && (
                 <div className="log-meta">{productLabel(row.product)}</div>
@@ -548,7 +598,15 @@ export default function AdminEnrollmentsTab({ toast }) {
               <div className="log-meta">
                 {t("parentPhone")}: {row.participant?.family?.phone || "—"}
               </div>
-              <div className="log-meta">{t("paymentStatus")}: {paymentLabel(row.payment_status)}</div>
+              <div className="log-meta" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {t("paymentStatus")}:
+                <Badge
+                  variant={PAYMENT_BADGE_VARIANT[row.payment_status] || "neutral"}
+                  dot={row.payment_status !== "waived"}
+                >
+                  {paymentLabel(row.payment_status)}
+                </Badge>
+              </div>
               {row.active && utilizationMap[row.id] && (
                 <div className="log-meta">
                   {t("utilizationBalance")}: {renderUtilization(row)}
@@ -565,48 +623,63 @@ export default function AdminEnrollmentsTab({ toast }) {
     );
   };
 
+  const historyFilterOptions = HISTORY_FILTERS.map((f) => ({
+    value: f,
+    label: t(`enrollmentFilter${f.charAt(0).toUpperCase()}${f.slice(1)}`),
+  }));
+
   return (
     <div>
-      <div className="page-header">
-        <h1 className="page-title">{t("tabEnrollments")}</h1>
-      </div>
+      {!isDesktop && (
+        <div className="page-header">
+          <h1 className="page-title">{t("tabEnrollments")}</h1>
+        </div>
+      )}
 
-      <div className="search-bar">
-        <input
-          className="search-input"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder={t("searchByPhoneOrChild")}
-          onKeyDown={(e) => e.key === "Enter" && runSearch()}
+      <div
+        style={isDesktop ? {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          marginBottom: 16,
+          flexWrap: "wrap",
+        } : { marginBottom: 12 }}
+      >
+        <SegmentedControl
+          options={historyFilterOptions}
+          value={historyFilter}
+          onChange={setHistoryFilter}
+          size="sm"
         />
-        <button className="btn btn-primary btn-sm" onClick={runSearch} disabled={searchLoading}>
-          {searchLoading ? "..." : t("search")}
-        </button>
-        {searchMode && (
-          <button type="button" className="btn btn-sm btn-outline" onClick={clearSearch}>
-            {t("clearSearch")}
-          </button>
-        )}
-      </div>
-
-      <div className="filter-bar">
-        {HISTORY_FILTERS.map((f) => (
-          <button
-            key={f}
-            type="button"
-            className={`btn btn-sm ${historyFilter === f ? "btn-primary" : "btn-outline"}`}
-            onClick={() => setHistoryFilter(f)}
-          >
-            {t(`enrollmentFilter${f.charAt(0).toUpperCase()}${f.slice(1)}`)}
-          </button>
-        ))}
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", flex: isDesktop ? "none" : 1 }}>
+          <div style={{ width: isDesktop ? 220 : "100%", minWidth: 0, flex: isDesktop ? "none" : 1 }}>
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t("searchByPhoneOrChild")}
+              onKeyDown={(e) => e.key === "Enter" && runSearch()}
+            />
+          </div>
+          <Button variant="primary" size="sm" onClick={runSearch} disabled={searchLoading}>
+            {searchLoading ? "..." : t("search")}
+          </Button>
+          {searchMode && (
+            <Button variant="secondary" size="sm" onClick={clearSearch}>
+              {t("clearSearch")}
+            </Button>
+          )}
+          {isDesktop && (
+            <Button variant="primary" size="md" onClick={() => setShowAddForm((v) => !v)}>
+              {showAddForm ? t("hideAddEnrollment") : t("addEnrollment")}
+            </Button>
+          )}
+        </div>
       </div>
 
       {!searchMode && (
-        <div className="field" style={{ marginTop: 16 }}>
-          <label className="label">{t("selectClass")}</label>
-          <select
-            className="input"
+        <Field label={t("selectClass")} style={{ marginBottom: 16, maxWidth: isDesktop ? 420 : undefined }}>
+          <Select
             value={selectedProductId}
             onChange={(e) => setSelectedProductId(e.target.value)}
           >
@@ -614,55 +687,48 @@ export default function AdminEnrollmentsTab({ toast }) {
             {products.map((p) => (
               <option key={p.id} value={p.id}>{productLabel(p)}</option>
             ))}
-          </select>
+          </Select>
+        </Field>
+      )}
+
+      {!isDesktop && (
+        <div style={{ marginBottom: 16 }}>
+          <Button variant="secondary" size="sm" onClick={() => setShowAddForm((v) => !v)}>
+            {showAddForm ? t("hideAddEnrollment") : t("addEnrollment")}
+          </Button>
         </div>
       )}
 
-      <div style={{ marginTop: 16, marginBottom: 8 }}>
-        <button
-          type="button"
-          className="btn btn-outline btn-sm"
-          onClick={() => setShowAddForm((v) => !v)}
-        >
-          {showAddForm ? t("hideAddEnrollment") : t("addEnrollment")}
-        </button>
-      </div>
-
       {showAddForm && (
-        <div className="card" style={{ marginBottom: 20 }}>
-          <div className="field">
-            <label className="label">{t("parentPhone")}</label>
-            <input className="input" type="tel" dir="ltr" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} />
-          </div>
-          <div className="field">
-            <label className="label">{t("parentNameOptional")}</label>
-            <input className="input" value={parentName} onChange={(e) => setParentName(e.target.value)} />
-          </div>
-          <div className="field">
-            <label className="label">{t("childName")}</label>
-            <input className="input" value={childName} onChange={(e) => setChildName(e.target.value)} />
-          </div>
-          <div className="field">
-            <label className="label">{t("selectClass")}</label>
-            <select className="input" value={addProductId} onChange={(e) => setAddProductId(e.target.value)}>
+        <Card style={{ marginBottom: 20 }}>
+          <Field label={t("parentPhone")}>
+            <Input type="tel" dir="ltr" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} />
+          </Field>
+          <Field label={t("parentNameOptional")}>
+            <Input value={parentName} onChange={(e) => setParentName(e.target.value)} />
+          </Field>
+          <Field label={t("childName")}>
+            <Input value={childName} onChange={(e) => setChildName(e.target.value)} />
+          </Field>
+          <Field label={t("selectClass")}>
+            <Select value={addProductId} onChange={(e) => setAddProductId(e.target.value)}>
               <option value="">{t("selectClassPlaceholder")}</option>
               {products.map((p) => (
                 <option key={p.id} value={p.id}>{productLabel(p)}</option>
               ))}
-            </select>
-          </div>
-          <div className="field">
-            <label className="label">{t("paymentStatus")}</label>
-            <select className="input" value={addPaymentStatus} onChange={(e) => setAddPaymentStatus(e.target.value)}>
+            </Select>
+          </Field>
+          <Field label={t("paymentStatus")}>
+            <Select value={addPaymentStatus} onChange={(e) => setAddPaymentStatus(e.target.value)}>
               {PAYMENT_STATUSES.map((s) => (
                 <option key={s} value={s}>{paymentLabel(s)}</option>
               ))}
-            </select>
-          </div>
-          <button className="btn btn-primary" onClick={addEnrollment} disabled={addSaving}>
-            {addSaving ? <><div className="spinner" /> {t("saving")}</> : t("saveEnrollment")}
-          </button>
-        </div>
+            </Select>
+          </Field>
+          <Button onClick={addEnrollment} disabled={addSaving}>
+            {addSaving ? <><Spinner size={16} /> {t("saving")}</> : t("saveEnrollment")}
+          </Button>
+        </Card>
       )}
 
       {displayLoading ? (
@@ -672,26 +738,33 @@ export default function AdminEnrollmentsTab({ toast }) {
           {searchMode && searchQuery.trim() ? t("noEnrollmentsFound") : t("noEnrollmentsInClass")}
         </div>
       ) : isDesktop ? (
-        <div className="data-table-wrap" style={{ marginTop: 12 }}>
+        <div
+          style={{
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius-md)",
+            overflow: "hidden",
+            background: "var(--surface)",
+          }}
+        >
           {!searchMode && selectedProductId && (
-            <div className="grouped-list-header" style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)" }}>
+            <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)", fontSize: 13, fontWeight: 500, color: "var(--ink-mid)" }}>
               {historyFilter === "active" ? t("activeEnrollments") : t("enrollmentHistory")} ({displayRows.length})
             </div>
           )}
-          <table className="data-table">
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr>
-                <th>{t("child")}</th>
-                <th>{t("parentPhone")}</th>
-                <th>{t("sectionClass")}</th>
-                <th>{t("paymentStatus")}</th>
-                <th>{t("utilizationBalance")}</th>
-                <th>{t("validUntil")}</th>
-                <th></th>
+                <th style={TABLE_TH}>{t("child")}</th>
+                <th style={TABLE_TH}>{t("parentPhone")}</th>
+                <th style={TABLE_TH}>{t("sectionClass")}</th>
+                <th style={TABLE_TH}>{t("paymentStatus")}</th>
+                <th style={TABLE_TH}>{t("utilizationBalance")}</th>
+                <th style={TABLE_TH}>{t("validUntil")}</th>
+                <th style={TABLE_TH}></th>
               </tr>
             </thead>
             <tbody>
-              {displayRows.map(renderTableRow)}
+              {displayRows.map((row, i) => renderTableRow(row, i, displayRows.length))}
             </tbody>
           </table>
         </div>
@@ -703,6 +776,12 @@ export default function AdminEnrollmentsTab({ toast }) {
             </div>
           )}
           {displayRows.map(renderRow)}
+        </div>
+      )}
+
+      {!displayLoading && displayRows.length > 0 && season && (
+        <div style={{ marginTop: 10, fontSize: 12, color: "var(--ink-soft)" }}>
+          {displayRows.length} · {season.name}
         </div>
       )}
 

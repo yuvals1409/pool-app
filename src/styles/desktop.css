@@ -43,8 +43,8 @@
     min-height: 0;
   }
 
-  .app-workspace-content:not(:has(.schedule-wrap)) {
-    padding: 24px;
+  .app-workspace-content:not(:has(.schedule-wrap)) .tab-panel {
+    padding: 20px 24px 28px;
   }
 
   .app-sidebar {
@@ -177,6 +177,11 @@
     padding: 0;
   }
 
+  .admin-rail .sidebar-btn,
+  .admin-sidebar .sidebar-btn {
+    border-radius: var(--radius);
+  }
+
   .admin-content {
     flex: 1;
     min-width: 0;
@@ -189,9 +194,10 @@
   /* Data tables */
   .data-table-wrap {
     overflow-x: auto;
-    border: 1px solid var(--separator);
-    border-radius: 16px;
-    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    box-shadow: none;
   }
 
   .data-table {

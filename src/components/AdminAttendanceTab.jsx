@@ -4,6 +4,14 @@ import { listAttendanceHistory, templateLabel } from "../lib/attendance.js";
 import { useLang } from "../i18n.jsx";
 import { fmt_time } from "../lib/lessonDates.js";
 import { useIsDesktop } from "../lib/useBreakpoint.js";
+import {
+  Button,
+  EmptyState,
+  Field,
+  Input,
+  Select,
+  Spinner,
+} from "./ui/ds/index.js";
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
@@ -115,47 +123,46 @@ export default function AdminAttendanceTab({ toast }) {
 
   return (
     <div>
-      <div className="page-header">
-        <h1 className="page-title">{t("tabAttendance")}</h1>
-        <p className="page-sub">{t("attendanceSub")}</p>
-      </div>
+      {!isDesktop && (
+        <div className="page-header">
+          <h1 className="page-title">{t("tabAttendance")}</h1>
+          <p className="page-sub">{t("attendanceSub")}</p>
+        </div>
+      )}
 
       <div className={filtersClass}>
-        <div className="field">
-          <label className="label">{t("validFrom")}</label>
-          <input className="input" type="date" value={from} onChange={(e) => setFrom(e.target.value)} dir="ltr" />
-        </div>
-        <div className="field">
-          <label className="label">{t("validUntil")}</label>
-          <input className="input" type="date" value={to} onChange={(e) => setTo(e.target.value)} dir="ltr" />
-        </div>
-        <div className="field">
-          <label className="label">{t("sectionClass")}</label>
-          <select className="input" value={productId} onChange={(e) => setProductId(e.target.value)} style={{ minWidth: 140 }}>
+        <Field label={t("validFrom")} style={{ marginBottom: 0 }}>
+          <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} dir="ltr" />
+        </Field>
+        <Field label={t("validUntil")} style={{ marginBottom: 0 }}>
+          <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} dir="ltr" />
+        </Field>
+        <Field label={t("sectionClass")} style={{ marginBottom: 0 }}>
+          <Select value={productId} onChange={(e) => setProductId(e.target.value)} style={{ minWidth: 140 }}>
             <option value="">{t("allProducts")}</option>
             {products.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
-          </select>
-        </div>
-        <div className="field">
-          <label className="label">{t("child")}</label>
-          <input
-            className="input"
+          </Select>
+        </Field>
+        <Field label={t("child")} style={{ marginBottom: 0 }}>
+          <Input
             value={searchChild}
             onChange={(e) => setSearchChild(e.target.value)}
             placeholder={t("searchByChild")}
           />
-        </div>
-        <button type="button" className="btn btn-outline btn-sm" onClick={() => exportCsv(rows, t)} disabled={!rows.length}>
+        </Field>
+        <Button type="button" variant="secondary" size="sm" onClick={() => exportCsv(rows, t)} disabled={!rows.length}>
           {t("exportCsv")}
-        </button>
+        </Button>
       </div>
 
       {loading ? (
-        <div style={{ textAlign: "center", padding: 32, color: "var(--ink-soft)" }}>{t("loading")}</div>
+        <div style={{ display: "flex", justifyContent: "center", padding: 32 }}>
+          <Spinner />
+        </div>
       ) : rows.length === 0 ? (
-        <div className="empty"><div className="empty-icon">📊</div><div className="empty-text">{t("noAttendanceHistory")}</div></div>
+        <EmptyState title={t("noAttendanceHistory")} />
       ) : isDesktop ? (
         <div className="data-table-wrap">
           <table className="data-table">

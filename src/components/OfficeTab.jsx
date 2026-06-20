@@ -5,8 +5,15 @@ import { copyEnrollmentTicketLink } from "../lib/accessPass.js";
 import { formatProductLabel } from "../lib/productLabel.js";
 import { useIsDesktop } from "../lib/useBreakpoint.js";
 import { listDueLeadTasks, completeLeadTask, updateLeadCrm } from "../lib/leadsCrm.js";
+import { Button, Input, Card, Badge, EmptyState, Spinner } from "./ui/ds/index.js";
 
 const PAYMENT_STATUSES = ["paid", "unpaid", "waived"];
+
+const paymentBadgeVariant = (status) => ({
+  paid: "success",
+  unpaid: "danger",
+  waived: "neutral",
+}[status] || "neutral");
 
 export default function OfficeTab({ toast }) {
   const { t, days, fmtDateDay } = useLang();
@@ -136,19 +143,19 @@ export default function OfficeTab({ toast }) {
   const renderPaymentActions = (row) => (
     <div className="actions-cell">
       {PAYMENT_STATUSES.map((status) => (
-        <button
+        <Button
           key={status}
-          type="button"
-          className={`btn btn-sm ${row.payment_status === status ? "btn-primary" : "btn-outline"}`}
+          size="sm"
+          variant={row.payment_status === status ? "primary" : "outline"}
           disabled={savingId === row.id}
           onClick={() => setPayment(row.id, status)}
         >
           {paymentLabel(status)}
-        </button>
+        </Button>
       ))}
-      <button type="button" className="btn btn-sm btn-outline" onClick={() => copyTicketLink(row.id)}>
+      <Button size="sm" variant="outline" onClick={() => copyTicketLink(row.id)}>
         {t("copyTicketLink")}
-      </button>
+      </Button>
     </div>
   );
 
@@ -158,12 +165,15 @@ export default function OfficeTab({ toast }) {
         <h1 className="page-title">{t("tabOffice")}</h1>
       </div>
 
-      <div className="card card-spaced">
+      <Card style={{ marginTop: 12, marginBottom: 20 }}>
         <div className="crm-card-title">{t("dueToday")}</div>
         {tasksLoading ? (
-          <div className="text-muted">{t("loading")}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--ink-soft)" }}>
+            <Spinner size={16} />
+            {t("loading")}
+          </div>
         ) : dueTasks.length === 0 ? (
-          <div className="text-muted">{t("noDueTasks")}</div>
+          <EmptyState title={t("noDueTasks")} style={{ padding: "24px 16px" }} />
         ) : (
           <div className="grouped-list">
             {dueTasks.map((task) => (
@@ -177,44 +187,43 @@ export default function OfficeTab({ toast }) {
                   </div>
                 </div>
                 <div className="user-actions-row">
-                  <button
-                    type="button"
-                    className="btn btn-outline btn-sm"
+                  <Button
+                    size="sm"
+                    variant="outline"
                     disabled={savingId === task.task_id}
                     onClick={() => handleMarkCalled(task)}
                   >
                     {t("markLeadCalled")}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-sm"
+                  </Button>
+                  <Button
+                    size="sm"
                     disabled={savingId === task.task_id}
                     onClick={() => handleCompleteTask(task)}
                   >
                     {t("taskComplete")}
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}
           </div>
         )}
-      </div>
+      </Card>
 
       <div className="search-bar">
-        <input
-          className="search-input"
+        <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t("searchByPhoneOrChild")}
           onKeyDown={(e) => e.key === "Enter" && search()}
+          style={{ flex: 1, minHeight: 44, height: 44 }}
         />
-        <button className="btn btn-primary btn-sm" onClick={search} disabled={loading}>
-          {loading ? "..." : t("search")}
-        </button>
+        <Button size="sm" onClick={search} disabled={loading} icon={loading ? <Spinner size={16} color="#fff" /> : null}>
+          {loading ? t("loading") : t("search")}
+        </Button>
       </div>
 
       {!loading && rows.length === 0 && query.trim() && (
-        <div className="loading-center text-muted">{t("noEnrollmentsFound")}</div>
+        <EmptyState title={t("noEnrollmentsFound")} style={{ padding: "32px 16px" }} />
       )}
 
       {isDesktop && rows.length > 0 ? (
@@ -234,7 +243,7 @@ export default function OfficeTab({ toast }) {
                 <tr key={row.id}>
                   <td>{row.participant?.full_name}</td>
                   <td>{formatProductLabel(row.product, days, row.product?.product_templates?.code)}</td>
-                  <td>{paymentLabel(row.payment_status)}</td>
+                  <td><Badge variant={paymentBadgeVariant(row.payment_status)}>{paymentLabel(row.payment_status)}</Badge></td>
                   <td>{fmtDateDay(row.valid_until)}</td>
                   <td>{renderPaymentActions(row)}</td>
                 </tr>
@@ -249,7 +258,9 @@ export default function OfficeTab({ toast }) {
               <div>
                 <div className="log-name">{row.participant?.full_name}</div>
                 <div className="log-meta">{formatProductLabel(row.product, days, row.product?.product_templates?.code)}</div>
-                <div className="log-meta">{t("paymentStatus")}: {paymentLabel(row.payment_status)}</div>
+                <div className="log-meta" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  {t("paymentStatus")}: <Badge variant={paymentBadgeVariant(row.payment_status)}>{paymentLabel(row.payment_status)}</Badge>
+                </div>
                 <div className="log-meta">{t("validUntil")}: {fmtDateDay(row.valid_until)}</div>
               </div>
               {renderPaymentActions(row)}

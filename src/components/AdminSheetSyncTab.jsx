@@ -1,9 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLang } from "../i18n.jsx";
+import { useIsDesktop } from "../lib/useBreakpoint.js";
 import { listSheetSyncRuns, triggerSheetSync, MONTHLY_TABS } from "../lib/sheetSync.js";
+import { Badge, Button, Card, EmptyState, Spinner } from "./ui/ds/index.js";
 
 export default function AdminSheetSyncTab({ toast }) {
   const { t } = useLang();
+  const isDesktop = useIsDesktop();
   const [runs, setRuns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -34,37 +37,41 @@ export default function AdminSheetSyncTab({ toast }) {
 
   return (
     <div>
-      <div className="page-header">
-        <h1 className="page-title">{t("tabSheetSync")}</h1>
-        <p className="page-sub">{t("sheetSyncSub")}</p>
-      </div>
+      {!isDesktop && (
+        <div className="page-header">
+          <h1 className="page-title">{t("tabSheetSync")}</h1>
+          <p className="page-sub">{t("sheetSyncSub")}</p>
+        </div>
+      )}
 
       <div className="filter-bar">
-        <button type="button" className="btn btn-primary btn-sm" disabled={syncing} onClick={() => runSync("both")}>
-          {syncing ? <><div className="spinner" /> {t("sheetSyncRunning")}</> : t("sheetSyncNow")}
-        </button>
-        <button type="button" className="btn btn-outline btn-sm" disabled={syncing} onClick={() => runSync("pull")}>
+        <Button type="button" variant="primary" size="sm" disabled={syncing} onClick={() => runSync("both")}>
+          {syncing ? <><Spinner size={14} color="var(--on-primary)" /> {t("sheetSyncRunning")}</> : t("sheetSyncNow")}
+        </Button>
+        <Button type="button" variant="secondary" size="sm" disabled={syncing} onClick={() => runSync("pull")}>
           {t("sheetSyncPull")}
-        </button>
-        <button type="button" className="btn btn-outline btn-sm" disabled={syncing} onClick={() => runSync("push")}>
+        </Button>
+        <Button type="button" variant="secondary" size="sm" disabled={syncing} onClick={() => runSync("push")}>
           {t("sheetSyncPush")}
-        </button>
+        </Button>
       </div>
 
-      <div className="card" style={{ marginBottom: 16 }}>
+      <Card style={{ marginBottom: 16 }}>
         <div className="label" style={{ marginBottom: 8 }}>{t("sheetSyncTabs")}</div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {MONTHLY_TABS.map((tab) => (
-            <span key={tab} className="badge badge-pending">{tab}</span>
+            <Badge key={tab} variant="warn">{tab}</Badge>
           ))}
         </div>
         <p className="schedule-session-hint" style={{ marginTop: 12 }}>{t("sheetSyncCliHint")}</p>
-      </div>
+      </Card>
 
       {loading ? (
-        <div style={{ textAlign: "center", padding: 24, color: "var(--ink-soft)" }}>{t("loading")}</div>
+        <div style={{ display: "flex", justifyContent: "center", padding: 24 }}>
+          <Spinner />
+        </div>
       ) : runs.length === 0 ? (
-        <div className="empty"><div className="empty-icon">📑</div><div className="empty-text">{t("sheetSyncNoRuns")}</div></div>
+        <EmptyState title={t("sheetSyncNoRuns")} />
       ) : (
         <div className="grouped-list">
           {runs.map((run) => (

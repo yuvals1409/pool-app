@@ -5,6 +5,7 @@ import { fmt_time } from "../lib/lessonDates.js";
 import { listMakeupTargetSessions, bookMakeupSession } from "../lib/makeup.js";
 import { getPublicPassUrl } from "../lib/accessPass.js";
 import { templateLabel } from "../lib/attendance.js";
+import { Badge, Button, Card, Field, Input, Spinner } from "./ui/ds/index.js";
 
 export default function MakeupBookingModal({
   enrollment,
@@ -83,37 +84,38 @@ export default function MakeupBookingModal({
         <div className="schedule-panel-handle" />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
           <div className="section-title" style={{ margin: 0 }}>{t("bookMakeup")}</div>
-          <button type="button" className="btn btn-outline btn-sm" onClick={onClose}>{t("close")}</button>
+          <Button type="button" variant="secondary" size="sm" onClick={onClose}>{t("close")}</Button>
         </div>
 
         <div className="log-meta" style={{ marginBottom: 12 }}>
           {childName} · {productName}
         </div>
         <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
-          <span className="badge badge-pending">{t("utilizationEntitled")}: {utilization?.entitled ?? "—"}</span>
-          <span className="badge badge-active">{t("utilizationUsed")}: {utilization?.utilized ?? "—"}</span>
-          <span className="badge badge-used">{t("utilizationShortfall")}: {shortfall}</span>
+          <Badge variant="warn">{t("utilizationEntitled")}: {utilization?.entitled ?? "—"}</Badge>
+          <Badge variant="success">{t("utilizationUsed")}: {utilization?.utilized ?? "—"}</Badge>
+          <Badge variant="danger">{t("utilizationShortfall")}: {shortfall}</Badge>
         </div>
 
         {bookedPass?.result === "ok" ? (
-          <div className="card">
+          <Card>
             <div className="log-name">{t("makeupBooked")}</div>
             <div className="log-meta">
               {fmtDateDay(bookedPass.session_date)} · {fmt_time(bookedPass.start_time)} · {bookedPass.product_name}
             </div>
-            <button type="button" className="btn btn-primary btn-sm" style={{ marginTop: 12 }} onClick={copyPassLink}>
+            <Button type="button" variant="primary" size="sm" style={{ marginTop: 12 }} onClick={copyPassLink}>
               {t("copyTicketLink")}
-            </button>
-          </div>
+            </Button>
+          </Card>
         ) : (
           <>
-            <div className="field">
-              <label className="label">{t("makeupNotes")}</label>
-              <input className="input" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t("makeupNotesPlaceholder")} />
-            </div>
+            <Field label={t("makeupNotes")}>
+              <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t("makeupNotesPlaceholder")} />
+            </Field>
 
             {loading ? (
-              <div style={{ textAlign: "center", padding: 24, color: "var(--ink-soft)" }}>{t("loading")}</div>
+              <div style={{ display: "flex", justifyContent: "center", padding: 24 }}>
+                <Spinner />
+              </div>
             ) : sessions.length === 0 ? (
               <div style={{ color: "var(--ink-soft)", textAlign: "center", padding: 16 }}>{t("noMakeupSessions")}</div>
             ) : (
@@ -121,11 +123,9 @@ export default function MakeupBookingModal({
                 {sessions.map((s) => (
                   <div className="user-row" key={s.session_id} style={{ flexWrap: "wrap", gap: 8 }}>
                     <div className="user-info" style={{ flex: 1 }}>
-                      <div className="user-display">
+                      <div className="user-display" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                         {s.product_name}
-                        {s.level_match ? (
-                          <span className="badge badge-active" style={{ marginInlineStart: 8 }}>{t("makeupLevelMatch")}</span>
-                        ) : null}
+                        {s.level_match ? <Badge variant="success">{t("makeupLevelMatch")}</Badge> : null}
                       </div>
                       <div className="user-email">
                         {fmtDateDay(s.session_date)} · {fmt_time(s.start_time)}
@@ -137,14 +137,15 @@ export default function MakeupBookingModal({
                         {s.capacity != null ? ` · ${s.attendee_count}/${s.capacity}` : ""}
                       </div>
                     </div>
-                    <button
+                    <Button
                       type="button"
-                      className="btn btn-primary btn-sm"
+                      variant="primary"
+                      size="sm"
                       disabled={saving}
                       onClick={() => book(s.session_id)}
                     >
                       {saving && bookingId === s.session_id ? "..." : t("bookMakeup")}
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </div>

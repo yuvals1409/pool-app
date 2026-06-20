@@ -49,7 +49,7 @@ export default function MonthView({
               onKeyDown={(e) => { if (e.key === "Enter") onDayClick?.(dateStr); }}
               title={t("openDayView")}
             >
-              <div className="month-day-num">{day.getDate()}</div>
+              <div className="month-day-num num">{day.getDate()}</div>
               {dayLessons.slice(0, MAX_VISIBLE).map(l => (
                 <LessonBlock
                   key={l.id}

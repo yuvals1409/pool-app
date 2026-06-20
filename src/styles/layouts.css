@@ -6,7 +6,7 @@
 
 .page-title {
   font-size: 22px;
-  font-weight: 700;
+  font-weight: var(--weight-semibold);
   color: var(--ink);
   margin-bottom: var(--space-1);
   line-height: 1.27;

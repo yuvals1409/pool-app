@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { ClipboardList } from "lucide-react";
 import { useLang } from "../i18n.jsx";
 import { fmt_time } from "../lib/lessonDates.js";
 import {
@@ -9,6 +10,7 @@ import {
   resolveSessionTemplateCode,
 } from "../lib/attendance.js";
 import AttendanceRoster from "./AttendanceRoster.jsx";
+import { Card, Badge, EmptyState, Spinner } from "./ui/ds/index.js";
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
@@ -83,7 +85,12 @@ export default function InstructorAttendanceTab({ toast, initialFocus, onFocusHa
 
   if (activeSession) {
     if (rosterLoading) {
-      return <div className="loading-center">{t("loading")}</div>;
+      return (
+        <div className="loading-center" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <Spinner />
+          {t("loading")}
+        </div>
+      );
     }
     return (
       <div>
@@ -114,14 +121,17 @@ export default function InstructorAttendanceTab({ toast, initialFocus, onFocusHa
       </div>
 
       {loading ? (
-        <div className="loading-center">{t("loading")}</div>
-      ) : sessions.length === 0 ? (
-        <div className="empty">
-          <div className="empty-icon">📋</div>
-          <div className="empty-text">{t("noSessionsForAttendance")}</div>
+        <div className="loading-center" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <Spinner />
+          {t("loading")}
         </div>
+      ) : sessions.length === 0 ? (
+        <EmptyState
+          icon={<ClipboardList size={22} strokeWidth={1.75} />}
+          title={t("noSessionsForAttendance")}
+        />
       ) : (
-        <div className="grouped-list">
+        <Card padded={false} style={{ overflow: "hidden" }}>
           {sessions.map((s) => {
             const typeLabel = templateLabel(t, resolveSessionTemplateCode(s));
             return (
@@ -142,17 +152,17 @@ export default function InstructorAttendanceTab({ toast, initialFocus, onFocusHa
                     {" · "}{t("attendanceMarkedCount", { marked: s.marked_count, total: s.expected_count })}
                   </span>
                   {typeLabel ? (
-                    <span className="badge badge-pending" style={{ flexShrink: 0 }}>
+                    <Badge variant="warn" style={{ flexShrink: 0 }}>
                       {typeLabel}
-                    </span>
+                    </Badge>
                   ) : null}
                 </div>
               </div>
-              <span className="btn btn-outline btn-sm">{t("markAttendance")}</span>
+              <span className="btn btn-outline btn-sm" style={{ pointerEvents: "none" }}>{t("markAttendance")}</span>
             </button>
             );
           })}
-        </div>
+        </Card>
       )}
     </div>
   );

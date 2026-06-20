@@ -16,6 +16,8 @@ import {
   exportCsv,
 } from "../lib/analytics.js";
 import { useLang } from "../i18n.jsx";
+import { useIsDesktop } from "../lib/useBreakpoint.js";
+import { Button, Card, Field, Input, KpiCard, Select } from "./ui/ds/index.js";
 
 const PIE_COLORS = ["#0077B6", "#E17055", "#00B894"];
 
@@ -31,6 +33,7 @@ function monthAgoStr() {
 
 export default function AdminDashboardTab({ toast }) {
   const { t } = useLang();
+  const isDesktop = useIsDesktop();
   const [from, setFrom] = useState(monthAgoStr());
   const [to, setTo] = useState(todayStr());
   const [productId, setProductId] = useState("");
@@ -138,24 +141,34 @@ export default function AdminDashboardTab({ toast }) {
 
   return (
     <div>
-      <div className="page-header">
-        <h1 className="page-title">{t("tabDashboard")}</h1>
-      </div>
+      {!isDesktop && (
+        <div className="page-header">
+          <h1 className="page-title">{t("tabDashboard")}</h1>
+        </div>
+      )}
 
-      <div className="filter-bar">
-        <input className="input" type="date" value={from} onChange={(e) => setFrom(e.target.value)} dir="ltr" />
-        <input className="input" type="date" value={to} onChange={(e) => setTo(e.target.value)} dir="ltr" />
-        <select className="input" value={seasonId} onChange={(e) => setSeasonId(e.target.value)}>
-          {seasons.map((s) => (
-            <option key={s.id} value={s.id}>{s.name}</option>
-          ))}
-        </select>
-        <select className="input" value={productId} onChange={(e) => setProductId(e.target.value)}>
-          <option value="">{t("allProducts")}</option>
-          {products.map((p) => (
-            <option key={p.id} value={p.id}>{p.name}</option>
-          ))}
-        </select>
+      <div className="filter-bar" style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "flex-end" }}>
+        <Field label={t("validFrom")} style={{ marginBottom: 0, minWidth: 140 }}>
+          <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} dir="ltr" />
+        </Field>
+        <Field label={t("validUntil")} style={{ marginBottom: 0, minWidth: 140 }}>
+          <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} dir="ltr" />
+        </Field>
+        <Field label={t("season")} style={{ marginBottom: 0, minWidth: 160 }}>
+          <Select value={seasonId} onChange={(e) => setSeasonId(e.target.value)}>
+            {seasons.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </Select>
+        </Field>
+        <Field label={t("selectClass")} style={{ marginBottom: 0, minWidth: 180 }}>
+          <Select value={productId} onChange={(e) => setProductId(e.target.value)}>
+            <option value="">{t("allProducts")}</option>
+            {products.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </Select>
+        </Field>
       </div>
 
       {loading ? (
@@ -163,31 +176,18 @@ export default function AdminDashboardTab({ toast }) {
       ) : (
         <>
           <div className="dashboard-kpi-grid">
-            <div className="dashboard-kpi-card">
-              <div className="dashboard-kpi-label">{t("dashboardTotalSessions")}</div>
-              <div className="dashboard-kpi-value">{summary.total_sessions ?? 0}</div>
-            </div>
-            <div className="dashboard-kpi-card">
-              <div className="dashboard-kpi-label">{t("dashboardAttendanceRate")}</div>
-              <div className="dashboard-kpi-value">{summary.attendance_rate ?? 0}%</div>
-            </div>
-            <div className="dashboard-kpi-card">
-              <div className="dashboard-kpi-label">{t("dashboardScanMarks")}</div>
-              <div className="dashboard-kpi-value">{summary.scan_marks ?? 0}</div>
-            </div>
-            <div className="dashboard-kpi-card">
-              <div className="dashboard-kpi-label">{t("dashboardInstructorMarks")}</div>
-              <div className="dashboard-kpi-value">{summary.instructor_marks ?? 0}</div>
-            </div>
-            <div className="dashboard-kpi-card">
-              <div className="dashboard-kpi-label">{t("dashboardUnpaid")}</div>
-              <div className="dashboard-kpi-value">{summary.unpaid_enrollments ?? 0}</div>
-            </div>
+            <KpiCard label={t("dashboardTotalSessions")} value={summary.total_sessions ?? 0} />
+            <KpiCard label={t("dashboardAttendanceRate")} value={`${summary.attendance_rate ?? 0}%`} />
+            <KpiCard label={t("dashboardScanMarks")} value={summary.scan_marks ?? 0} />
+            <KpiCard label={t("dashboardInstructorMarks")} value={summary.instructor_marks ?? 0} />
+            <KpiCard label={t("dashboardUnpaid")} value={summary.unpaid_enrollments ?? 0} />
           </div>
 
           <div className="dashboard-charts">
-            <div className="dashboard-chart-card">
-              <div className="dashboard-chart-title">{t("dashboardWeeklyAttendance")}</div>
+            <Card style={{ minHeight: 280 }}>
+              <div style={{ fontSize: 15, fontWeight: 600, color: "var(--ink)", marginBottom: 8 }}>
+                {t("dashboardWeeklyAttendance")}
+              </div>
               {weekly.length === 0 ? (
                 <div className="empty-text" style={{ padding: 24 }}>{t("noResults")}</div>
               ) : (
@@ -201,10 +201,12 @@ export default function AdminDashboardTab({ toast }) {
                   </LineChart>
                 </ResponsiveContainer>
               )}
-            </div>
+            </Card>
 
-            <div className="dashboard-chart-card">
-              <div className="dashboard-chart-title">{t("dashboardByProduct")}</div>
+            <Card style={{ minHeight: 280 }}>
+              <div style={{ fontSize: 15, fontWeight: 600, color: "var(--ink)", marginBottom: 8 }}>
+                {t("dashboardByProduct")}
+              </div>
               {byProduct.length === 0 ? (
                 <div className="empty-text" style={{ padding: 24 }}>{t("noResults")}</div>
               ) : (
@@ -219,13 +221,13 @@ export default function AdminDashboardTab({ toast }) {
                   </BarChart>
                 </ResponsiveContainer>
               )}
-            </div>
+            </Card>
 
-            <div className="dashboard-chart-card">
+            <Card style={{ minHeight: 280 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <div className="dashboard-chart-title">{t("dashboardByInstructor")}</div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: "var(--ink)" }}>{t("dashboardByInstructor")}</div>
                 {byInstructor.length > 0 && (
-                  <button type="button" className="btn btn-outline btn-sm" onClick={() => exportReport("instructor")}>{t("exportCsv")}</button>
+                  <Button variant="secondary" size="sm" onClick={() => exportReport("instructor")}>{t("exportCsv")}</Button>
                 )}
               </div>
               {byInstructor.length === 0 ? (
@@ -242,13 +244,13 @@ export default function AdminDashboardTab({ toast }) {
                   </BarChart>
                 </ResponsiveContainer>
               )}
-            </div>
+            </Card>
 
-            <div className="dashboard-chart-card">
+            <Card style={{ minHeight: 280 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <div className="dashboard-chart-title">{t("dashboardScanVsAttendance")}</div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: "var(--ink)" }}>{t("dashboardScanVsAttendance")}</div>
                 {scanVs.length > 0 && (
-                  <button type="button" className="btn btn-outline btn-sm" onClick={() => exportReport("scan")}>{t("exportCsv")}</button>
+                  <Button variant="secondary" size="sm" onClick={() => exportReport("scan")}>{t("exportCsv")}</Button>
                 )}
               </div>
               {scanVs.length === 0 ? (
@@ -267,13 +269,13 @@ export default function AdminDashboardTab({ toast }) {
                   </BarChart>
                 </ResponsiveContainer>
               )}
-            </div>
+            </Card>
 
-            <div className="dashboard-chart-card">
+            <Card style={{ minHeight: 280 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <div className="dashboard-chart-title">{t("dashboardRevenueBySeason")}</div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: "var(--ink)" }}>{t("dashboardRevenueBySeason")}</div>
                 {revenue.length > 0 && (
-                  <button type="button" className="btn btn-outline btn-sm" onClick={() => exportReport("revenue")}>{t("exportCsv")}</button>
+                  <Button variant="secondary" size="sm" onClick={() => exportReport("revenue")}>{t("exportCsv")}</Button>
                 )}
               </div>
               {revenue.length === 0 ? (
@@ -289,10 +291,12 @@ export default function AdminDashboardTab({ toast }) {
                   </BarChart>
                 </ResponsiveContainer>
               )}
-            </div>
+            </Card>
 
-            <div className="dashboard-chart-card">
-              <div className="dashboard-chart-title">{t("dashboardPaymentSplit")}</div>
+            <Card style={{ minHeight: 280 }}>
+              <div style={{ fontSize: 15, fontWeight: 600, color: "var(--ink)", marginBottom: 8 }}>
+                {t("dashboardPaymentSplit")}
+              </div>
               {enrollmentPie.length === 0 ? (
                 <div className="empty-text" style={{ padding: 24 }}>{t("noResults")}</div>
               ) : (
@@ -308,10 +312,12 @@ export default function AdminDashboardTab({ toast }) {
                   </PieChart>
                 </ResponsiveContainer>
               )}
-            </div>
+            </Card>
 
-            <div className="dashboard-chart-card">
-              <div className="dashboard-chart-title">{t("dashboardAssessmentFunnel")}</div>
+            <Card style={{ minHeight: 280 }}>
+              <div style={{ fontSize: 15, fontWeight: 600, color: "var(--ink)", marginBottom: 8 }}>
+                {t("dashboardAssessmentFunnel")}
+              </div>
               <p style={{ fontSize: 12, color: "var(--ink-soft)", margin: "0 0 8px" }}>
                 {t("dashboardPassRate")}: {funnel.pass_rate ?? 0}%
                 {" · "}{t("dashboardSummerConversion")}: {funnel.summer_conversion ?? 0}%
@@ -326,7 +332,7 @@ export default function AdminDashboardTab({ toast }) {
                   <Bar dataKey="count" fill="#00B894" />
                 </BarChart>
               </ResponsiveContainer>
-            </div>
+            </Card>
           </div>
         </>
       )}

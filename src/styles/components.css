@@ -1,9 +1,9 @@
 /* HEADER */
 .header {
-  background: var(--bg-secondary);
+  background: var(--canvas);
   padding: var(--space-3) var(--space-4) var(--space-4);
   color: var(--label);
-  border-bottom: 1px solid var(--separator);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
@@ -166,8 +166,8 @@
 /* SECTION */
 .section-title {
   font-size: 22px;
-  font-weight: 700;
-  color: var(--label);
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
   margin-bottom: var(--space-1);
   line-height: 1.27;
 }
@@ -181,13 +181,14 @@
 
 /* CARD — grouped list style */
 .card {
-  background: var(--bg);
-  border: 1px solid var(--separator);
-  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   padding: var(--space-4);
   margin-bottom: var(--space-4);
   overflow: hidden;
   min-width: 0;
+  box-shadow: none;
 }
 
 .card-group {
@@ -218,20 +219,20 @@
 .input {
   width: 100%;
   padding: var(--space-3) var(--space-4);
-  border: 1.5px solid var(--separator);
-  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
   font-family: var(--font-body);
   font-size: var(--text-body);
   color: var(--label);
-  background: var(--bg);
-  transition: border-color var(--dur-fast);
+  background: var(--surface);
+  transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
   outline: none;
   min-height: var(--tap-target-min);
   max-width: 100%;
   min-width: 0;
 }
 
-.input:focus { border-color: var(--accent); background: var(--bg); }
+.input:focus { border-color: var(--border-focus); box-shadow: var(--ring); background: var(--surface); }
 .input::placeholder { color: var(--label-tertiary); }
 
 /* iOS Safari: clip native date input inside RTL layout */
@@ -375,37 +376,38 @@ select.input { cursor: pointer; }
 .btn-primary {
   background: var(--pool);
   color: var(--on-primary);
-  box-shadow: 0 2px 8px rgba(0, 119, 182, 0.2);
+  border: 1px solid var(--pool);
+  box-shadow: none;
 }
-.btn-primary:hover { background: var(--pool-deep); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 119, 182, 0.25); }
-.btn-primary:active { transform: translateY(0); }
+.btn-primary:hover { background: var(--pool-press); transform: none; box-shadow: none; }
+.btn-primary:active { transform: translateY(0.5px); }
 
 .btn-secondary {
-  background: var(--bg);
+  background: var(--surface);
   color: var(--ink);
-  border: 1.5px solid var(--separator);
-  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  border: 1px solid var(--border-strong);
+  box-shadow: none;
 }
-.btn-secondary:hover { background: var(--bg-secondary); }
+.btn-secondary:hover { background: var(--surface-hover); }
 
 .btn-outline {
-  background: var(--bg);
-  color: var(--accent);
-  border: 1.5px solid var(--accent);
+  background: var(--surface);
+  color: var(--pool);
+  border: 1px solid var(--pool);
 }
-.btn-outline:hover { background: var(--pool-pale); }
+.btn-outline:hover { background: var(--pool-wash); }
 
 .btn-danger  { background: var(--danger);  color: var(--on-danger); }
 .btn-success { background: var(--success); color: var(--on-success); }
 .btn-whatsapp{ background: #25D366;        color: #fff; }
 
 .btn-google {
-  background: var(--bg);
+  background: var(--surface);
   color: #3c4043;
-  border: 1.5px solid var(--separator);
-  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  border: 1px solid var(--border-strong);
+  box-shadow: none;
 }
-.btn-google:hover { background: var(--bg-secondary); }
+.btn-google:hover { background: var(--surface-hover); }
 
 .contact-picker-btn { width: 100%; }
 .contact-picker-hint { font-size: var(--text-caption); color: var(--label-secondary); margin-top: var(--space-2); line-height: 1.4; }
@@ -435,7 +437,7 @@ select.input { cursor: pointer; }
   align-items: center;
   justify-content: center;
   padding: var(--space-6) var(--space-5);
-  background: var(--bg-secondary);
+  background: var(--canvas);
 }
 
 .login-logo { margin-bottom: var(--space-4); display: flex; justify-content: center; }
@@ -444,12 +446,13 @@ select.input { cursor: pointer; }
 .login-sub { font-size: var(--text-subhead); color: var(--label-secondary); margin-bottom: var(--space-6); text-align: center; line-height: 1.6; }
 
 .login-card {
-  background: var(--bg);
-  border-radius: 16px;
+  background: var(--surface);
+  border-radius: var(--radius-md);
   padding: var(--space-6) var(--space-5);
   width: 100%;
   max-width: 360px;
-  border: 1px solid var(--separator);
+  border: 1px solid var(--border);
+  box-shadow: none;
 }
 
 /* PENDING PAGE */
@@ -461,7 +464,7 @@ select.input { cursor: pointer; }
   justify-content: center;
   padding: var(--space-6) var(--space-5);
   text-align: center;
-  background: var(--bg-secondary);
+  background: var(--canvas);
 }
 
 .pending-icon { font-size: 64px; margin-bottom: var(--space-4); }
@@ -790,13 +793,15 @@ select.input { cursor: pointer; }
   bottom: calc(var(--tab-bar-h) + env(safe-area-inset-bottom, 0px) + var(--space-2));
   left: 50%;
   transform: translateX(-50%);
-  background: var(--ink);
-  color: #fff;
-  padding: var(--space-3) var(--space-5);
-  border-radius: var(--radius-pill);
-  font-size: var(--text-subhead);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-inline-start: 3px solid var(--pool);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
   font-weight: 500;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
   z-index: 200;
   white-space: nowrap;
   max-width: calc(100% - var(--space-8));
@@ -1017,5 +1022,5 @@ select.input { cursor: pointer; }
   stroke-width: 2;
 }
 
-.sidebar-btn.active { background: var(--pool-pale); color: var(--accent); font-weight: var(--weight-semibold); }
-.sidebar-btn:hover:not(.active) { background: var(--surface); color: var(--accent); }
+.sidebar-btn.active { background: var(--pool-wash); color: var(--accent); font-weight: var(--weight-semibold); }
+.sidebar-btn:hover:not(.active) { background: var(--surface-hover); color: var(--accent); }

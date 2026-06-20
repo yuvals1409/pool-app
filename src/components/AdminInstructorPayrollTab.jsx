@@ -12,6 +12,15 @@ import {
 import { useLang } from "../i18n.jsx";
 import { fmt_time } from "../lib/lessonDates.js";
 import { useIsDesktop } from "../lib/useBreakpoint.js";
+import {
+  Button,
+  Card,
+  EmptyState,
+  Field,
+  Input,
+  Select,
+  Spinner,
+} from "./ui/ds/index.js";
 
 function exportPayrollCsv(rows, t, templateLabelFn) {
   const header = [
@@ -149,16 +158,17 @@ export default function AdminInstructorPayrollTab({ toast }) {
 
   return (
     <div>
-      <div className="page-header">
-        <h1 className="page-title">{t("tabPayroll")}</h1>
-        <p className="page-sub">{t("payrollSub")}</p>
-      </div>
+      {!isDesktop && (
+        <div className="page-header">
+          <h1 className="page-title">{t("tabPayroll")}</h1>
+          <p className="page-sub">{t("payrollSub")}</p>
+        </div>
+      )}
 
-      <div className="card">
+      <Card>
         <div className="crm-card-title">{t("payrollRates")}</div>
         <div className="filter-bar">
-          <select
-            className="input"
+          <Select
             style={{ flex: 1, minWidth: 180 }}
             value={rateInstructorId}
             onChange={(e) => setRateInstructorId(e.target.value)}
@@ -167,23 +177,22 @@ export default function AdminInstructorPayrollTab({ toast }) {
             {instructors.map((i) => (
               <option key={i.id} value={i.id}>{i.full_name || i.email}</option>
             ))}
-          </select>
-          <button
+          </Select>
+          <Button
             type="button"
-            className="btn btn-primary btn-sm"
+            variant="primary"
+            size="sm"
             disabled={!rateInstructorId || savingRates}
             onClick={saveRates}
           >
-            {savingRates ? <><div className="spinner" /> {t("saving")}</> : t("save")}
-          </button>
+            {savingRates ? <><Spinner size={14} color="var(--on-primary)" /> {t("saving")}</> : t("save")}
+          </Button>
         </div>
         {rateInstructorId && (
           <div className="dashboard-kpi-grid" style={{ gridTemplateColumns: isDesktop ? "repeat(4, 1fr)" : "repeat(2, 1fr)" }}>
             {PAYROLL_TEMPLATE_CODES.map((code) => (
-              <div key={code} className="field">
-                <label className="label">{labelFor(code)} ({t("ratePerHour")})</label>
-                <input
-                  className="input"
+              <Field key={code} label={`${labelFor(code)} (${t("ratePerHour")})`}>
+                <Input
                   type="number"
                   min="0"
                   step="0.01"
@@ -191,45 +200,44 @@ export default function AdminInstructorPayrollTab({ toast }) {
                   value={rates[code] ?? ""}
                   onChange={(e) => setRates((r) => ({ ...r, [code]: e.target.value }))}
                 />
-              </div>
+              </Field>
             ))}
           </div>
         )}
-      </div>
+      </Card>
 
-      <div className="card" style={{ marginBottom: 16 }}>
+      <Card style={{ marginBottom: 16, marginTop: 16 }}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "end" }}>
-          <div className="field" style={{ flex: 1, minWidth: 120 }}>
-            <label className="label">{t("fromDate")}</label>
-            <input className="input" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-          </div>
-          <div className="field" style={{ flex: 1, minWidth: 120 }}>
-            <label className="label">{t("toDate")}</label>
-            <input className="input" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-          </div>
-          <div className="field" style={{ flex: 1, minWidth: 160 }}>
-            <label className="label">{t("instructor")}</label>
-            <select className="input" value={filterInstructorId} onChange={(e) => setFilterInstructorId(e.target.value)}>
+          <Field label={t("fromDate")} style={{ flex: 1, minWidth: 120, marginBottom: 0 }}>
+            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+          </Field>
+          <Field label={t("toDate")} style={{ flex: 1, minWidth: 120, marginBottom: 0 }}>
+            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+          </Field>
+          <Field label={t("instructor")} style={{ flex: 1, minWidth: 160, marginBottom: 0 }}>
+            <Select value={filterInstructorId} onChange={(e) => setFilterInstructorId(e.target.value)}>
               <option value="">{t("allInstructors")}</option>
               {instructors.map((i) => (
                 <option key={i.id} value={i.id}>{i.full_name || i.email}</option>
               ))}
-            </select>
-          </div>
-          <button type="button" className="btn btn-outline btn-sm" onClick={() => exportPayrollCsv(summary, t, labelFor)}>
+            </Select>
+          </Field>
+          <Button type="button" variant="secondary" size="sm" onClick={() => exportPayrollCsv(summary, t, labelFor)}>
             {t("exportCsv")}
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
 
       {loading && !detailInstructor ? (
-        <div style={{ textAlign: "center", padding: 24, color: "var(--ink-soft)" }}>{t("loading")}</div>
+        <div style={{ display: "flex", justifyContent: "center", padding: 24 }}>
+          <Spinner />
+        </div>
       ) : summary.length === 0 ? (
-        <div className="empty"><div className="empty-icon">💼</div><div className="empty-text">{t("payrollNoData")}</div></div>
+        <EmptyState title={t("payrollNoData")} />
       ) : (
         <div className="grouped-list">
           {summary.map((inst) => (
-            <div key={inst.instructor_id} className="card" style={{ marginBottom: 12 }}>
+            <Card key={inst.instructor_id} style={{ marginBottom: 12 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
                 <div>
                   <div className="log-name">{inst.instructor_name}</div>
@@ -241,9 +249,9 @@ export default function AdminInstructorPayrollTab({ toast }) {
                     <div className="log-meta" style={{ color: "var(--warning)" }}>{t("missingRate")}</div>
                   )}
                 </div>
-                <button type="button" className="btn btn-outline btn-sm" onClick={() => showDetail(inst)}>
+                <Button type="button" variant="secondary" size="sm" onClick={() => showDetail(inst)}>
                   {t("payrollViewSessions")}
-                </button>
+                </Button>
               </div>
               {(inst.by_template || []).length > 0 && (
                 <table className="data-table" style={{ width: "100%", fontSize: "var(--text-footnote)" }}>
@@ -269,18 +277,18 @@ export default function AdminInstructorPayrollTab({ toast }) {
                   </tbody>
                 </table>
               )}
-            </div>
+            </Card>
           ))}
         </div>
       )}
 
       {detailInstructor && (
-        <div className="card" style={{ marginTop: 16 }}>
+        <Card style={{ marginTop: 16 }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
             <div className="label">{t("payrollSessionDetail")}: {detailInstructor.instructor_name}</div>
-            <button type="button" className="btn btn-outline btn-sm" onClick={() => { setDetailInstructor(null); setDetailSessions([]); }}>
+            <Button type="button" variant="secondary" size="sm" onClick={() => { setDetailInstructor(null); setDetailSessions([]); }}>
               {t("close")}
-            </button>
+            </Button>
           </div>
           {detailSessions.length === 0 ? (
             <div className="empty-text">{t("payrollNoData")}</div>
@@ -310,7 +318,7 @@ export default function AdminInstructorPayrollTab({ toast }) {
               </tbody>
             </table>
           )}
-        </div>
+        </Card>
       )}
     </div>
   );

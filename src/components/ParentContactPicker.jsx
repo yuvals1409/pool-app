@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useLang } from "../i18n.jsx";
 import { isContactPickerSupported, pickParentContact } from "../lib/contactPicker.js";
+import { Button, Field, Input, Spinner } from "./ui/ds/index.js";
 
 export default function ParentContactPicker({ value, onChange, onError }) {
   const { t } = useLang();
@@ -38,16 +39,17 @@ export default function ParentContactPicker({ value, onChange, onError }) {
   if (showManual && !pickerAvailable) {
     return (
       <div className="contact-picker">
-        <input
-          className="input"
-          type="tel"
-          inputMode="tel"
-          autoComplete="tel"
-          placeholder="050-0000000"
-          value={value}
-          onChange={e => onChange?.(e.target.value)}
-          dir="ltr"
-        />
+        <Field>
+          <Input
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            placeholder="050-0000000"
+            value={value}
+            onChange={e => onChange?.(e.target.value)}
+            dir="ltr"
+          />
+        </Field>
         <div className="contact-picker-hint">{t("parentPhoneManualHint")}</div>
         <div className="contact-picker-hint">{t("contactPickerEnableIOS")}</div>
       </div>
@@ -57,23 +59,24 @@ export default function ParentContactPicker({ value, onChange, onError }) {
   if (!value) {
     return (
       <div className="contact-picker">
-        <button type="button" className="btn btn-outline contact-picker-btn" onClick={pick} disabled={picking}>
-          {picking ? <><div className="spinner" /> {t("openingContacts")}</> : <>📇 {t("selectParentContact")}</>}
-        </button>
+        <Button type="button" variant="secondary" className="contact-picker-btn" onClick={pick} disabled={picking} fullWidth>
+          {picking ? <><Spinner size={14} /> {t("openingContacts")}</> : <>📇 {t("selectParentContact")}</>}
+        </Button>
         <div className="contact-picker-hint">{t("parentPhoneHint")}</div>
         {showManual && (
           <div className="contact-picker-manual-fallback">
             <div className="contact-picker-hint">{t("parentPhoneManualHint")}</div>
-            <input
-              className="input"
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              placeholder="050-0000000"
-              value={value}
-              onChange={e => onChange?.(e.target.value)}
-              dir="ltr"
-            />
+            <Field>
+              <Input
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="050-0000000"
+                value={value}
+                onChange={e => onChange?.(e.target.value)}
+                dir="ltr"
+              />
+            </Field>
           </div>
         )}
       </div>
@@ -87,9 +90,9 @@ export default function ParentContactPicker({ value, onChange, onError }) {
           {contactName && <div className="contact-picker-name">{contactName}</div>}
           <div className="contact-picker-phone" dir="ltr">{value}</div>
         </div>
-        <button type="button" className="btn btn-outline btn-sm" onClick={pick} disabled={picking}>
-          {picking ? <><div className="spinner" /> {t("openingContacts")}</> : t("changeParentContact")}
-        </button>
+        <Button type="button" variant="secondary" size="sm" onClick={pick} disabled={picking}>
+          {picking ? <><Spinner size={14} /> {t("openingContacts")}</> : t("changeParentContact")}
+        </Button>
       </div>
     </div>
   );

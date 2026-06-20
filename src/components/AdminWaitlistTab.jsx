@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLang } from "../i18n.jsx";
+import { useIsDesktop } from "../lib/useBreakpoint.js";
 import {
   listWaitlist,
   listPendingWaitlistNotifications,
@@ -7,9 +8,13 @@ import {
   getWaitlistOfferUrl,
 } from "../lib/waitlist.js";
 import { buildWaitlistOfferMessage, shareWaitlistOfferViaWhatsApp } from "../lib/lessonNotify.js";
+import { Badge, Button, Card, EmptyState, Spinner } from "./ui/ds/index.js";
+
+const WHATSAPP_BTN_STYLE = { background: "#25D366", color: "#fff", border: "1px solid #25D366" };
 
 export default function AdminWaitlistTab({ toast }) {
   const { t, fmtDateDay } = useLang();
+  const isDesktop = useIsDesktop();
   const [entries, setEntries] = useState([]);
   const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -65,12 +70,14 @@ export default function AdminWaitlistTab({ toast }) {
 
   return (
     <div>
-      <div className="page-header">
-        <h1 className="page-title">{t("tabWaitlist")}</h1>
-      </div>
+      {!isDesktop && (
+        <div className="page-header">
+          <h1 className="page-title">{t("tabWaitlist")}</h1>
+        </div>
+      )}
 
       {pending.length > 0 && (
-        <div className="card" style={{ marginBottom: 20, borderColor: "var(--accent)" }}>
+        <Card style={{ marginBottom: 20, borderColor: "var(--accent)" }}>
           <div className="section-sub" style={{ marginBottom: 12 }}>{t("waitlistPendingNotify")} ({pending.length})</div>
           <div className="grouped-list">
             {pending.map((row) => (
@@ -82,37 +89,37 @@ export default function AdminWaitlistTab({ toast }) {
                     {" · "}{row.phone}
                   </div>
                 </div>
-                <button
+                <Button
                   type="button"
-                  className="btn btn-whatsapp btn-sm"
+                  size="sm"
+                  style={WHATSAPP_BTN_STYLE}
                   disabled={sendingId === row.id}
                   onClick={() => sendWhatsApp(row)}
                 >
                   {sendingId === row.id ? "..." : t("sendWhatsApp")}
-                </button>
+                </Button>
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       )}
 
       <div className="section-sub" style={{ marginBottom: 12 }}>{t("waitlistAllEntries")}</div>
 
       {loading ? (
-        <div style={{ textAlign: "center", padding: 24, color: "var(--ink-soft)" }}>{t("loading")}</div>
-      ) : entries.length === 0 ? (
-        <div className="empty">
-          <div className="empty-icon">📋</div>
-          <div className="empty-text">{t("waitlistEmpty")}</div>
+        <div style={{ display: "flex", justifyContent: "center", padding: 24 }}>
+          <Spinner />
         </div>
+      ) : entries.length === 0 ? (
+        <EmptyState title={t("waitlistEmpty")} />
       ) : (
         <div className="grouped-list">
           {entries.map((row) => (
             <div className="user-row" key={row.id} style={{ flexWrap: "wrap", gap: 8 }}>
               <div className="user-info" style={{ flex: 1 }}>
-                <div className="user-display">
+                <div className="user-display" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                   {row.child_name}
-                  <span className="badge" style={{ marginInlineStart: 8 }}>{statusLabel(row.status)}</span>
+                  <Badge variant="neutral">{statusLabel(row.status)}</Badge>
                 </div>
                 <div className="user-email">
                   {row.target_label} · {t("waitlistPosition", { n: row.position })}
@@ -120,9 +127,10 @@ export default function AdminWaitlistTab({ toast }) {
                 </div>
               </div>
               {row.status === "notified" && !row.notified_at && row.offer_token && (
-                <button
+                <Button
                   type="button"
-                  className="btn btn-whatsapp btn-sm"
+                  size="sm"
+                  style={WHATSAPP_BTN_STYLE}
                   disabled={sendingId === row.id}
                   onClick={() => sendWhatsApp({
                     ...row,
@@ -132,7 +140,7 @@ export default function AdminWaitlistTab({ toast }) {
                   })}
                 >
                   {sendingId === row.id ? "..." : t("sendWhatsApp")}
-                </button>
+                </Button>
               )}
             </div>
           ))}

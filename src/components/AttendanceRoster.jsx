@@ -4,6 +4,7 @@ import {
   submitSessionAttendance,
   submitLessonAttendance,
 } from "../lib/attendance.js";
+import { Button, Card, Badge, Input, Select, Spinner } from "./ui/ds/index.js";
 
 const MARK_STATUSES = ["present", "absent", "excused", "late"];
 const REASON_STATUSES = new Set(["excused", "late"]);
@@ -28,12 +29,12 @@ export default function AttendanceRoster({ session, roster, onSaved, onBack, toa
     other: t("attendanceReasonOther"),
   }[key] || key);
 
-  const statusBtnClass = (st, selected) => {
-    if (!selected) return "btn-outline";
-    if (st === "present") return "btn-primary";
-    if (st === "absent") return "btn-danger";
-    if (st === "excused") return "btn-success";
-    return "btn-outline";
+  const statusVariant = (st, selected) => {
+    if (!selected) return "outline";
+    if (st === "present") return "primary";
+    if (st === "absent") return "danger";
+    if (st === "excused") return "success";
+    return "outline";
   };
 
   const updateMark = (key, patch) => {
@@ -108,11 +109,11 @@ export default function AttendanceRoster({ session, roster, onSaved, onBack, toa
 
   return (
     <div>
-      <button type="button" className="btn btn-outline btn-sm" onClick={onBack} style={{ marginBottom: 12 }}>
+      <Button size="sm" variant="outline" onClick={onBack} style={{ marginBottom: 12 }}>
         ← {t("backToSessions")}
-      </button>
+      </Button>
 
-      <div className="grouped-list">
+      <Card padded={false} style={{ overflow: "hidden" }}>
         {rows.map((row) => {
           const mark = marks[row.key];
           const showReason = REASON_STATUSES.has(mark.status);
@@ -122,7 +123,7 @@ export default function AttendanceRoster({ session, roster, onSaved, onBack, toa
                 <div className="user-display">
                   {row.name}
                   {row.isMakeup && (
-                    <span className="badge badge-active" style={{ marginInlineStart: 8 }}>{t("makeupBadge")}</span>
+                    <Badge variant="success" style={{ marginInlineStart: 8 }}>{t("makeupBadge")}</Badge>
                   )}
                 </div>
                 {row.isMakeup && row.homeProductName && (
@@ -137,22 +138,21 @@ export default function AttendanceRoster({ session, roster, onSaved, onBack, toa
               </div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap", flex: "1 1 100%" }}>
                 {MARK_STATUSES.map((st) => (
-                  <button
+                  <Button
                     key={st}
-                    type="button"
-                    className={`btn btn-sm ${statusBtnClass(st, mark.status === st)}`}
+                    size="sm"
+                    variant={statusVariant(st, mark.status === st)}
                     style={st === "late" && mark.status === st ? { background: "#f59e0b", color: "#fff", borderColor: "#f59e0b" } : undefined}
                     onClick={() => setStatus(row.key, st)}
                   >
                     {statusLabel(st)}
-                  </button>
+                  </Button>
                 ))}
               </div>
               {showReason && (
                 <div className="field" style={{ flex: "1 1 100%", marginTop: 4 }}>
                   <label className="label">{t("attendanceReason")}</label>
-                  <select
-                    className="input"
+                  <Select
                     value={mark.reasonKey}
                     onChange={(e) => updateMark(row.key, { reasonKey: e.target.value, reasonText: "" })}
                   >
@@ -160,10 +160,9 @@ export default function AttendanceRoster({ session, roster, onSaved, onBack, toa
                     {REASON_OPTIONS.map((opt) => (
                       <option key={opt} value={opt}>{reasonLabel(opt)}</option>
                     ))}
-                  </select>
+                  </Select>
                   {mark.reasonKey === "other" && (
-                    <input
-                      className="input"
+                    <Input
                       style={{ marginTop: 8 }}
                       value={mark.reasonText}
                       onChange={(e) => updateMark(row.key, { reasonText: e.target.value })}
@@ -175,11 +174,11 @@ export default function AttendanceRoster({ session, roster, onSaved, onBack, toa
             </div>
           );
         })}
-      </div>
+      </Card>
 
-      <button type="button" className="btn btn-primary mt-8" onClick={save} disabled={saving} style={{ width: "100%" }}>
-        {saving ? <><div className="spinner" /> {t("saving")}</> : t("saveAttendance")}
-      </button>
+      <Button fullWidth onClick={save} disabled={saving} style={{ marginTop: "var(--space-2)" }} icon={saving ? <Spinner color="#fff" /> : null}>
+        {saving ? t("saving") : t("saveAttendance")}
+      </Button>
     </div>
   );
 }
