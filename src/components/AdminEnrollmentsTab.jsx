@@ -80,7 +80,7 @@ export default function AdminEnrollmentsTab({ toast }) {
   const enrollmentSelect = `
     id, payment_status, valid_from, valid_until, active,
     participant:participants(id, full_name, family:families(id, phone, parent_name)),
-    product:products(id, name, day_of_week, start_time, end_time, instructor_name, schedule_pattern, product_templates(code))
+    product:products(id, name, day_of_week, start_time, end_time, instructor_name, level, level_label, target_audience, gender, schedule_pattern, product_templates(code))
   `;
 
   useEffect(() => {
@@ -96,7 +96,7 @@ export default function AdminEnrollmentsTab({ toast }) {
       if (!seasonRow) return;
       const { data: prods, error } = await supabase
         .from("products")
-        .select("id, name, day_of_week, start_time, end_time, instructor_name, schedule_pattern, product_templates(code)")
+        .select("id, name, day_of_week, start_time, end_time, instructor_name, level, level_label, target_audience, gender, schedule_pattern, product_templates(code)")
         .eq("season_id", seasonRow.id)
         .order("name");
       if (error) toast.show(error.message);

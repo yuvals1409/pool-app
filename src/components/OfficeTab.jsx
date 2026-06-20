@@ -77,7 +77,7 @@ export default function OfficeTab({ toast }) {
         .select(`
           id, payment_status, valid_until, active,
           participant:participants(id, full_name),
-          product:products(id, name, day_of_week, start_time, end_time, instructor_name, schedule_pattern, product_templates(code))
+          product:products(id, name, day_of_week, start_time, end_time, instructor_name, level, level_label, target_audience, gender, schedule_pattern, product_templates(code))
         `)
         .in("participant_id", [...participantIds])
         .eq("active", true)

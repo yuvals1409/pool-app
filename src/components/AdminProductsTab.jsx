@@ -3,12 +3,23 @@ import { supabase } from "../lib/supabase.js";
 import { generateCourseSeriesSessions } from "../lib/summerCourse.js";
 import { formatProductLabel } from "../lib/productLabel.js";
 import { collectAgeOptions, collectGradeOptions, filterProducts } from "../lib/productFilters.js";
+import {
+  createEmptyFormState,
+  formStateToProductPayload,
+  productToFormState,
+} from "../lib/groupModel.js";
+import {
+  classifyAudienceKind,
+  mergeAudienceOptions,
+  validateCustomAudience,
+  GROUP_TYPE_SUMMER,
+} from "../lib/groupConstants.js";
 import { useLang } from "../i18n.jsx";
 import { useIsDesktop } from "../lib/useBreakpoint.js";
 import { seasonOptionLabel } from "../lib/bidi.js";
+import GroupFormCard from "./GroupFormCard.jsx";
 import {
   Button,
-  Card,
   EmptyState,
   Field,
   Input,
@@ -29,21 +40,9 @@ export default function AdminProductsTab({ toast }) {
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [showForm, setShowForm] = useState(false);
-
-  const [name, setName] = useState("");
-  const [templateCode, setTemplateCode] = useState("annual_section");
-  const [dayOfWeek, setDayOfWeek] = useState("1");
-  const [startTime, setStartTime] = useState("16:00");
-  const [endTime, setEndTime] = useState("16:45");
-  const [instructorName, setInstructorName] = useState("");
-  const [instructorId, setInstructorId] = useState("");
+  const [formState, setFormState] = useState(createEmptyFormState);
+  const [dbAudienceOptions, setDbAudienceOptions] = useState([]);
   const [instructors, setInstructors] = useState([]);
-  const [capacity, setCapacity] = useState("");
-  const [price, setPrice] = useState("");
-  const [weekdays, setWeekdays] = useState([2, 4]);
-  const [courseStart, setCourseStart] = useState("");
-  const [courseEnd, setCourseEnd] = useState("");
-  const [levelLabel, setLevelLabel] = useState("");
 
   const [filterInstructorId, setFilterInstructorId] = useState("");
   const [filterDay, setFilterDay] = useState("");
@@ -51,6 +50,11 @@ export default function AdminProductsTab({ toast }) {
   const [filterAge, setFilterAge] = useState("");
   const [filterTemplate, setFilterTemplate] = useState("");
   const [filterSearch, setFilterSearch] = useState("");
+
+  const audienceOptions = useMemo(
+    () => mergeAudienceOptions(formState.type, dbAudienceOptions),
+    [formState.type, dbAudienceOptions],
+  );
 
   const gradeOptions = useMemo(() => collectGradeOptions(products), [products]);
   const ageOptions = useMemo(() => collectAgeOptions(products), [products]);
@@ -82,6 +86,14 @@ export default function AdminProductsTab({ toast }) {
     setFilterSearch("");
   };
 
+  const loadAudienceOptions = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("target_audience_options")
+      .select("kind, label")
+      .order("label");
+    if (!error) setDbAudienceOptions(data || []);
+  }, []);
+
   const loadMeta = useCallback(async () => {
     const [{ data: seasonRows }, { data: templateRows }, { data: instructorRows }] = await Promise.all([
       supabase.from("seasons").select("id, name, active").order("start_date", { ascending: false }),
@@ -102,7 +114,7 @@ export default function AdminProductsTab({ toast }) {
     setLoading(true);
     const { data, error } = await supabase
       .from("products")
-      .select("id, name, day_of_week, start_time, end_time, instructor_name, instructor_id, capacity, price, level_label, schedule_pattern, template_id, product_templates(code)")
+      .select("id, name, day_of_week, start_time, end_time, instructor_name, instructor_id, capacity, price, level, level_label, target_audience, gender, schedule_pattern, template_id, product_templates(code)")
       .eq("season_id", sid)
       .order("name");
     if (error) toast.show(error.message);
@@ -110,7 +122,7 @@ export default function AdminProductsTab({ toast }) {
     setLoading(false);
   }, [toast]);
 
-  useEffect(() => { loadMeta(); }, [loadMeta]);
+  useEffect(() => { loadMeta(); loadAudienceOptions(); }, [loadMeta, loadAudienceOptions]);
   useEffect(() => { if (seasonId) loadProducts(seasonId); }, [seasonId, loadProducts]);
   useEffect(() => {
     setFilterInstructorId("");
@@ -123,91 +135,59 @@ export default function AdminProductsTab({ toast }) {
 
   const resetForm = () => {
     setEditingId(null);
-    setName("");
-    setTemplateCode("annual_section");
-    setDayOfWeek("1");
-    setStartTime("16:00");
-    setEndTime("16:45");
-    setInstructorName("");
-    setInstructorId("");
-    setCapacity("");
-    setPrice("");
-    setWeekdays([2, 4]);
-    setCourseStart("");
-    setCourseEnd("");
-    setLevelLabel("");
+    setFormState(createEmptyFormState());
     setShowForm(false);
   };
 
   const startEdit = (p) => {
-    const code = p.product_templates?.code || "annual_section";
     setEditingId(p.id);
-    setName(p.name);
-    setTemplateCode(code);
-    setDayOfWeek(String(p.day_of_week ?? 1));
-    setStartTime(String(p.start_time).slice(0, 5));
-    setEndTime(String(p.end_time).slice(0, 5));
-    setInstructorName(p.instructor_name || "");
-    setInstructorId(p.instructor_id || "");
-    setCapacity(p.capacity != null ? String(p.capacity) : "");
-    setPrice(p.price != null ? String(p.price) : "");
-    const sp = p.schedule_pattern || {};
-    setWeekdays(Array.isArray(sp.weekdays) ? sp.weekdays : [2, 4]);
-    setCourseStart(sp.course_start || "");
-    setCourseEnd(sp.course_end || "");
-    setLevelLabel(p.level_label || "");
+    setFormState(productToFormState(p));
     setShowForm(true);
   };
 
-  const toggleWeekday = (d) => {
-    setWeekdays((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d].sort()));
-  };
-
-  const pickInstructor = (id) => {
-    setInstructorId(id);
-    const inst = instructors.find((x) => x.id === id);
-    setInstructorName(inst ? (inst.full_name || inst.email || "") : "");
+  const addAudienceOption = async (label) => {
+    const err = validateCustomAudience(formState.type, label);
+    if (err === "summerAgeOnly") {
+      toast.show(t("summerAudienceAgeOnly"));
+      throw new Error(err);
+    }
+    if (err) {
+      toast.show(t("invalidAudience"));
+      throw new Error(err);
+    }
+    const kind = classifyAudienceKind(label);
+    if (!kind) {
+      toast.show(t("invalidAudience"));
+      throw new Error("invalid");
+    }
+    const { error } = await supabase
+      .from("target_audience_options")
+      .upsert({ kind, label }, { onConflict: "label" });
+    if (error) {
+      toast.show(error.message);
+      throw error;
+    }
+    await loadAudienceOptions();
   };
 
   const save = async () => {
-    if (!seasonId || !name.trim() || !instructorId) {
+    if (!seasonId) {
       return toast.show(t("fillAllFields"));
     }
-    const template = templates.find((x) => x.code === templateCode);
+
+    const result = formStateToProductPayload(formState, { days });
+    if (!result.ok) {
+      return toast.show(t(result.errorKey));
+    }
+
+    const template = templates.find((x) => x.code === result.templateCode);
     if (!template) return toast.show(t("systemError"));
 
-    const cap = capacity.trim() ? Number(capacity) : null;
-    const priceVal = price.trim() ? Number(price) : null;
     const payload = {
+      ...result.payload,
       season_id: seasonId,
       template_id: template.id,
-      name: name.trim(),
-      instructor_id: instructorId,
-      instructor_name: instructorName.trim(),
-      capacity: Number.isInteger(cap) ? cap : null,
-      price: priceVal != null && priceVal >= 0 ? priceVal : null,
-      level_label: levelLabel.trim() || null,
     };
-
-    if (templateCode === "summer_course") {
-      if (!courseStart || !courseEnd || weekdays.length === 0) {
-        return toast.show(t("summerCourseDatesRequired"));
-      }
-      payload.day_of_week = null;
-      payload.start_time = startTime;
-      payload.end_time = endTime;
-      payload.schedule_pattern = {
-        type: "course_series",
-        weekdays,
-        course_start: courseStart,
-        course_end: courseEnd,
-      };
-    } else {
-      payload.day_of_week = Number(dayOfWeek);
-      payload.start_time = startTime;
-      payload.end_time = endTime;
-      payload.schedule_pattern = {};
-    }
 
     setSaving(true);
     try {
@@ -220,7 +200,7 @@ export default function AdminProductsTab({ toast }) {
         if (error) throw error;
         productId = data.id;
       }
-      if (templateCode === "summer_course") {
+      if (formState.type === GROUP_TYPE_SUMMER) {
         await generateCourseSeriesSessions(productId);
       }
       toast.show(t("productSaved"));
@@ -246,7 +226,7 @@ export default function AdminProductsTab({ toast }) {
             <option key={s.id} value={s.id}>{seasonOptionLabel(s.name, { active: s.active, activeLabel: t("active") })}</option>
           ))}
         </Select>
-        <Button type="button" variant="primary" size="sm" onClick={() => { resetForm(); setShowForm(true); }}>
+        <Button type="button" variant="primary" size="sm" onClick={() => { resetForm(); setShowForm(true); setFormState(createEmptyFormState()); }}>
           {t("addProduct")}
         </Button>
       </div>
@@ -306,77 +286,18 @@ export default function AdminProductsTab({ toast }) {
       )}
 
       {showForm && (
-        <Card style={{ marginBottom: 20 }}>
-          <Field label={t("productType")}>
-            <Select value={templateCode} onChange={(e) => setTemplateCode(e.target.value)}>
-              <option value="annual_section">{t("productTypeAnnual")}</option>
-              <option value="summer_course">{t("productTypeSummer")}</option>
-            </Select>
-          </Field>
-          <Field label={t("productName")}>
-            <Input value={name} onChange={(e) => setName(e.target.value)} />
-          </Field>
-          <Field label={t("instructor")}>
-            <Select value={instructorId} onChange={(e) => pickInstructor(e.target.value)}>
-              <option value="">{t("selectInstructor")}</option>
-              {instructors.map((inst) => (
-                <option key={inst.id} value={inst.id}>{inst.full_name || inst.email}</option>
-              ))}
-            </Select>
-          </Field>
-          {templateCode === "annual_section" ? (
-            <Field label={t("dayOfWeek")}>
-              <Select value={dayOfWeek} onChange={(e) => setDayOfWeek(e.target.value)}>
-                {days.map((d, i) => <option key={d} value={i}>{d}</option>)}
-              </Select>
-            </Field>
-          ) : (
-            <>
-              <Field label={t("courseWeekdays")}>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {days.map((d, i) => (
-                    <Button
-                      key={d}
-                      type="button"
-                      size="sm"
-                      variant={weekdays.includes(i) ? "primary" : "outline"}
-                      onClick={() => toggleWeekday(i)}
-                    >
-                      {d}
-                    </Button>
-                  ))}
-                </div>
-              </Field>
-              <Field label={t("courseDateRange")}>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <Input type="date" value={courseStart} onChange={(e) => setCourseStart(e.target.value)} dir="ltr" />
-                  <Input type="date" value={courseEnd} onChange={(e) => setCourseEnd(e.target.value)} dir="ltr" />
-                </div>
-              </Field>
-            </>
-          )}
-          <Field label={`${t("lessonStartTime")} / ${t("endTime")}`}>
-            <div style={{ display: "flex", gap: 8 }}>
-              <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} dir="ltr" />
-              <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} dir="ltr" />
-            </div>
-          </Field>
-          <Field label={t("productLevelLabel")}>
-            <Input value={levelLabel} onChange={(e) => setLevelLabel(e.target.value)} placeholder={t("productLevelLabelPlaceholder")} />
-          </Field>
-          <Field label={t("assessmentCapacity")}>
-            <Input type="number" min={1} value={capacity} onChange={(e) => setCapacity(e.target.value)} dir="ltr" />
-          </Field>
-          <Field label={t("productPrice")}>
-            <Input type="number" min={0} step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} dir="ltr" placeholder={t("productPriceOptional")} />
-          </Field>
-          <div style={{ display: "flex", gap: 8 }}>
-            <Button type="button" variant="primary" onClick={save} disabled={saving}>
-              {saving ? <><Spinner size={14} color="var(--on-primary)" /> {t("saving")}</> : t("saveProduct")}
-            </Button>
-            <Button type="button" variant="secondary" onClick={resetForm}>{t("cancel")}</Button>
-          </div>
-        </Card>
+        <GroupFormCard
+          formState={formState}
+          setFormState={setFormState}
+          instructors={instructors}
+          days={days}
+          t={t}
+          audienceOptions={audienceOptions}
+          onAddAudience={addAudienceOption}
+          saving={saving}
+          onSave={save}
+          onCancel={resetForm}
+        />
       )}
 
       {loading ? (
@@ -392,8 +313,14 @@ export default function AdminProductsTab({ toast }) {
           {filteredProducts.map((p) => (
             <div className="user-row" key={p.id} style={{ flexWrap: "wrap", gap: 8 }}>
               <div className="user-info" style={{ flex: 1 }}>
-                <div className="user-display">{formatProductLabel({ ...p, schedule_pattern: p.schedule_pattern }, days, p.product_templates?.code)}</div>
-                <div className="user-email">{p.instructor_name}{p.capacity != null ? ` · ${t("assessmentCapacity")}: ${p.capacity}` : ""}{p.price != null ? ` · ${t("productPrice")}: ₪${p.price}` : ""}</div>
+                <div className="user-display">
+                  {formatProductLabel({ ...p, schedule_pattern: p.schedule_pattern }, days, p.product_templates?.code)}
+                </div>
+                <div className="user-email">
+                  {p.instructor_name}
+                  {p.capacity != null ? ` · ${t("assessmentCapacity")}: ${p.capacity}` : ""}
+                  {p.price != null ? ` · ${t("productPrice")}: ₪${p.price}` : ""}
+                </div>
               </div>
               <Button type="button" variant="secondary" size="sm" onClick={() => startEdit(p)}>{t("editProduct")}</Button>
             </div>

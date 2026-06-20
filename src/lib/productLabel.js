@@ -1,8 +1,15 @@
 import { fmt_time } from "./lessonDates.js";
+import { hasStructuredGroupFields } from "./groupName.js";
 
 const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
 export function formatWeekdays(pattern, days) {
+  const schedule = pattern?.schedule;
+  if (Array.isArray(schedule) && schedule.length) {
+    return schedule
+      .map((slot) => days?.[slot.day] ?? DAY_NAMES[slot.day] ?? String(slot.day))
+      .join(" + ");
+  }
   const weekdays = pattern?.weekdays;
   if (!Array.isArray(weekdays) || !weekdays.length) return "";
   return weekdays.map((d) => days?.[d] ?? DAY_NAMES[d] ?? String(d)).join(" + ");
@@ -10,6 +17,9 @@ export function formatWeekdays(pattern, days) {
 
 export function formatProductLabel(product, days, templateCode) {
   if (!product) return "";
+  if (hasStructuredGroupFields(product) && product.name) {
+    return product.name;
+  }
   const pattern = product.schedule_pattern || {};
   const isSummer = templateCode === "summer_course" || pattern.type === "course_series";
   if (isSummer) {

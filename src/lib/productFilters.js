@@ -1,5 +1,5 @@
 export function productTextFields(product) {
-  return [product.name, product.level_label].filter(Boolean);
+  return [product.name, product.level_label, product.target_audience].filter(Boolean);
 }
 
 export function productSearchBlob(product) {
@@ -71,6 +71,12 @@ export function productMatchesDay(product, dayFilter) {
   const day = Number(dayFilter);
   const code = product.product_templates?.code;
   const pattern = product.schedule_pattern || {};
+  const schedule = Array.isArray(pattern.schedule) ? pattern.schedule : [];
+
+  if (schedule.length) {
+    return schedule.some((slot) => Number(slot.day) === day);
+  }
+
   if (code === "summer_course" || pattern.type === "course_series") {
     const weekdays = Array.isArray(pattern.weekdays) ? pattern.weekdays : [];
     return weekdays.includes(day);
@@ -83,14 +89,20 @@ export function filterProducts(products, filters) {
   return products.filter((p) => {
     if (filters.instructorId && p.instructor_id !== filters.instructorId) return false;
     if (!productMatchesDay(p, filters.day)) return false;
-    if (filters.grade && !productSearchBlob(p).includes(filters.grade)) return false;
-    if (filters.age && !productSearchBlob(p).includes(filters.age)) return false;
+    if (filters.grade) {
+      const gradeHay = product.target_audience || productSearchBlob(p);
+      if (!gradeHay.includes(filters.grade)) return false;
+    }
+    if (filters.age) {
+      const ageHay = product.target_audience || productSearchBlob(p);
+      if (!ageHay.includes(filters.age)) return false;
+    }
     if (filters.templateCode) {
       const code = p.product_templates?.code || "annual_section";
       if (code !== filters.templateCode) return false;
     }
     if (search) {
-      const hay = [p.name, p.instructor_name, p.level_label]
+      const hay = [p.name, p.instructor_name, p.level_label, p.target_audience]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
