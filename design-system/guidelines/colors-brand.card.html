@@ -1,29 +1,26 @@
-<!-- @dsCard group="Colors" viewport="700x160" name="Brand Palette" subtitle="Pool blue ramp — the core brand color scale" -->
+<!-- @dsCard group="Colors" viewport="700x170" name="Brand — Pool Blue" subtitle="Primary brand ramp + flame accent" -->
 <!DOCTYPE html>
-<html dir="rtl" lang="he">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <link rel="stylesheet" href="../styles.css">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--font-body); background: #fff; }
-  .row { display: flex; height: 160px; }
-  .swatch { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; padding: 10px 10px; }
-  .name { font-size: 10px; font-weight: 700; font-family: var(--font-mono); }
-  .hex  { font-size: 10px; font-family: var(--font-mono); opacity: .8; margin-top: 2px; }
-  .light .name, .light .hex { color: var(--ink); }
-  .dark  .name, .dark  .hex { color: rgba(255,255,255,.9); }
+  body { margin: 0; background: var(--canvas); }
+  .row { display: flex; gap: 12px; padding: 24px 28px; flex-wrap: wrap; }
+  .sw { width: 96px; }
+  .chip { height: 64px; border-radius: var(--radius-md); border: 1px solid rgba(0,0,0,0.06); }
+  .name { font-size: 12px; font-weight: 600; color: var(--ink); margin-top: 8px; }
+  .hex { font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft); }
 </style>
 </head>
 <body>
-<div class="row">
-  <div class="swatch light" style="background:var(--pool-faint)"><div class="name">--pool-faint</div><div class="hex">#F0F8FF</div></div>
-  <div class="swatch light" style="background:var(--pool-pale)"><div class="name">--pool-pale</div><div class="hex">#CAF0F8</div></div>
-  <div class="swatch light" style="background:var(--pool-light)"><div class="name">--pool-light</div><div class="hex">#90E0EF</div></div>
-  <div class="swatch dark" style="background:var(--pool)"><div class="name">--pool</div><div class="hex">#0077B6</div></div>
-  <div class="swatch dark" style="background:var(--pool-mid)"><div class="name">--pool-mid</div><div class="hex">#0090D4</div></div>
-  <div class="swatch dark" style="background:var(--pool-deep)"><div class="name">--pool-deep</div><div class="hex">#023E8A</div></div>
-  <div class="swatch dark" style="background:var(--ink)"><div class="name">--ink</div><div class="hex">#012A4A</div></div>
-</div>
+  <div class="row">
+    <div class="sw"><div class="chip" style="background:#0077B6"></div><div class="name">Pool</div><div class="hex">#0077B6</div></div>
+    <div class="sw"><div class="chip" style="background:#023E8A"></div><div class="name">Pool Deep</div><div class="hex">#023E8A</div></div>
+    <div class="sw"><div class="chip" style="background:#0090D4"></div><div class="name">Pool Mid</div><div class="hex">#0090D4</div></div>
+    <div class="sw"><div class="chip" style="background:#90E0EF"></div><div class="name">Pool Light</div><div class="hex">#90E0EF</div></div>
+    <div class="sw"><div class="chip" style="background:#CAF0F8"></div><div class="name">Pool Pale</div><div class="hex">#CAF0F8</div></div>
+    <div class="sw"><div class="chip" style="background:#E8722E"></div><div class="name">Accent Warm</div><div class="hex">#E8722E</div></div>
+  </div>
 </body>
 </html>

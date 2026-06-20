@@ -1,5 +1,8 @@
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLang } from "../../i18n.jsx";
+import { getInstructorColor } from "../../lib/instructorColors.js";
 import { getWeekBounds, isToday, toLocalDateStr } from "../../lib/lessonDates.js";
+import { SegmentedControl, Button } from "../ui/ds/index.js";
 
 const MONTH_NAMES = {
   he: ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"],
@@ -25,34 +28,78 @@ function formatTitle(view, anchorDate, locale, t, fmtDateDay) {
   return t("scheduleTitleDay", { date: fmtDateDay(toLocalDateStr(anchorDate)) });
 }
 
-export default function ScheduleToolbar({ view, anchorDate, onViewChange, onNavigate, onToday }) {
-  const { t, locale, fmtDateDay } = useLang();
+function shortName(name = "") {
+  return name.trim().split(/\s+/)[0] || name;
+}
+
+export default function ScheduleToolbar({
+  view,
+  anchorDate,
+  instructors = [],
+  showLegend = false,
+  hideToday = false,
+  onViewChange,
+  onNavigate,
+  onToday,
+}) {
+  const { t, locale, fmtDateDay, dir } = useLang();
   const title = formatTitle(view, anchorDate, locale, t, fmtDateDay);
-  const showToday = !isToday(anchorDate);
+  const showToday = !hideToday && !isToday(anchorDate);
+  const PrevIcon = dir === "rtl" ? ChevronRight : ChevronLeft;
+  const NextIcon = dir === "rtl" ? ChevronLeft : ChevronRight;
+
+  const viewOptions = [
+    { value: "day", label: t("viewDay") },
+    { value: "week", label: t("viewWeek") },
+    { value: "month", label: t("viewMonth") },
+  ];
 
   return (
     <div className="schedule-toolbar">
-      <div className="schedule-toolbar-row">
-        <div className="schedule-nav">
-          <button type="button" className="schedule-nav-btn" onClick={() => onNavigate(-1)} aria-label="prev">◀</button>
-          <button type="button" className="schedule-nav-btn" onClick={() => onNavigate(1)} aria-label="next">▶</button>
+      <div className="schedule-toolbar-row schedule-toolbar-row--primary">
+        <div className="schedule-toolbar-start">
+          <div className="schedule-nav">
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label="prev"
+              onClick={() => onNavigate(-1)}
+              icon={<PrevIcon size={16} aria-hidden />}
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label="next"
+              onClick={() => onNavigate(1)}
+              icon={<NextIcon size={16} aria-hidden />}
+            />
+          </div>
+          <span className="schedule-title">{title}</span>
+          {showLegend && instructors.length > 0 && (
+            <div className="schedule-legend schedule-legend--inline">
+              {instructors.map((inst) => (
+                <span key={inst.id} className="schedule-legend-pill">
+                  <span
+                    className="schedule-legend-dot"
+                    style={{ background: getInstructorColor(inst.id) }}
+                  />
+                  {shortName(inst.name)}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
-        <div className="schedule-title">{title}</div>
-        {showToday && (
-          <button type="button" className="schedule-today-btn" onClick={onToday}>{t("today")}</button>
-        )}
-      </div>
-      <div className="schedule-view-switch">
-        {["day", "week", "month"].map(v => (
-          <button
-            key={v}
-            type="button"
-            className={`schedule-view-btn ${view === v ? "active" : ""}`}
-            onClick={() => onViewChange(v)}
-          >
-            {t(v === "day" ? "viewDay" : v === "week" ? "viewWeek" : "viewMonth")}
-          </button>
-        ))}
+        <div className="schedule-toolbar-end">
+          {showToday && (
+            <Button variant="secondary" size="sm" onClick={onToday}>{t("today")}</Button>
+          )}
+          <SegmentedControl
+            options={viewOptions}
+            value={view}
+            onChange={onViewChange}
+            size="sm"
+          />
+        </div>
       </div>
     </div>
   );

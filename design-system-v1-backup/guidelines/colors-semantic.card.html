@@ -1,0 +1,34 @@
+<!-- @dsCard group="Colors" viewport="700x130" name="Semantic Colors" subtitle="Status and feedback — success, danger, warning, info" -->
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-body); background: #fff; padding: 20px 24px; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .group { display: flex; flex-direction: column; gap: 6px; }
+  .chip { padding: 10px 12px; border-radius: var(--radius-card); display: flex; align-items: center; gap: 8px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .label { font-size: var(--text-caption); font-weight: 700; font-family: var(--font-mono); }
+  .hex { font-size: 10px; font-family: var(--font-mono); color: var(--ink-soft); }
+</style>
+</head>
+<body>
+<div class="grid">
+  <div class="group">
+    <div class="chip" style="background:var(--success-bg)"><div class="dot" style="background:var(--success)"></div><div><div class="label" style="color:var(--success)">success</div><div class="hex">#00B894</div></div></div>
+  </div>
+  <div class="group">
+    <div class="chip" style="background:var(--danger-bg)"><div class="dot" style="background:var(--danger)"></div><div><div class="label" style="color:var(--danger)">danger</div><div class="hex">#D63031</div></div></div>
+  </div>
+  <div class="group">
+    <div class="chip" style="background:var(--warn-bg)"><div class="dot" style="background:var(--warn)"></div><div><div class="label" style="color:#b7791f">warning</div><div class="hex">#FDCB6E</div></div></div>
+  </div>
+  <div class="group">
+    <div class="chip" style="background:var(--info-bg)"><div class="dot" style="background:var(--info)"></div><div><div class="label" style="color:var(--info)">info</div><div class="hex">#0984E3</div></div></div>
+  </div>
+</div>
+</body>
+</html>

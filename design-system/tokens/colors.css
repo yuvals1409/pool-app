@@ -1,126 +1,71 @@
 /* ─────────────────────────────────────────────────────────────
-   Stream Line — Color Tokens
-   Light + Dark mode. All colors are pool/water themed.
+   Stream Line — Color Tokens  ·  Notion-light direction
+   Warm off-white canvas, warm-grey borders, pool-blue brand.
+   Light mode only (the workspace is always light).
    ───────────────────────────────────────────────────────────── */
 
 :root {
-  /* ── Brand — Pool Blue ── */
-  --pool:         #0077B6;  /* primary action, links, active state */
-  --pool-deep:    #023E8A;  /* gradient endpoint, hero bands */
-  --pool-mid:     #0090D4;  /* hover states, lighter tints */
-  --pool-light:   #90E0EF;  /* borders on pool surfaces, decorative */
-  --pool-pale:    #CAF0F8;  /* info box backgrounds, lesson info */
-  --pool-faint:   #F0F8FF;  /* page background, subtle fills */
+  /* ── Brand — Pool Blue ramp (preserved from product) ── */
+  --pool:         #0077B6;   /* primary action, links, active */
+  --pool-deep:    #023E8A;   /* headings on color, hero */
+  --pool-mid:     #0090D4;   /* secondary brand */
+  --pool-light:   #90E0EF;   /* light fills, info edges */
+  --pool-pale:    #CAF0F8;   /* pale tint */
+  --pool-wash:    #EAF4FB;   /* selected nav row, info bg (warm-cool) */
+  --pool-press:   #00679E;   /* primary button pressed */
+  --accent-warm:  #E8722E;   /* logo flame accent */
 
-  /* ── Text / Ink ── */
-  --ink:          #012A4A;  /* primary headings + body text */
-  --ink-mid:      #2C6E8A;  /* secondary labels */
-  --ink-soft:     #6BA3BE;  /* tertiary / placeholder */
-  --ink-faint:    rgba(107, 163, 190, 0.5); /* disabled text */
+  /* ── Canvas / Surfaces — warm off-white ── */
+  --canvas:       #FAFAF7;   /* page background — warm paper */
+  --sidebar:      #F6F5F1;   /* flat sidebar fill */
+  --surface:      #FFFFFF;   /* cards, panels, popovers */
+  --surface-sunk: #F4F3EF;   /* inset / well, code blocks */
+  --surface-hover:#F1F0EC;   /* row + item hover */
+  --overlay:      rgba(15, 15, 14, 0.32); /* modal scrim */
 
-  /* ── Surface / Canvas ── */
-  --surface:      #F0F8FF;  /* page canvas, secondary bg */
-  --white:        #FFFFFF;  /* card surface, input bg */
+  /* ── Ink — warm charcoal text ── */
+  --ink:          #32302C;   /* primary text + headings */
+  --ink-mid:      #6B675F;   /* secondary text, labels */
+  --ink-soft:     #9A958B;   /* tertiary, captions, meta */
+  --ink-faint:    #BCB8AE;   /* placeholders, disabled */
 
-  /* ── Semantic — Status ── */
-  --success:      #00B894;
-  --success-bg:   #EAFAF6;
-  --danger:       #D63031;
-  --danger-bg:    #FFF0F0;
-  --warn:         #FDCB6E;
-  --warn-bg:      #FFFBF0;
-  --info:         #0984E3;
-  --info-bg:      #EBF4FF;
+  /* ── Borders — warm grey, hairline ── */
+  --border:        #ECEAE3;  /* default hairline */
+  --border-strong: #DEDBD2;  /* inputs, dividers needing weight */
+  --border-focus:  #0077B6;  /* focus ring color */
 
-  /* ── Border / Separator ── */
-  --border:       #C8E6F0;
-
-  /* ── Badge / Role tokens (light) ── */
-  --badge-pending-fg:    #b7791f;
-  --badge-admin-bg:      #EDE9FE;        --badge-admin-fg:      #5B21B6;
-  --badge-owner-bg:      #FDE8FF;        --badge-owner-fg:      #7C3AED;
-  --badge-instructor-bg: rgba(0,119,182,.10);  --badge-instructor-fg: #023E8A;
-  --badge-guard-bg:      rgba(0,184,148,.12);  --badge-guard-fg:      #059669;
-  --badge-office-bg:     #FFF7ED;        --badge-office-fg:     #C2410C;
-  --badge-parent-bg:     #CAF0F8;        --badge-parent-fg:     #023E8A;
-
-  /* ── Accent (complementary) — Warm Orange ── */
-  --accent-warm:  #E17055;  /* used in logo, instructor 4, warm highlights */
-  --accent-teal:  #00CEC9;  /* instructor 8 */
-  --accent-purple:#6C5CE7;  /* instructor 3 */
-
-  /* ── Instructor Schedule Palette ── */
-  --instr-1:      #0077B6;  /* pool blue */
-  --instr-2:      #00B894;  /* teal green */
-  --instr-3:      #6C5CE7;  /* purple */
-  --instr-4:      #E17055;  /* warm orange */
-  --instr-5:      #0984E3;  /* sky blue */
-  --instr-6:      #FDCB6E;  /* amber */
-  --instr-7:      #A29BFE;  /* lavender */
-  --instr-8:      #00CEC9;  /* aqua teal */
-
-  /* ── Apple-semantic aliases (used in components) ── */
-  --label:            var(--ink);
-  --label-secondary:  var(--ink-mid);
-  --label-tertiary:   var(--ink-soft);
-  --bg:               var(--white);
-  --bg-secondary:     var(--surface);
-  --bg-tertiary:      var(--white);
-  --separator:        var(--border);
-  --accent:           var(--pool);
-
-  /* ── Frosted nav materials ── */
-  --nav-bg:           rgba(255, 255, 255, 0.72);
-  --nav-border:       rgba(60, 60, 67, 0.12);
-  --nav-inactive:     rgba(60, 60, 67, 0.6);
+  /* ── Semantic — status ── */
+  --success:    #2E9E6B;   --success-bg: #ECF7F0;   --success-border: #CDE9D9;
+  --danger:     #D14343;   --danger-bg:  #FCF0EF;   --danger-border:  #F2D4D1;
+  --warn:       #C9881E;   --warn-bg:    #FBF3E2;   --warn-border:    #EEDFBE;
+  --info:       #0077B6;   --info-bg:    #EAF4FB;   --info-border:    #CDE4F3;
 
   /* ── On-color text ── */
-  --on-primary:   #ffffff;
-  --on-danger:    #ffffff;
-  --on-success:   #ffffff;
-}
+  --on-primary:   #FFFFFF;
+  --on-danger:    #FFFFFF;
+  --on-success:   #FFFFFF;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --pool:         #0a84ff;
-    --pool-deep:    #0066cc;
-    --pool-mid:     #2196f3;
-    --pool-light:   #3a9ee8;
-    --pool-pale:    #1c2c3e;
-    --pool-faint:   #111a25;
-    --surface:      #1c1c1e;
-    --white:        #2c2c2e;
-    --ink:          rgba(255, 255, 255, 0.92);
-    --ink-mid:      rgba(235, 235, 245, 0.75);
-    --ink-soft:     rgba(235, 235, 245, 0.55);
-    --ink-faint:    rgba(235, 235, 245, 0.3);
-    --success:      #30d158;
-    --success-bg:   rgba(48, 209, 88, 0.15);
-    --danger:       #ff453a;
-    --danger-bg:    rgba(255, 69, 58, 0.15);
-    --warn:         #ff9f0a;
-    --warn-bg:      rgba(255, 159, 10, 0.15);
-    --info:         #64d2ff;
-    --info-bg:      rgba(100, 210, 255, 0.15);
-    --border:       rgba(84, 84, 88, 0.45);
+  /* ── Role / Badge palette (warm-light, soft tints) ── */
+  --badge-neutral-bg: #EFEEE9;            --badge-neutral-fg: #6B675F;
+  --badge-owner-bg:   #F1ECFB;            --badge-owner-fg:   #6D43C4;
+  --badge-admin-bg:   #EDE9FB;            --badge-admin-fg:   #5B47C0;
+  --badge-instructor-bg: #EAF4FB;         --badge-instructor-fg: #0A5E92;
+  --badge-guard-bg:   #ECF7F0;            --badge-guard-fg:   #1F7F55;
+  --badge-office-bg:  #FCF0E6;            --badge-office-fg:  #B4541C;
+  --badge-parent-bg:  #FBF3E2;            --badge-parent-fg:  #9A6A12;
 
-    /* ── Badge / Role tokens (dark) ── */
-    --badge-pending-fg:    #ffd166;
-    --badge-admin-bg:      rgba(167,139,250,.18); --badge-admin-fg:      #c4b5fd;
-    --badge-owner-bg:      rgba(192,132,252,.18); --badge-owner-fg:      #e9d5ff;
-    --badge-instructor-bg: rgba(10,132,255,.20);  --badge-instructor-fg: #7cc0ff;
-    --badge-guard-bg:      rgba(48,209,88,.20);   --badge-guard-fg:      #5be584;
-    --badge-office-bg:     rgba(251,146,60,.20);  --badge-office-fg:     #fdba74;
-    --badge-parent-bg:     rgba(10,132,255,.18);  --badge-parent-fg:     #7cc0ff;
-    --label:        rgba(255, 255, 255, 0.92);
-    --label-secondary: rgba(235, 235, 245, 0.6);
-    --label-tertiary:  rgba(235, 235, 245, 0.3);
-    --bg:           #000000;
-    --bg-secondary: #1c1c1e;
-    --bg-tertiary:  #2c2c2e;
-    --separator:    rgba(84, 84, 88, 0.6);
-    --nav-bg:       rgba(28, 28, 30, 0.82);
-    --nav-border:   rgba(84, 84, 88, 0.5);
-    --nav-inactive: rgba(235, 235, 245, 0.6);
-  }
+  /* ── Instructor schedule palette (8) ── */
+  --instr-1: #0077B6;  --instr-2: #2E9E6B;  --instr-3: #6C5CE7;  --instr-4: #E8722E;
+  --instr-5: #0984E3;  --instr-6: #C9881E;  --instr-7: #8E7CFF;  --instr-8: #15B4AC;
+
+  /* ── Semantic aliases ── */
+  --text-primary:    var(--ink);
+  --text-secondary:  var(--ink-mid);
+  --text-tertiary:   var(--ink-soft);
+  --text-placeholder:var(--ink-faint);
+  --text-link:       var(--pool);
+  --surface-card:    var(--surface);
+  --surface-page:    var(--canvas);
+  --separator:       var(--border);
+  --accent:          var(--pool);
 }

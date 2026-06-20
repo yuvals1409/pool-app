@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle, Plus } from "lucide-react";
 import QRCode from "qrcode";
 import jsQR from "jsqr";
 import AnimatedToast from "./components/ui/AnimatedToast.jsx";
@@ -15,6 +15,7 @@ import {
 import { supabase, ensureWeeklyLessonsGenerated, ensureWeeklySessionsGenerated, ensureAccessPassesGenerated, markLessonNotified } from "./lib/supabase.js";
 import {
   isOwner, canManage, canCreateLesson, canScan, canViewSchedule, canAccessOffice, canMarkAttendance,
+  canEditSchedule,
   ACTIVE_USER_ROLE_ORDER, assignableRoles, canRevokeUser,
 } from "./lib/permissions.js";
 import {
@@ -52,6 +53,8 @@ import {
 import { markLessonScanAttendance } from "./lib/attendance.js";
 import { getOAuthRedirectUrl } from "./lib/authRedirect.js";
 import { useIsDesktop } from "./lib/useBreakpoint.js";
+import AppWorkspaceShell from "./components/layout/AppWorkspaceShell.jsx";
+import { Button } from "./components/ui/ds/index.js";
 
 const PRIORITY_TABS = new Set(["schedule", "office", "admin"]);
 
@@ -1345,6 +1348,7 @@ export default function App() {
   const [attendanceFocus, setAttendanceFocus] = useState(null);
   const reducedMotion = useReducedMotion();
   const isDesktop = useIsDesktop();
+  const scheduleRef = useRef(null);
   const toast = useToast();
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -1593,6 +1597,7 @@ export default function App() {
       case "guard":      return <GuardTab toast={toast} />;
       case "schedule":   return (
         <ScheduleTab
+          ref={scheduleRef}
           profile={profile}
           toast={toast}
           onMarkAttendance={handleMarkAttendanceFromSchedule}
@@ -1606,22 +1611,115 @@ export default function App() {
 
   const useNarrowContent = isDesktop && !PRIORITY_TABS.has(tab);
 
+  const activeTabMeta = allTabs.find(ti => ti.id === tab);
+  const topBarTitle = activeTabMeta?.label || t("tabSchedule");
+  const topBarSubtitle = tab === "schedule" ? t("scheduleSub") : null;
+
+  const scheduleTopBarActions = tab === "schedule" && isDesktop ? (
+    <>
+      <Button variant="secondary" size="sm" onClick={() => scheduleRef.current?.goToday()}>
+        {t("today")}
+      </Button>
+      {canEditSchedule(profile) && (
+        <Button
+          variant="primary"
+          size="sm"
+          icon={<Plus size={15} aria-hidden />}
+          onClick={() => scheduleRef.current?.openCreateLesson()}
+        >
+          {t("newLesson")}
+        </Button>
+      )}
+    </>
+  ) : null;
+
+  const topBarTrailing = isDesktop ? (
+    <>
+      <LanguageSwitcher compact />
+      <button type="button" className="btn-logout" onClick={logout}>{t("logout")}</button>
+    </>
+  ) : null;
+
+  const tabPanel = (
+    <AnimatePresence mode="popLayout" custom={tabDirection} initial={false}>
+      <motion.div
+        key={tab}
+        custom={tabDirection}
+        className={`tab-panel${useNarrowContent ? " content-narrow" : ""}`}
+        variants={{
+          enter: (motionDir) => ({
+            opacity: 0,
+            x: slideOffset(motionDir),
+          }),
+          center: { opacity: 1, x: 0 },
+          exit: (motionDir) => ({
+            opacity: 0,
+            x: slideOffset(-motionDir),
+          }),
+        }}
+        initial="enter"
+        animate="center"
+        exit="exit"
+        transition={tabTransition}
+      >
+        {renderActiveTab()}
+      </motion.div>
+    </AnimatePresence>
+  );
+
   return (
     <>
       <div className={`app${isDesktop ? " app--desktop" : ""}`} dir={dir}>
-        {isDesktop && (
-          <aside className="app-sidebar">
-            <div className="app-sidebar-logo">
-              <BrandLogo height={28} /> {t("neveOz")}
+        {isDesktop ? (
+          <AppWorkspaceShell
+            tabs={allTabs}
+            activeTab={tab}
+            onTabChange={goToTab}
+            profile={profile}
+            brandTitle={t("neveOz")}
+            brandSubtitle={VENUE_NAME}
+            roleLabel={roleLabel(profile.role, isOwner(profile))}
+            topBarTitle={topBarTitle}
+            topBarSubtitle={topBarSubtitle}
+            topBarActions={scheduleTopBarActions}
+            topBarTrailing={topBarTrailing}
+          >
+            {tabPanel}
+          </AppWorkspaceShell>
+        ) : (
+          <>
+            <div className="app-main">
+              <div className="header topbar app-header">
+                <div className="header-top">
+                  <div className="header-logo"><BrandLogo height={32} /> {t("neveOz")}</div>
+                  <div className="topbar-actions">
+                    <LanguageSwitcher compact />
+                    <span className={`badge ${headerRoleBadgeClass(profile.role, { owner: isOwner(profile) })}`}>{roleLabel(profile.role, isOwner(profile))}</span>
+                  </div>
+                </div>
+                <div className="header-user">
+                  {profile.avatar_url
+                    ? <img className="avatar" src={profile.avatar_url} alt="" />
+                    : <div className="avatar-placeholder">{initials(profile.full_name)}</div>
+                  }
+                  <EditableDisplayName profile={profile} onUpdate={setProfile} toast={toast} />
+                  <button className="btn-logout" onClick={logout}>{t("logout")}</button>
+                </div>
+              </div>
+
+              <div className="content tab-stage">
+                {tabPanel}
+              </div>
             </div>
-            <nav className="app-sidebar-nav" role="tablist">
+
+            <nav className="nav" role="tablist">
               {allTabs.map(tabItem => (
                 <button
                   key={tabItem.id}
                   type="button"
                   role="tab"
                   aria-selected={tab === tabItem.id}
-                  className={`sidebar-btn ${tab === tabItem.id ? "active" : ""}`}
+                  className={`nav-btn ${tab === tabItem.id ? "active" : ""}`}
                   onClick={() => goToTab(tabItem.id)}
                 >
                   <span className="nav-icon">
@@ -1631,80 +1729,8 @@ export default function App() {
                 </button>
               ))}
             </nav>
-            <div className="sidebar-user">
-              {profile.avatar_url
-                ? <img className="avatar" src={profile.avatar_url} alt="" />
-                : <div className="avatar-placeholder">{initials(profile.full_name)}</div>
-              }
-              <span className="sidebar-user-name">{profile.full_name || profile.email}</span>
-            </div>
-          </aside>
+          </>
         )}
-
-        <div className="app-main">
-          <div className="header topbar app-header">
-            <div className="header-top">
-              <div className="header-logo"><BrandLogo height={32} /> {t("neveOz")}</div>
-              <div className="topbar-actions">
-                <LanguageSwitcher compact />
-                <span className={`badge ${headerRoleBadgeClass(profile.role, { owner: isOwner(profile) })}`}>{roleLabel(profile.role, isOwner(profile))}</span>
-              </div>
-            </div>
-            <div className="header-user">
-              {profile.avatar_url
-                ? <img className="avatar" src={profile.avatar_url} alt="" />
-                : <div className="avatar-placeholder">{initials(profile.full_name)}</div>
-              }
-              <EditableDisplayName profile={profile} onUpdate={setProfile} toast={toast} />
-              <button className="btn-logout" onClick={logout}>{t("logout")}</button>
-            </div>
-          </div>
-
-          <div className="content tab-stage">
-            <AnimatePresence mode="popLayout" custom={tabDirection} initial={false}>
-              <motion.div
-                key={tab}
-                custom={tabDirection}
-                className={`tab-panel${useNarrowContent ? " content-narrow" : ""}`}
-                variants={{
-                  enter: (motionDir) => ({
-                    opacity: 0,
-                    x: slideOffset(motionDir),
-                  }),
-                  center: { opacity: 1, x: 0 },
-                  exit: (motionDir) => ({
-                    opacity: 0,
-                    x: slideOffset(-motionDir),
-                  }),
-                }}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={tabTransition}
-              >
-                {renderActiveTab()}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </div>
-
-        <nav className="nav" role="tablist">
-          {allTabs.map(tabItem => (
-            <button
-              key={tabItem.id}
-              type="button"
-              role="tab"
-              aria-selected={tab === tabItem.id}
-              className={`nav-btn ${tab === tabItem.id ? "active" : ""}`}
-              onClick={() => goToTab(tabItem.id)}
-            >
-              <span className="nav-icon">
-                <TabIcon id={tabItem.id} active={tab === tabItem.id} />
-              </span>
-              {tabItem.label}
-            </button>
-          ))}
-        </nav>
       </div>
       <AnimatedToast msg={toast.msg} visible={toast.visible} />
     </>

@@ -1,38 +1,30 @@
-# Self-Hosting Fonts — Stream Line
+# Fonts — IBM Plex Sans + IBM Plex Mono
 
-For a true offline PWA, host the brand fonts locally instead of loading from the Google Fonts CDN.
+Stream Line uses **IBM Plex Sans** for all UI/display text and **IBM Plex Mono**
+for numeric data (times, phone numbers, IDs, statistics). These are the
+product's real typefaces — the app loads them via the `@fontsource/ibm-plex-*`
+npm packages.
 
-## Fonts used
+## How they load here
 
-| Family | Weights | Role |
-|---|---|---|
-| **IBM Plex Sans Hebrew** | 400, 500, 600, 700 | All Hebrew + Latin UI text |
-| **IBM Plex Mono** | 400, 600 | Times, phone numbers, IDs, numeric data |
+`tokens/fonts.css` pulls both families from the Google Fonts CDN:
 
-## Steps
+```css
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+```
 
-1. **Download the woff2 files** from one of:
-   - [Google Fonts — IBM Plex Sans Hebrew](https://fonts.google.com/specimen/IBM+Plex+Sans+Hebrew)
-   - [Google Fonts — IBM Plex Mono](https://fonts.google.com/specimen/IBM+Plex+Mono)
-   - [google-webfonts-helper](https://gwfh.mranftl.com/fonts) (easiest — pick weights, download woff2 zip)
-   - npm: `@fontsource/ibm-plex-sans-hebrew` and `@fontsource/ibm-plex-mono`
+## Self-hosting (offline / PWA)
 
-2. **Place them in this folder** with these exact names (referenced by `tokens/typography.css`):
+For an offline build, download the `.woff2` files and replace the `@import`
+with local `@font-face` rules:
 
-   ```
-   fonts/
-   ├── IBMPlexSansHebrew-Regular.woff2    (400)
-   ├── IBMPlexSansHebrew-Medium.woff2     (500)
-   ├── IBMPlexSansHebrew-SemiBold.woff2   (600)
-   ├── IBMPlexSansHebrew-Bold.woff2       (700)
-   ├── IBMPlexMono-Regular.woff2          (400)
-   └── IBMPlexMono-SemiBold.woff2         (600)
-   ```
+1. Get the files from <https://fonts.google.com/specimen/IBM+Plex+Sans> and
+   <https://fonts.google.com/specimen/IBM+Plex+Mono> (or `npm i @fontsource/ibm-plex-sans @fontsource/ibm-plex-mono`).
+2. Drop the woff2 files in `fonts/`.
+3. Replace the `@import` in `tokens/fonts.css` with `@font-face` blocks pointing
+   at the local files (weights 400/500/600/700 sans, 400/500/600 mono).
 
-3. **In `tokens/typography.css`:**
-   - Uncomment the `@font-face` block.
-   - Remove (or keep as last-resort fallback) the `@import url("https://fonts.googleapis.com…")` line.
+## Hebrew (RTL product surfaces)
 
-That's it — the `--font-body`, `--font-hebrew`, and `--font-mono` tokens already point at these family names.
-
-> **Note:** the `@font-face` rules use `local()` first, so if a visitor already has IBM Plex installed it is used with zero download; otherwise the self-hosted woff2 loads.
+The live product is Hebrew RTL and uses **IBM Plex Sans Hebrew** — see the
+`--font-hebrew` token. Add it the same way when building Hebrew screens.

@@ -1,6 +1,7 @@
 /* ─────────────────────────────────────────────────────────────
-   Stream Line — Spacing Tokens
-   8-point grid. --space-N = N×4px (space-1=4, space-2=8…)
+   Stream Line — Spacing Tokens  ·  8-point grid
+   Notion-like rhythm: generous section padding (24–32px),
+   tight control padding (6–12px).
    ───────────────────────────────────────────────────────────── */
 :root {
   --space-0:  0px;
@@ -15,4 +16,13 @@
   --space-10: 64px;
   --space-12: 80px;
   --space-16: 96px;
+
+  /* ── Semantic spacing ── */
+  --gap-control:   8px;    /* between inline controls */
+  --gap-stack:     12px;   /* between stacked fields */
+  --pad-control:   8px 12px;
+  --pad-card:      20px 24px;
+  --pad-section:   32px;
+  --content-max:   1080px; /* max content column */
+  --sidebar-w:     248px;  /* flat sidebar width */
 }

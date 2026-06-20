@@ -1,0 +1,42 @@
+/* Legacy token aliases for screens not yet migrated to DS v2 */
+:root {
+  --bg: var(--surface);
+  --bg-secondary: var(--canvas);
+  --bg-tertiary: var(--surface-sunk);
+  --white: var(--surface);
+  --label: var(--ink);
+  --label-secondary: var(--ink-mid);
+  --label-tertiary: var(--ink-soft);
+  --pool-pale: var(--pool-wash);
+  --pool-faint: var(--canvas);
+  --font-body: var(--font-sans);
+  --accent: var(--pool);
+
+  --text-headline: var(--text-title-3);
+  --text-subhead: var(--text-base);
+  --text-footnote: var(--text-sm);
+  --text-caption: var(--text-xs);
+  --text-title1: var(--text-title-1);
+  --text-title2: var(--text-title-2);
+  --text-micro: var(--text-micro);
+
+  --tracking-body: var(--tracking-tight);
+  --radius-card: var(--radius-md);
+  --radius-control: var(--radius);
+  --shadow-btn: var(--shadow-sm);
+  --shadow-btn-hover: var(--shadow);
+  --shadow-lg: var(--shadow-md);
+
+  --nav-bg: var(--surface);
+  --nav-border: var(--border);
+  --nav-inactive: var(--ink-soft);
+
+  --badge-active-bg: var(--success-bg);
+  --badge-active-fg: var(--success);
+  --badge-pending-bg: var(--warn-bg);
+  --badge-pending-fg: var(--warn);
+  --badge-used-bg: var(--danger-bg);
+  --badge-used-fg: var(--danger);
+  --badge-cancelled-bg: var(--danger-bg);
+  --badge-cancelled-fg: var(--danger);
+}

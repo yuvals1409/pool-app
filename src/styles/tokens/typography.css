@@ -1,38 +1,42 @@
 /* ─────────────────────────────────────────────────────────────
    Stream Line — Typography Tokens
-   IBM Plex loaded via @fontsource in main.jsx (offline PWA).
+   IBM Plex Sans (UI + display) · IBM Plex Mono (numeric / data).
+   These are the product's real typefaces. @font-face in fonts.css.
    ───────────────────────────────────────────────────────────── */
 
 :root {
-  --font-body:    -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
-                  "IBM Plex Sans Hebrew", Heebo, sans-serif;
-  --font-hebrew:  "IBM Plex Sans Hebrew", Heebo, -apple-system, sans-serif;
-  --font-mono:    ui-monospace, "IBM Plex Mono", "SF Mono", "Menlo", monospace;
+  --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
+               system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  /* Hebrew product surfaces use this stack (RTL) */
+  --font-hebrew: "IBM Plex Sans Hebrew", "IBM Plex Sans", Heebo, sans-serif;
 
-  --text-large-title: 2.125rem;
-  --text-title1:      1.75rem;
-  --text-title2:      1.375rem;
-  --text-headline:    1.0625rem;
-  --text-body:        1.0625rem;
-  --text-subhead:     0.9375rem;
-  --text-footnote:    0.8125rem;
-  --text-caption:     0.75rem;
-  --text-micro:       0.6875rem;
+  /* ── Type scale (Notion-like, restrained) ── */
+  --text-display: 2.25rem;   /* 36px — page hero */
+  --text-title-1: 1.75rem;   /* 28px — page title */
+  --text-title-2: 1.375rem;  /* 22px — section title */
+  --text-title-3: 1.125rem;  /* 18px — card / group heading */
+  --text-body:    0.9375rem; /* 15px — default body */
+  --text-base:    0.875rem;  /* 14px — dense UI, table cells */
+  --text-sm:      0.8125rem; /* 13px — labels, meta */
+  --text-xs:      0.75rem;   /* 12px — captions, badges */
+  --text-micro:   0.6875rem; /* 11px — overline / tiny meta */
 
-  --weight-light:     300;
-  --weight-regular:   400;
-  --weight-medium:    500;
-  --weight-semibold:  600;
-  --weight-bold:      700;
+  /* ── Weights ── */
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
 
-  --tracking-body:    -0.022em;
-  --tracking-tight:   -0.03em;
-  --tracking-display: -0.04em;
-  --tracking-caps:    0.06em;
+  /* ── Tracking (tight on display, neutral on body) ── */
+  --tracking-display: -0.02em;
+  --tracking-tight:   -0.012em;
+  --tracking-normal:  0;
+  --tracking-caps:    0.05em;   /* overlines / all-caps labels */
 
-  --leading-tight:    1.2;
-  --leading-snug:     1.33;
-  --leading-normal:   1.45;
-  --leading-relaxed:  1.6;
-  --leading-loose:    1.75;
+  /* ── Line height ── */
+  --leading-tight:   1.2;
+  --leading-snug:    1.35;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.65;
 }

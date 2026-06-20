@@ -1,0 +1,29 @@
+<!-- @dsCard group="Colors" viewport="700x160" name="Brand Palette" subtitle="Pool blue ramp — the core brand color scale" -->
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-body); background: #fff; }
+  .row { display: flex; height: 160px; }
+  .swatch { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; padding: 10px 10px; }
+  .name { font-size: 10px; font-weight: 700; font-family: var(--font-mono); }
+  .hex  { font-size: 10px; font-family: var(--font-mono); opacity: .8; margin-top: 2px; }
+  .light .name, .light .hex { color: var(--ink); }
+  .dark  .name, .dark  .hex { color: rgba(255,255,255,.9); }
+</style>
+</head>
+<body>
+<div class="row">
+  <div class="swatch light" style="background:var(--pool-faint)"><div class="name">--pool-faint</div><div class="hex">#F0F8FF</div></div>
+  <div class="swatch light" style="background:var(--pool-pale)"><div class="name">--pool-pale</div><div class="hex">#CAF0F8</div></div>
+  <div class="swatch light" style="background:var(--pool-light)"><div class="name">--pool-light</div><div class="hex">#90E0EF</div></div>
+  <div class="swatch dark" style="background:var(--pool)"><div class="name">--pool</div><div class="hex">#0077B6</div></div>
+  <div class="swatch dark" style="background:var(--pool-mid)"><div class="name">--pool-mid</div><div class="hex">#0090D4</div></div>
+  <div class="swatch dark" style="background:var(--pool-deep)"><div class="name">--pool-deep</div><div class="hex">#023E8A</div></div>
+  <div class="swatch dark" style="background:var(--ink)"><div class="name">--ink</div><div class="hex">#012A4A</div></div>
+</div>
+</body>
+</html>

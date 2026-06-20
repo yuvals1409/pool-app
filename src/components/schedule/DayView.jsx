@@ -5,8 +5,8 @@ import {
 import { eventDurationMinutes } from "../../lib/scheduleEvents.js";
 import LessonBlock from "./LessonBlock.jsx";
 
-const SLOT_H = 24;
-const SLOT_GAP = 1;
+const SLOT_H = 27;
+const SLOT_GAP = 0;
 
 function slotTime(hour, half) {
   const m = half ? 30 : 0;
@@ -55,7 +55,7 @@ export default function DayView({
           <div className={`time-col-header ${today ? "today" : ""}`}>
             {fmtDateDay(dateStr)}
           </div>
-          <div className="time-col-body">
+          <div className={`time-col-body${today ? " today" : ""}`}>
             {SCHEDULE_HOURS.flatMap(h =>
               [0, 1].map(half => {
                 const time = slotTime(h, half);
@@ -80,10 +80,9 @@ export default function DayView({
                   onClick={onLessonClick}
                   style={{
                     position: "absolute",
-                    left: 3,
-                    right: 3,
-                    top: slotTop(startSlot),
-                    height: Math.max(lessonHeight(eventDurationMinutes(lesson)), SLOT_H),
+                    insetInline: 3,
+                    top: slotTop(startSlot) + 1,
+                    height: Math.max(lessonHeight(eventDurationMinutes(lesson)), SLOT_H) - 3,
                     zIndex: 2,
                   }}
                 />

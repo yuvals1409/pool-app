@@ -1,0 +1,13 @@
+/* ─────────────────────────────────────────────────────────────
+   Stream Line — Border Radius Tokens
+   ───────────────────────────────────────────────────────────── */
+:root {
+  --radius-xs:    4px;   /* inline tags, schedule blocks */
+  --radius-sm:    8px;   /* small chips, compact buttons */
+  --radius:       10px;  /* controls: buttons, inputs, segmented */
+  --radius-control: 10px; /* alias for --radius */
+  --radius-card:  16px;  /* cards, bottom sheets, modal */
+  --radius-xl:    20px;  /* large panels, landing cards */
+  --radius-2xl:   24px;  /* hero cards, registration forms */
+  --radius-pill:  999px; /* pills, tags, nav chips, circular */
+}

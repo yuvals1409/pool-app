@@ -1,34 +1,24 @@
-<!-- @dsCard group="Colors" viewport="700x130" name="Semantic Colors" subtitle="Status and feedback — success, danger, warning, info" -->
+<!-- @dsCard group="Colors" viewport="700x180" name="Semantic — Status" subtitle="Success · Danger · Warn · Info with soft tints" -->
 <!DOCTYPE html>
-<html dir="rtl" lang="he">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <link rel="stylesheet" href="../styles.css">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--font-body); background: #fff; padding: 20px 24px; }
-  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-  .group { display: flex; flex-direction: column; gap: 6px; }
-  .chip { padding: 10px 12px; border-radius: var(--radius-card); display: flex; align-items: center; gap: 8px; }
-  .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-  .label { font-size: var(--text-caption); font-weight: 700; font-family: var(--font-mono); }
-  .hex { font-size: 10px; font-family: var(--font-mono); color: var(--ink-soft); }
+  body { margin: 0; background: var(--canvas); }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; padding: 24px 28px; }
+  .cell { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; background: var(--surface); }
+  .solid { height: 42px; display: flex; align-items: center; padding: 0 14px; color: #fff; font-size: 13px; font-weight: 600; }
+  .tint { padding: 8px 14px; font-size: 12px; }
+  .hex { font-family: var(--font-mono); font-size: 11px; }
 </style>
 </head>
 <body>
-<div class="grid">
-  <div class="group">
-    <div class="chip" style="background:var(--success-bg)"><div class="dot" style="background:var(--success)"></div><div><div class="label" style="color:var(--success)">success</div><div class="hex">#00B894</div></div></div>
+  <div class="grid">
+    <div class="cell"><div class="solid" style="background:#2E9E6B">Success</div><div class="tint" style="background:#ECF7F0;color:#2E9E6B"><span class="hex">#2E9E6B</span></div></div>
+    <div class="cell"><div class="solid" style="background:#D14343">Danger</div><div class="tint" style="background:#FCF0EF;color:#D14343"><span class="hex">#D14343</span></div></div>
+    <div class="cell"><div class="solid" style="background:#C9881E">Warn</div><div class="tint" style="background:#FBF3E2;color:#C9881E"><span class="hex">#C9881E</span></div></div>
+    <div class="cell"><div class="solid" style="background:#0077B6">Info</div><div class="tint" style="background:#EAF4FB;color:#0077B6"><span class="hex">#0077B6</span></div></div>
   </div>
-  <div class="group">
-    <div class="chip" style="background:var(--danger-bg)"><div class="dot" style="background:var(--danger)"></div><div><div class="label" style="color:var(--danger)">danger</div><div class="hex">#D63031</div></div></div>
-  </div>
-  <div class="group">
-    <div class="chip" style="background:var(--warn-bg)"><div class="dot" style="background:var(--warn)"></div><div><div class="label" style="color:#b7791f">warning</div><div class="hex">#FDCB6E</div></div></div>
-  </div>
-  <div class="group">
-    <div class="chip" style="background:var(--info-bg)"><div class="dot" style="background:var(--info)"></div><div><div class="label" style="color:var(--info)">info</div><div class="hex">#0984E3</div></div></div>
-  </div>
-</div>
 </body>
 </html>

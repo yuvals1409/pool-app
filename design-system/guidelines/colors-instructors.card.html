@@ -1,28 +1,27 @@
-<!-- @dsCard group="Colors" viewport="700x100" name="Instructor Palette" subtitle="8-color hash-assigned palette for schedule blocks" -->
+<!-- @dsCard group="Colors" viewport="700x150" name="Instructor Palette" subtitle="8 distinct hues for schedule blocks" -->
 <!DOCTYPE html>
-<html dir="rtl" lang="he">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <link rel="stylesheet" href="../styles.css">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--font-body); background: #fff; padding: 18px 24px; }
-  .row { display: flex; gap: 10px; flex-wrap: wrap; }
-  .chip { display: flex; flex-direction: column; align-items: center; gap: 5px; }
-  .dot { width: 36px; height: 36px; border-radius: var(--radius-sm); border: 1.5px solid rgba(0,0,0,.08); }
-  .label { font-size: 10px; font-family: var(--font-mono); color: var(--ink-soft); }
+  body { margin: 0; background: var(--canvas); }
+  .row { display: flex; gap: 10px; padding: 28px; flex-wrap: wrap; }
+  .sw { text-align: center; }
+  .chip { width: 70px; height: 56px; border-radius: var(--radius-sm); border: 1px solid rgba(0,0,0,0.06); }
+  .hex { font-family: var(--font-mono); font-size: 10px; color: var(--ink-soft); margin-top: 6px; }
 </style>
 </head>
 <body>
-<div class="row">
-  <div class="chip"><div class="dot" style="background:#0077B6"></div><div class="label">instr-1</div></div>
-  <div class="chip"><div class="dot" style="background:#00B894"></div><div class="label">instr-2</div></div>
-  <div class="chip"><div class="dot" style="background:#6C5CE7"></div><div class="label">instr-3</div></div>
-  <div class="chip"><div class="dot" style="background:#E17055"></div><div class="label">instr-4</div></div>
-  <div class="chip"><div class="dot" style="background:#0984E3"></div><div class="label">instr-5</div></div>
-  <div class="chip"><div class="dot" style="background:#FDCB6E"></div><div class="label">instr-6</div></div>
-  <div class="chip"><div class="dot" style="background:#A29BFE"></div><div class="label">instr-7</div></div>
-  <div class="chip"><div class="dot" style="background:#00CEC9"></div><div class="label">instr-8</div></div>
-</div>
+  <div class="row">
+    <div class="sw"><div class="chip" style="background:#0077B6"></div><div class="hex">instr-1</div></div>
+    <div class="sw"><div class="chip" style="background:#2E9E6B"></div><div class="hex">instr-2</div></div>
+    <div class="sw"><div class="chip" style="background:#6C5CE7"></div><div class="hex">instr-3</div></div>
+    <div class="sw"><div class="chip" style="background:#E8722E"></div><div class="hex">instr-4</div></div>
+    <div class="sw"><div class="chip" style="background:#0984E3"></div><div class="hex">instr-5</div></div>
+    <div class="sw"><div class="chip" style="background:#C9881E"></div><div class="hex">instr-6</div></div>
+    <div class="sw"><div class="chip" style="background:#8E7CFF"></div><div class="hex">instr-7</div></div>
+    <div class="sw"><div class="chip" style="background:#15B4AC"></div><div class="hex">instr-8</div></div>
+  </div>
 </body>
 </html>

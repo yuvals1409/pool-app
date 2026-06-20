@@ -1,0 +1,10 @@
+/* ─────────────────────────────────────────────────────────────
+   Stream Line — Webfonts
+   IBM Plex Sans + IBM Plex Mono, loaded from Google Fonts CDN.
+   These are the product's real typefaces (@fontsource in the app).
+   For offline / self-hosted use, download the woff2 files from
+   https://fonts.google.com/specimen/IBM+Plex+Sans and replace the
+   @import below with local @font-face rules — see fonts/README.md.
+   ───────────────────────────────────────────────────────────── */
+
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");

@@ -5,7 +5,7 @@
   body:has(.app.app--desktop) {
     width: 100%;
     overflow: hidden;
-    background: var(--surface);
+    background: var(--canvas);
   }
 
   .app.app--desktop {
@@ -18,7 +18,33 @@
     height: 100vh;
     overflow: hidden;
     box-shadow: none;
-    background: var(--surface);
+    background: var(--canvas);
+  }
+
+  .app-workspace-shell {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+  }
+
+  .app-workspace-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--canvas);
+  }
+
+  .app-workspace-content {
+    flex: 1;
+    overflow-y: auto;
+    background: var(--canvas);
+    min-height: 0;
+  }
+
+  .app-workspace-content:not(:has(.schedule-wrap)) {
+    padding: 24px;
   }
 
   .app-sidebar {
@@ -80,7 +106,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    background: var(--surface);
+    background: var(--canvas);
   }
 
   .app--desktop .header.topbar {
@@ -121,7 +147,7 @@
     padding-bottom: 24px;
     overflow-y: auto;
     flex: 1;
-    background: var(--surface);
+    background: var(--canvas);
   }
 
   .app--desktop .nav {

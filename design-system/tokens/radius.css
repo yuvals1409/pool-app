@@ -1,13 +1,12 @@
 /* ─────────────────────────────────────────────────────────────
-   Stream Line — Border Radius Tokens
+   Stream Line — Border Radius  ·  Notion-soft (small radii)
    ───────────────────────────────────────────────────────────── */
 :root {
-  --radius-xs:    4px;   /* inline tags, schedule blocks */
-  --radius-sm:    8px;   /* small chips, compact buttons */
-  --radius:       10px;  /* controls: buttons, inputs, segmented */
-  --radius-control: 10px; /* alias for --radius */
-  --radius-card:  16px;  /* cards, bottom sheets, modal */
-  --radius-xl:    20px;  /* large panels, landing cards */
-  --radius-2xl:   24px;  /* hero cards, registration forms */
-  --radius-pill:  999px; /* pills, tags, nav chips, circular */
+  --radius-xs:   3px;   /* inline chips, schedule blocks */
+  --radius-sm:   4px;   /* small controls, tags */
+  --radius:      6px;   /* buttons, inputs, default control */
+  --radius-md:   8px;   /* cards, menus, popovers */
+  --radius-lg:   12px;  /* modals, large panels */
+  --radius-xl:   16px;  /* hero / feature surfaces */
+  --radius-pill: 999px; /* badges, avatars, pills */
 }

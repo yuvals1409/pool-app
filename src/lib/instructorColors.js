@@ -1,5 +1,10 @@
 const PALETTE_SIZE = 8;
 
+const INSTRUCTOR_COLORS = [
+  "#0077B6", "#2E9E6B", "#6C5CE7", "#E8722E",
+  "#0984E3", "#C9881E", "#8E7CFF", "#15B4AC",
+];
+
 function hashId(id) {
   if (!id) return 0;
   let h = 0;
@@ -10,6 +15,15 @@ function hashId(id) {
 export function getInstructorClass(instructorId) {
   const index = hashId(instructorId) % PALETTE_SIZE;
   return `instr-${index + 1}`;
+}
+
+export function getInstructorColor(instructorId) {
+  return INSTRUCTOR_COLORS[hashId(instructorId) % PALETTE_SIZE];
+}
+
+export function getInstructorColorVar(instructorId) {
+  const index = hashId(instructorId) % PALETTE_SIZE;
+  return `var(--instr-${index + 1})`;
 }
 
 export function buildInstructorMap(lessons) {

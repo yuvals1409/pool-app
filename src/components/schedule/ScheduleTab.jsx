@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, forwardRef, useImperativeHandle } from "react";
 import { AnimatePresence } from "framer-motion";
+import { Calendar } from "lucide-react";
 import { useLang } from "../../i18n.jsx";
 import { supabase } from "../../lib/supabase.js";
 import {
@@ -17,14 +18,14 @@ import ScheduleToolbar from "./ScheduleToolbar.jsx";
 import MonthView from "./MonthView.jsx";
 import WeekView from "./WeekView.jsx";
 import DayView from "./DayView.jsx";
-import InstructorLegend from "./InstructorLegend.jsx";
 import LessonPanel from "./LessonPanel.jsx";
 import SessionSchedulePanel from "./SessionSchedulePanel.jsx";
 import RecurringScopeDialog from "./RecurringScopeDialog.jsx";
 import { useIsDesktop } from "../../lib/useBreakpoint.js";
+import { Spinner, EmptyState } from "../ui/ds/index.js";
 import "./schedule.css";
 
-export default function ScheduleTab({ profile, toast, onMarkAttendance }) {
+const ScheduleTab = forwardRef(function ScheduleTab({ profile, toast, onMarkAttendance }, ref) {
   const i18n = useLang();
   const { t } = i18n;
   const isDesktop = useIsDesktop();
@@ -51,6 +52,14 @@ export default function ScheduleTab({ profile, toast, onMarkAttendance }) {
     }
   };
   const [pendingAction, setPendingAction] = useState(null);
+
+  useImperativeHandle(ref, () => ({
+    goToday: () => setAnchorDate(new Date()),
+    openCreateLesson: () => {
+      if (!canEdit) return;
+      setPanel({ mode: "create", initial: {} });
+    },
+  }), [canEdit]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -228,12 +237,16 @@ export default function ScheduleTab({ profile, toast, onMarkAttendance }) {
 
   const panelLayout = isDesktop ? "inline" : "sheet";
   const hasRailPanel = isDesktop && (panel || sessionPanel);
-  const wrapClass = `schedule-wrap${hasRailPanel ? " schedule-wrap--with-rail" : ""}`;
+  const wrapClass = `schedule-wrap${hasRailPanel ? " schedule-wrap--with-rail" : ""}${isDesktop ? " schedule-wrap--desktop" : ""}`;
 
   return (
     <div className={wrapClass}>
-      <div className="section-title">{t("schedule")}</div>
-      <div className="section-sub">{t("scheduleSub")}</div>
+      {!isDesktop && (
+        <>
+          <div className="section-title">{t("schedule")}</div>
+          <div className="section-sub">{t("scheduleSub")}</div>
+        </>
+      )}
 
       {!canEdit && (
         <div className="schedule-readonly-hint">{t("readOnlySchedule")}</div>
@@ -244,22 +257,29 @@ export default function ScheduleTab({ profile, toast, onMarkAttendance }) {
           <ScheduleToolbar
             view={view}
             anchorDate={anchorDate}
+            instructors={instructorLegend}
+            showLegend={showLegend}
+            hideToday={isDesktop}
             onViewChange={setView}
             onNavigate={navigate}
             onToday={() => setAnchorDate(new Date())}
           />
 
-          {showLegend && <InstructorLegend instructors={instructorLegend} />}
-
           {loading ? (
-            <div style={{ textAlign: "center", padding: 32, color: "var(--ink-soft)" }}>{t("loading")}</div>
+            <div className="schedule-loading">
+              <Spinner size={28} />
+              <span>{t("loading")}</span>
+            </div>
           ) : (
             <>
               {view === "month" && <MonthView {...viewProps} />}
               {view === "week" && <WeekView {...viewProps} />}
               {view === "day" && <DayView {...viewProps} />}
               {lessons.length === 0 && (
-                <div className="schedule-empty">{t("noScheduleEvents")}</div>
+                <EmptyState
+                  icon={<Calendar size={22} aria-hidden />}
+                  title={t("noScheduleEvents")}
+                />
               )}
             </>
           )}
@@ -353,4 +373,6 @@ export default function ScheduleTab({ profile, toast, onMarkAttendance }) {
       )}
     </div>
   );
-}
+});
+
+export default ScheduleTab;

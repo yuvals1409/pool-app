@@ -5,8 +5,10 @@ import {
 import { eventDurationMinutes } from "../../lib/scheduleEvents.js";
 import LessonBlock from "./LessonBlock.jsx";
 
-const SLOT_H = 24;
-const SLOT_GAP = 1;
+const HOUR_ROW = 54;
+const SLOT_H = 27;
+const SLOT_GAP = 0;
+const AXIS_W = 56;
 
 function getWeekDays(anchorDate) {
   const { start } = getWeekBounds(anchorDate);
@@ -42,79 +44,90 @@ export default function WeekView({
   const { t, days: dayNames } = useLang();
   const weekDays = getWeekDays(anchorDate);
   const totalSlots = SCHEDULE_HOURS.length * 2;
+  const gridCols = `${AXIS_W}px repeat(7, 1fr)`;
 
   const byDate = {};
   for (const l of lessons) {
     (byDate[l.lesson_date] ||= []).push(l);
   }
 
-  const axisLabels = SCHEDULE_HOURS.flatMap(h => [
-    { key: `${h}-0`, text: `${String(h).padStart(2, "0")}:00`, half: false },
-    { key: `${h}-1`, text: ":30", half: true },
-  ]);
-
   return (
-    <div className="schedule-calendar time-grid-wrap">
-      <div className="time-grid">
-        <div className="time-axis">
-          <div className="time-axis-corner" />
-          {axisLabels.map(({ key, text, half }) => (
-            <div key={key} className={`time-axis-label ${half ? "time-axis-label-half" : ""}`}>
-              {text}
+    <div className="schedule-calendar week-grid-card">
+      <div className="week-grid-header" style={{ gridTemplateColumns: gridCols }}>
+        <div className="week-grid-corner" />
+        {weekDays.map((day, colIdx) => {
+          const dateStr = toLocalDateStr(day);
+          const today = isToday(day);
+          return (
+            <button
+              key={dateStr}
+              type="button"
+              className={`week-grid-day-header ${today ? "today" : ""}`}
+              onClick={() => onDayClick?.(dateStr)}
+              title={t("openDayView")}
+            >
+              <div className="week-grid-day-name">{dayNames[colIdx]}</div>
+              <div className="num week-grid-day-num">{day.getDate()}</div>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="week-grid-body" style={{ gridTemplateColumns: gridCols }}>
+        <div className="week-grid-axis">
+          {SCHEDULE_HOURS.map((h) => (
+            <div key={h} className="week-grid-hour" style={{ height: HOUR_ROW }}>
+              <span className="num week-grid-hour-label">
+                {String(h).padStart(2, "0")}:00
+              </span>
             </div>
           ))}
         </div>
-        {weekDays.map((day, colIdx) => {
+
+        {weekDays.map((day) => {
           const dateStr = toLocalDateStr(day);
           const today = isToday(day);
           const dayLessons = byDate[dateStr] || [];
 
           return (
-            <div key={dateStr} className="time-col">
-              <button
-                type="button"
-                className={`time-col-header time-col-header-btn ${today ? "today" : ""}`}
-                onClick={() => onDayClick?.(dateStr)}
-                title={t("openDayView")}
-              >
-                {dayNames[colIdx]}
-                <span className="day-num">{day.getDate()}</span>
-              </button>
-              <div className="time-col-body">
-                {SCHEDULE_HOURS.flatMap(h =>
-                  [0, 1].map(half => {
-                    const time = slotTime(h, half);
-                    return (
-                      <div
-                        key={`${dateStr}|${time}`}
-                        className="time-slot"
-                        onClick={() => canEdit && onSlotClick?.(dateStr, time)}
-                      />
-                    );
-                  })
-                )}
-                {dayLessons.map(lesson => {
-                  const mins = timeToMinutes(lesson.start_time);
-                  const startSlot = (mins - 5 * 60) / 30;
-                  if (startSlot < 0 || startSlot >= totalSlots) return null;
+            <div
+              key={dateStr}
+              className={`week-grid-col ${today ? "today" : ""}`}
+            >
+              {SCHEDULE_HOURS.flatMap((h, hi) =>
+                [0, 1].map((half) => {
+                  const time = slotTime(h, half);
+                  const isLastHour = hi === SCHEDULE_HOURS.length - 1 && half === 1;
                   return (
-                    <LessonBlock
-                      key={lesson.id}
-                      lesson={lesson}
-                      t={t}
-                      onClick={onLessonClick}
-                      style={{
-                        position: "absolute",
-                        left: 3,
-                        right: 3,
-                        top: slotTop(startSlot),
-                        height: Math.max(lessonHeight(eventDurationMinutes(lesson)), SLOT_H),
-                        zIndex: 2,
-                      }}
+                    <div
+                      key={`${dateStr}|${time}`}
+                      className={`week-grid-slot${isLastHour ? " week-grid-slot--last" : ""}`}
+                      style={{ height: SLOT_H }}
+                      onClick={() => canEdit && onSlotClick?.(dateStr, time)}
                     />
                   );
-                })}
-              </div>
+                })
+              )}
+              {dayLessons.map((lesson) => {
+                const mins = timeToMinutes(lesson.start_time);
+                const startSlot = (mins - SCHEDULE_HOURS[0] * 60) / 30;
+                if (startSlot < 0 || startSlot >= totalSlots) return null;
+                return (
+                  <LessonBlock
+                    key={lesson.id}
+                    lesson={lesson}
+                    t={t}
+                    onClick={onLessonClick}
+                    style={{
+                      position: "absolute",
+                      insetInline: 3,
+                      top: slotTop(startSlot) + 1,
+                      height: Math.max(lessonHeight(eventDurationMinutes(lesson)), SLOT_H) - 3,
+                      zIndex: 2,
+                    }}
+                  />
+                );
+              })}
             </div>
           );
         })}

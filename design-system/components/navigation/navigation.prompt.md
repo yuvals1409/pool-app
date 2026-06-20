@@ -1,26 +1,17 @@
-Use `TabBar` on mobile (≤767px) and `Sidebar` on desktop (≥768px). Both share the same `NavItem` shape.
+Workspace navigation — the flat sidebar and thin top bar that frame every admin screen.
 
 ```jsx
-// Mobile
-<TabBar
-  tabs={[
-    { id: 'schedule', label: 'לו"ז', icon: <Calendar size={22} /> },
-    { id: 'scan',     label: 'סריקה', icon: <ScanLine size={22} /> },
-    { id: 'admin',    label: 'ניהול', icon: <Settings size={22} /> },
-  ]}
-  activeId={activeTab}
-  onTabChange={setActiveTab}
-/>
-
-// Desktop
 <Sidebar
-  logoSrc="/logo.png"
-  items={navItems}
-  activeId={activeTab}
-  onItemChange={setActiveTab}
-  user={{ name: 'יובל כהן', email: 'yuval@example.com' }}
-/>
+  header={<WorkspaceHeader />}
+  footer={<UserChip />}
+>
+  <NavItem icon={<Calendar/>} label="Schedule" active />
+  <NavItem icon={<Users/>} label="Enrollments" badge="284" />
+  <NavSection>Admin</NavSection>
+  <NavItem icon={<BarChart/>} label="Dashboard" />
+</Sidebar>
+
+<TopBar title="Enrollments" subtitle="Summer 2026" actions={<Button>Add</Button>} />
 ```
 
-Icons from **lucide-react**: `Waves`, `ScanLine`, `Calendar`, `Settings`, `ClipboardList`.
-Tab bar is sticky bottom with frosted glass. Sidebar is sticky inline-start on desktop.
+Active rows use `--pool-wash` fill + pool-blue text; hover is `--surface-hover`. Group rows with `NavSection` overlines. The sidebar is flat (no shadow), separated from content by a single hairline border.

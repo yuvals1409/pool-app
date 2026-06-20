@@ -1,39 +1,21 @@
-<!-- @dsCard group="Type" viewport="700x280" name="Display & Heading Type" subtitle="Large title through headline — tight negative tracking on Hebrew" -->
+<!-- @dsCard group="Type" viewport="700x230" name="Display & Titles" subtitle="IBM Plex Sans — display through section title" -->
 <!DOCTYPE html>
-<html dir="rtl" lang="he">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <link rel="stylesheet" href="../styles.css">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--font-body); background: #fff; padding: 20px 24px; color: var(--ink); }
-  .row { display: flex; align-items: baseline; gap: 14px; padding: 6px 0; border-bottom: 1px solid var(--border); }
-  .row:last-child { border-bottom: none; }
-  .token { font-size: 10px; color: var(--ink-soft); font-family: var(--font-mono); width: 140px; flex-shrink: 0; text-align: left; }
-  .sample-he { letter-spacing: var(--tracking-display); }
-  .meta { font-size: 10px; color: var(--ink-soft); font-family: var(--font-mono); margin-right: auto; white-space: nowrap; }
+  body { margin: 0; background: var(--canvas); padding: 24px 28px; }
+  .spec { display: flex; align-items: baseline; gap: 16px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .spec:last-child { border-bottom: 0; }
+  .lbl { width: 120px; flex: none; font-size: 11px; color: var(--ink-soft); font-family: var(--font-mono); }
+  .t { color: var(--ink); }
 </style>
 </head>
 <body>
-  <div class="row">
-    <div class="token">--text-large-title</div>
-    <div style="font-size:var(--text-large-title);font-weight:700;line-height:1.1;letter-spacing:var(--tracking-display)">לו"ז שיעורים</div>
-    <div class="meta">34px · 700</div>
-  </div>
-  <div class="row">
-    <div class="token">--text-title1</div>
-    <div style="font-size:var(--text-title1);font-weight:700;line-height:1.1;letter-spacing:var(--tracking-tight)">קאנטרי נווה עוז</div>
-    <div class="meta">28px · 700</div>
-  </div>
-  <div class="row">
-    <div class="token">--text-title2</div>
-    <div style="font-size:var(--text-title2);font-weight:700;line-height:1.2">רשימת תלמידים</div>
-    <div class="meta">22px · 700</div>
-  </div>
-  <div class="row">
-    <div class="token">--text-headline</div>
-    <div style="font-size:var(--text-headline);font-weight:600;line-height:1.33">שיעור פרטי — מדריך: יובל</div>
-    <div class="meta">17px · 600</div>
-  </div>
+  <div class="spec"><span class="lbl">display · 36/600</span><span class="t" style="font-size:36px;font-weight:600;letter-spacing:-0.02em">Lessons this week</span></div>
+  <div class="spec"><span class="lbl">title-1 · 28/600</span><span class="t" style="font-size:28px;font-weight:600;letter-spacing:-0.012em">Schedule</span></div>
+  <div class="spec"><span class="lbl">title-2 · 22/600</span><span class="t" style="font-size:22px;font-weight:600;letter-spacing:-0.012em">Enrollments</span></div>
+  <div class="spec"><span class="lbl">title-3 · 18/600</span><span class="t" style="font-size:18px;font-weight:600">Active participants</span></div>
 </body>
 </html>

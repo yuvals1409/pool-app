@@ -1,0 +1,113 @@
+<!-- @dsCard group="Workspace" viewport="1280x720" name="Admin Workspace" subtitle="Notion-light swim-school workspace — schedule, enrollments, dashboard" -->
+<!-- @startingPoint section="Workspace" subtitle="Full admin workspace shell — sidebar, top bar, schedule" viewport="1280x720" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stream Line · Workspace</title>
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--canvas); overflow: hidden; }
+  #root { height: 100vh; }
+  .sl-row { transition: background var(--dur-fast); }
+  .sl-row:hover { background: var(--surface-hover); }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; border: 3px solid var(--canvas); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="data.js"></script>
+<script type="text/babel" src="Schedule.jsx"></script>
+<script type="text/babel" src="Enrollments.jsx"></script>
+<script type="text/babel" src="Dashboard.jsx"></script>
+<script type="text/babel">
+const NS = window.StreamLineDesignSystem_132b60;
+const { Sidebar, NavItem, NavSection, TopBar, Avatar, Button } = NS;
+
+function Icon({ n, s = 17 }) {
+  const ref = React.useRef(null);
+  React.useEffect(() => {
+    if (!ref.current || !window.lucide || !window.lucide.icons[n]) return;
+    ref.current.innerHTML = "";
+    const el = window.lucide.createElement(window.lucide.icons[n]);
+    el.setAttribute("width", s); el.setAttribute("height", s);
+    ref.current.appendChild(el);
+  }, [n, s]);
+  return <span ref={ref} style={{ display: "inline-flex" }} />;
+}
+
+const TABS = {
+  schedule:    { label: "Schedule",    sub: "Summer 2026", view: () => <window.SL_Schedule /> },
+  enrollments: { label: "Enrollments", sub: "Summer 2026", view: () => <window.SL_Enrollments /> },
+  dashboard:   { label: "Dashboard",   sub: "Last 7 days", view: () => <window.SL_Dashboard /> },
+};
+
+function App() {
+  const [tab, setTab] = React.useState("schedule");
+  const T = TABS[tab];
+  const actions = tab === "schedule"
+    ? <><Button variant="secondary" size="sm">Today</Button><Button variant="primary" size="sm" icon={<Icon n="Plus" s={15} />}>New lesson</Button></>
+    : tab === "enrollments"
+    ? <Button variant="secondary" size="sm" icon={<Icon n="Download" s={15} />}>Export</Button>
+    : <Button variant="secondary" size="sm" icon={<Icon n="SlidersHorizontal" s={15} />}>Filters</Button>;
+
+  return (
+    <div style={{ display: "flex", height: "100vh" }}>
+      <Sidebar
+        header={
+          <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "2px 4px" }}>
+            <img src="../../assets/logo.png" style={{ width: 28, height: 28, borderRadius: 6 }} alt="" />
+            <div style={{ lineHeight: 1.1 }}>
+              <div style={{ fontWeight: 600, fontSize: 14, color: "var(--ink)" }}>Stream Line</div>
+              <div style={{ fontSize: 11, color: "var(--ink-soft)" }}>Neve Oz Country Club</div>
+            </div>
+          </div>
+        }
+        footer={
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Avatar name="Yael Admin" size={28} />
+            <div style={{ flex: 1, lineHeight: 1.15 }}>
+              <div style={{ fontSize: 13, color: "var(--ink)", fontWeight: 500 }}>Yael Stern</div>
+              <div style={{ fontSize: 11, color: "var(--ink-soft)" }}>Admin</div>
+            </div>
+            <Icon n="ChevronsUpDown" s={15} />
+          </div>
+        }
+      >
+        <NavItem icon={<Icon n="Calendar" />} label="Schedule" active={tab === "schedule"} onClick={() => setTab("schedule")} />
+        <NavItem icon={<Icon n="Users" />} label="Enrollments" badge="284" active={tab === "enrollments"} onClick={() => setTab("enrollments")} />
+        <NavItem icon={<Icon n="ClipboardCheck" />} label="Attendance" onClick={() => setTab("schedule")} />
+        <NavItem icon={<Icon n="ScanLine" />} label="Scanner" onClick={() => setTab("schedule")} />
+        <NavSection>Admin</NavSection>
+        <NavItem icon={<Icon n="LayoutDashboard" />} label="Dashboard" active={tab === "dashboard"} onClick={() => setTab("dashboard")} />
+        <NavItem icon={<Icon n="Wallet" />} label="Payroll" onClick={() => setTab("dashboard")} />
+        <NavItem icon={<Icon n="Package" />} label="Products" onClick={() => setTab("enrollments")} />
+        <NavItem icon={<Icon n="Settings" />} label="Settings" onClick={() => setTab("dashboard")} />
+      </Sidebar>
+
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <TopBar title={T.label} subtitle={T.sub} actions={actions} />
+        <div style={{ flex: 1, overflowY: "auto" }}>{T.view()}</div>
+      </div>
+    </div>
+  );
+}
+
+function mount() {
+  if (!window.StreamLineDesignSystem_132b60 || !window.SL_Schedule || !window.SL_Enrollments || !window.SL_Dashboard) {
+    return setTimeout(mount, 40);
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+}
+mount();
+</script>
+</body>
+</html>

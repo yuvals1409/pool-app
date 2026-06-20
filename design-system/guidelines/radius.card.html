@@ -1,28 +1,26 @@
-<!-- @dsCard group="Spacing" viewport="700x130" name="Radius & Borders" subtitle="Border radius scale — xs chip through pill CTA" -->
+<!-- @dsCard group="Spacing" viewport="700x190" name="Radius scale" subtitle="3px chips → 16px hero · pill for badges" -->
 <!DOCTYPE html>
-<html dir="rtl" lang="he">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <link rel="stylesheet" href="../styles.css">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--font-body); background: #fff; padding: 20px 24px; }
-  .row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-  .item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-  .box { width: 52px; height: 52px; background: var(--pool-pale); border: 2px solid var(--pool-light); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 4px; }
-  .name { font-size: 10px; font-family: var(--font-mono); color: var(--ink-soft); }
-  .val { font-size: 11px; font-family: var(--font-mono); font-weight: 600; color: var(--pool-deep); }
+  body { margin: 0; background: var(--canvas); padding: 26px 28px; }
+  .row { display: flex; gap: 18px; align-items: flex-end; flex-wrap: wrap; }
+  .item { text-align: center; }
+  .box { width: 64px; height: 64px; background: var(--surface); border: 1px solid var(--border-strong); }
+  .k { font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft); margin-top: 8px; }
 </style>
 </head>
 <body>
-<div class="row">
-  <div class="item"><div class="box" style="border-radius:var(--radius-xs)"></div><div class="name">--radius-xs</div><div class="val">4px</div></div>
-  <div class="item"><div class="box" style="border-radius:var(--radius-sm)"></div><div class="name">--radius-sm</div><div class="val">8px</div></div>
-  <div class="item"><div class="box" style="border-radius:var(--radius)"></div><div class="name">--radius</div><div class="val">10px</div></div>
-  <div class="item"><div class="box" style="border-radius:var(--radius-card)"></div><div class="name">--radius-card</div><div class="val">16px</div></div>
-  <div class="item"><div class="box" style="border-radius:var(--radius-xl)"></div><div class="name">--radius-xl</div><div class="val">20px</div></div>
-  <div class="item"><div class="box" style="border-radius:var(--radius-2xl)"></div><div class="name">--radius-2xl</div><div class="val">24px</div></div>
-  <div class="item"><div class="box" style="border-radius:var(--radius-pill)"></div><div class="name">--radius-pill</div><div class="val">999px</div></div>
-</div>
+  <div class="row">
+    <div class="item"><div class="box" style="border-radius:3px"></div><div class="k">xs·3</div></div>
+    <div class="item"><div class="box" style="border-radius:4px"></div><div class="k">sm·4</div></div>
+    <div class="item"><div class="box" style="border-radius:6px"></div><div class="k">·6</div></div>
+    <div class="item"><div class="box" style="border-radius:8px"></div><div class="k">md·8</div></div>
+    <div class="item"><div class="box" style="border-radius:12px"></div><div class="k">lg·12</div></div>
+    <div class="item"><div class="box" style="border-radius:16px"></div><div class="k">xl·16</div></div>
+    <div class="item"><div class="box" style="border-radius:999px"></div><div class="k">pill</div></div>
+  </div>
 </body>
 </html>

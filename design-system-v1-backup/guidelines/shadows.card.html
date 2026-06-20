@@ -1,0 +1,29 @@
+<!-- @dsCard group="Spacing" viewport="700x130" name="Elevation & Shadows" subtitle="Pool-blue tinted layered shadows — xs through xl" -->
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-body); background: var(--surface); padding: 20px 24px; }
+  .row { display: flex; align-items: center; gap: 20px; }
+  .card { background: #fff; border-radius: var(--radius-card); width: 100px; height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 1px solid var(--border); }
+  .name { font-size: 10px; font-family: var(--font-mono); color: var(--ink-soft); }
+  .flat .card { box-shadow: none; }
+  .xs   .card { box-shadow: var(--shadow-xs);  border: none; }
+  .sm   .card { box-shadow: var(--shadow-sm);  border: none; }
+  .md   .card { box-shadow: var(--shadow);     border: none; }
+  .lg   .card { box-shadow: var(--shadow-lg);  border: none; }
+</style>
+</head>
+<body>
+<div class="row">
+  <div class="flat item"><div class="card"><div class="name">flat</div><div style="font-size:10px;font-family:var(--font-mono);color:var(--border)">border only</div></div></div>
+  <div class="xs item"><div class="card"><div class="name">shadow-xs</div></div></div>
+  <div class="sm item"><div class="card"><div class="name">shadow-sm</div></div></div>
+  <div class="md item"><div class="card"><div class="name">shadow</div></div></div>
+  <div class="lg item"><div class="card"><div class="name">shadow-lg</div></div></div>
+</div>
+</body>
+</html>
