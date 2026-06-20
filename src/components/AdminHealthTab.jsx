@@ -61,7 +61,7 @@ export default function AdminHealthTab({ toast }) {
       toast.show(e.message || t("systemError"));
     }
     setLoading(false);
-  }, [month, toast, t]);
+  }, [month]);
 
   useEffect(() => { load(); }, [load]);
 

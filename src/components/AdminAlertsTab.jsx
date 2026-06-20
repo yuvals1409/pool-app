@@ -36,7 +36,7 @@ export default function AdminAlertsTab({ toast }) {
       toast.show(e.message || t("systemError"));
     }
     setLoading(false);
-  }, [toast, t]);
+  }, []);
 
   useEffect(() => { load(); }, [load]);
 

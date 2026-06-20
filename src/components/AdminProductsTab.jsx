@@ -120,7 +120,7 @@ export default function AdminProductsTab({ toast }) {
     if (error) toast.show(error.message);
     else setProducts(data || []);
     setLoading(false);
-  }, [toast]);
+  }, []);
 
   useEffect(() => { loadMeta(); loadAudienceOptions(); }, [loadMeta, loadAudienceOptions]);
   useEffect(() => { if (seasonId) loadProducts(seasonId); }, [seasonId, loadProducts]);

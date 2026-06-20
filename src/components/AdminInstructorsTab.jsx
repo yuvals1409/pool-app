@@ -87,7 +87,7 @@ export default function AdminInstructorsTab({ toast }) {
       toast.show(e.message || t("systemError"));
     }
     setLoading(false);
-  }, [from, to, filterInstructorId, toast, t]);
+  }, [from, to, filterInstructorId]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -272,7 +272,7 @@ function InstructorDetailPanel({ row, from, to, open, onClose, toast, onSaved })
       toast?.show(e.message || t("systemError"));
     }
     setLoading(false);
-  }, [row, from, to, toast, t]);
+  }, [row, from, to]);
 
   useEffect(() => {
     if (open && row) loadDetail();

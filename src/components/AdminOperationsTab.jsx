@@ -59,7 +59,7 @@ export default function AdminOperationsTab({ toast, onOpenUtilization }) {
       toast.show(e.message || t("systemError"));
     }
     setLoading(false);
-  }, [date, weekRange.from, weekRange.to, toast, t]);
+  }, [date, weekRange.from, weekRange.to]);
 
   useEffect(() => { load(); }, [load]);
 

@@ -79,7 +79,7 @@ export default function AdminStudentsTab({ toast }) {
       toast.show(e.message || t("systemError"));
     }
     setLoading(false);
-  }, [seasonId, toast, t]);
+  }, [seasonId]);
 
   useEffect(() => { load(); }, [load]);
 

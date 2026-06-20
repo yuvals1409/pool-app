@@ -103,7 +103,7 @@ export default function AdminMarketingTab({ toast }) {
       toast.show(e.message || t("systemError"));
     }
     setLoading(false);
-  }, [from, to, toast, t, loadForecast]);
+  }, [from, to, loadForecast]);
 
   useEffect(() => { load(); }, [load]);
 

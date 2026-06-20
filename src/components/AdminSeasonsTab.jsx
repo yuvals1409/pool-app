@@ -31,7 +31,7 @@ export default function AdminSeasonsTab({ toast }) {
     if (error) toast.show(error.message);
     else setRows(data || []);
     setLoading(false);
-  }, [toast]);
+  }, []);
 
   useEffect(() => { load(); }, [load]);
 

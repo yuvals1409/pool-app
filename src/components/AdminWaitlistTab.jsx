@@ -33,7 +33,7 @@ export default function AdminWaitlistTab({ toast }) {
       toast.show(e.message || t("systemError"));
     }
     setLoading(false);
-  }, [toast, t]);
+  }, []);
 
   useEffect(() => { load(); }, [load]);
 

@@ -101,7 +101,7 @@ export default function AdminAssessmentTab({ toast }) {
       .order("start_time", { ascending: false });
     if (error) toast.show(error.message);
     else setSlots(data || []);
-  }, [toast]);
+  }, []);
 
   const loadLeads = useCallback(async () => {
     let q = supabase
@@ -115,7 +115,7 @@ export default function AdminAssessmentTab({ toast }) {
     const { data, error } = await q;
     if (error) toast.show(error.message);
     else setLeads(data || []);
-  }, [leadFilterSlot, leadFilterStatus, leadFilterSource, leadFilterResult, toast]);
+  }, [leadFilterSlot, leadFilterStatus, leadFilterSource, leadFilterResult]);
 
   const loadFunnel = useCallback(async () => {
     try {
@@ -124,7 +124,7 @@ export default function AdminAssessmentTab({ toast }) {
     } catch (e) {
       toast.show(e.message);
     }
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     (async () => {

@@ -68,7 +68,7 @@ export default function AdminFinanceTab({ toast }) {
       toast.show(e.message || t("systemError"));
     }
     setLoading(false);
-  }, [from, to, toast, t]);
+  }, [from, to]);
 
   useEffect(() => { load(); }, [load]);
 

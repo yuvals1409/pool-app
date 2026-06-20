@@ -109,7 +109,7 @@ export default function AdminAttendanceTab({ toast }) {
       toast.show(e.message || t("systemError"));
     }
     setLoading(false);
-  }, [from, to, productId, searchChild, toast, t]);
+  }, [from, to, productId, searchChild]);
 
   const loadSummary = useCallback(async () => {
     setLoading(true);
@@ -120,7 +120,7 @@ export default function AdminAttendanceTab({ toast }) {
       toast.show(e.message || t("systemError"));
     }
     setLoading(false);
-  }, [from, to, groupBy, toast, t]);
+  }, [from, to, groupBy]);
 
   useEffect(() => {
     if (viewMode === "events") loadEvents();

@@ -122,7 +122,7 @@ export default function AdminEnrollmentsTab({ toast }) {
         }
       }
     })();
-  }, [toast]);
+  }, []);
 
   const loadUtilization = useCallback(async (enrollmentRows, productId = null) => {
     const active = (enrollmentRows || []).filter((r) => r.active);
@@ -184,7 +184,7 @@ export default function AdminEnrollmentsTab({ toast }) {
       await loadUtilization(data || [], productId);
     }
     setListLoading(false);
-  }, [toast, loadUtilization]);
+  }, [loadUtilization]);
 
   useEffect(() => {
     if (!searchMode) loadByProduct(selectedProductId, historyFilter);

@@ -97,7 +97,7 @@ export default function AdminInstructorPayrollTab({ toast }) {
     } catch (e) {
       toast.show(e.message || t("systemError"));
     }
-  }, [toast, t]);
+  }, []);
 
   useEffect(() => { loadRates(rateInstructorId); }, [rateInstructorId, loadRates]);
 
@@ -116,7 +116,7 @@ export default function AdminInstructorPayrollTab({ toast }) {
       toast.show(e.message || t("systemError"));
     }
     setLoading(false);
-  }, [from, to, filterInstructorId, toast, t]);
+  }, [from, to, filterInstructorId]);
 
   useEffect(() => { loadSummary(); }, [loadSummary]);
 

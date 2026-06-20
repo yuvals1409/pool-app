@@ -188,7 +188,7 @@ export default function AdminCustomersTab({ toast }) {
       toast.show(e.message || t("systemError"));
     }
     setLoading(false);
-  }, [toast, t]);
+  }, []);
 
   useEffect(() => { load(); }, [load]);
 
@@ -249,7 +249,7 @@ export default function AdminCustomersTab({ toast }) {
         if (productId && !(data || []).some((p) => p.id === productId)) setProductId("");
       }
     })();
-  }, [seasonId, productId, toast]);
+  }, [seasonId, productId]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
