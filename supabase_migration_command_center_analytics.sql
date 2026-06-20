@@ -686,7 +686,7 @@ BEGIN
     SELECT json_agg(row_to_json(t) ORDER BY t.week_start)
     FROM (
       SELECT
-        w.week_start,
+        w.week_start::date AS week_start,
         COUNT(e.id)::int AS enrolled,
         COALESCE(SUM(p.capacity), 0)::int AS capacity,
         ROUND(100.0 * COUNT(e.id) / NULLIF(SUM(p.capacity), 0), 1) AS occupancy_pct
@@ -698,11 +698,11 @@ BEGIN
       CROSS JOIN products p
       LEFT JOIN enrollments e ON e.product_id = p.id
         AND e.active = TRUE
-        AND e.valid_from <= w.week_start + 6
-        AND e.valid_until >= w.week_start
+        AND e.valid_from <= (w.week_start::date + 6)
+        AND e.valid_until >= w.week_start::date
       WHERE p.capacity IS NOT NULL
         AND (v_season_id IS NULL OR p.season_id = v_season_id)
-      GROUP BY w.week_start
+      GROUP BY w.week_start::date
     ) t
   ), '[]'::json);
 END;

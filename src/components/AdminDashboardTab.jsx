@@ -106,7 +106,7 @@ export default function AdminDashboardTab({ toast, onOpenHealth }) {
       toast.show(e.message || t("systemError"));
     }
     setCcLoading(false);
-  }, [seasonId, periodPreset, toast, t]);
+  }, [seasonId, periodPreset]);
 
   const loadLegacy = useCallback(async () => {
     setLegacyLoading(true);
@@ -143,7 +143,7 @@ export default function AdminDashboardTab({ toast, onOpenHealth }) {
       toast.show(e.message || t("systemError"));
     }
     setLegacyLoading(false);
-  }, [from, to, productId, seasonId, toast, t]);
+  }, [from, to, productId, seasonId]);
 
   useEffect(() => { loadCommandCenter(); }, [loadCommandCenter]);
   useEffect(() => { loadLegacy(); }, [loadLegacy]);
