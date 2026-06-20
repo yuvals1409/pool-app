@@ -4,6 +4,7 @@ import {
 } from "../../lib/lessonDates.js";
 import { eventDurationMinutes } from "../../lib/scheduleEvents.js";
 import LessonBlock from "./LessonBlock.jsx";
+import CurrentTimeLine from "./CurrentTimeLine.jsx";
 
 const HOUR_ROW = 54;
 const SLOT_H = 27;
@@ -131,6 +132,7 @@ export default function WeekView({
             </div>
           );
         })}
+        <CurrentTimeLine anchorDate={anchorDate} variant="week" />
       </div>
     </div>
   );

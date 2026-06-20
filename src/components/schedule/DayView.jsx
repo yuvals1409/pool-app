@@ -4,6 +4,7 @@ import {
 } from "../../lib/lessonDates.js";
 import { eventDurationMinutes } from "../../lib/scheduleEvents.js";
 import LessonBlock from "./LessonBlock.jsx";
+import CurrentTimeLine from "./CurrentTimeLine.jsx";
 
 const SLOT_H = 27;
 const SLOT_GAP = 0;
@@ -88,6 +89,7 @@ export default function DayView({
                 />
               );
             })}
+            <CurrentTimeLine anchorDate={anchorDate} variant="day" />
           </div>
         </div>
       </div>

@@ -386,6 +386,35 @@
 
 .schedule-calendar .time-slot:hover { background: rgba(0, 119, 182, 0.04); }
 
+.schedule-now-line {
+  position: absolute;
+  inset-inline-end: 0;
+  height: 2px;
+  background: var(--danger);
+  z-index: 4;
+  pointer-events: none;
+}
+
+.schedule-now-line::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: -4px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--danger);
+  transform: translateY(-50%);
+}
+
+.schedule-now-line--day {
+  inset-inline-start: 0;
+}
+
+.schedule-now-line--week {
+  inset-inline-end: 0;
+}
+
 /* Lesson block — v2 surface card */
 .lesson-block {
   border-radius: var(--radius-sm);
