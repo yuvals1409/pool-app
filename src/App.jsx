@@ -35,6 +35,8 @@ import AdminProductsTab from "./components/AdminProductsTab.jsx";
 import AdminSeasonsTab from "./components/AdminSeasonsTab.jsx";
 import AdminAttendanceTab from "./components/AdminAttendanceTab.jsx";
 import AdminAlertsTab from "./components/AdminAlertsTab.jsx";
+import AdminOperationsTab from "./components/AdminOperationsTab.jsx";
+import AdminHealthTab from "./components/AdminHealthTab.jsx";
 import AdminMarketingTab from "./components/AdminMarketingTab.jsx";
 import AdminUtilizationTab from "./components/AdminUtilizationTab.jsx";
 import AdminDashboardTab from "./components/AdminDashboardTab.jsx";
@@ -1038,9 +1040,11 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
     { id: "marketing", label: t("tabMarketing") },
     { id: "attendance", label: t("tabAttendance") },
     { id: "alerts", label: t("tabAlerts") },
+    { id: "operations", label: t("tabOperations") },
     { id: "utilization", label: t("tabUtilization") },
     { id: "waitlist", label: t("tabWaitlist") },
     { id: "dashboard", label: t("tabDashboard") },
+    { id: "health", label: t("tabHealth") },
     { id: "students", label: t("tabStudents") },
     { id: "finance", label: t("tabFinance") },
     { id: "instructors", label: t("tabInstructorsAnalytics") },
@@ -1098,10 +1102,14 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
         <AdminAttendanceTab toast={toast} />
       ) : adminSection === "alerts" ? (
         <AdminAlertsTab toast={toast} />
+      ) : adminSection === "operations" ? (
+        <AdminOperationsTab toast={toast} onOpenUtilization={() => onAdminSectionChange("utilization")} />
       ) : adminSection === "utilization" ? (
         <AdminUtilizationTab toast={toast} />
       ) : adminSection === "dashboard" ? (
-        <AdminDashboardTab toast={toast} />
+        <AdminDashboardTab toast={toast} onOpenHealth={() => onAdminSectionChange("health")} />
+      ) : adminSection === "health" ? (
+        <AdminHealthTab toast={toast} />
       ) : adminSection === "students" ? (
         <AdminStudentsTab toast={toast} />
       ) : adminSection === "finance" ? (
@@ -1709,9 +1717,11 @@ export default function App() {
     marketing: t("tabMarketing"),
     attendance: t("tabAttendance"),
     alerts: t("tabAlerts"),
+    operations: t("tabOperations"),
     utilization: t("tabUtilization"),
     waitlist: t("tabWaitlist"),
     dashboard: t("tabDashboard"),
+    health: t("tabHealth"),
     students: t("tabStudents"),
     finance: t("tabFinance"),
     instructors: t("tabInstructorsAnalytics"),

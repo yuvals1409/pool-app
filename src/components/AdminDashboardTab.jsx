@@ -38,7 +38,7 @@ function monthAgoStr() {
   return d.toISOString().slice(0, 10);
 }
 
-export default function AdminDashboardTab({ toast }) {
+export default function AdminDashboardTab({ toast, onOpenHealth }) {
   const { t } = useLang();
   const isDesktop = useIsDesktop();
   const [periodPreset, setPeriodPreset] = useState("month");
@@ -258,6 +258,11 @@ export default function AdminDashboardTab({ toast }) {
                 {" · "}{t("ccNewThisMonth")}: {health.new_count ?? 0}
                 {" · "}{t("ccChurnedThisMonth")}: {health.churn_count ?? 0}
               </div>
+              {onOpenHealth && (
+                <Button size="sm" variant="outline" onClick={onOpenHealth}>
+                  {t("healthOpenSettings")}
+                </Button>
+              )}
             </Card>
           </div>
         </>
