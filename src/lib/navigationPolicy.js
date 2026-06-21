@@ -15,6 +15,7 @@ export const ADMIN_SECTION_IDS = [
   "products",
   "pricelist",
   "seasons",
+  "season_planning",
   "assessment",
   "marketing",
   "attendance",
@@ -34,7 +35,7 @@ export const ADMIN_SECTION_IDS = [
 
 export const ADMIN_NAV_GROUPS = [
   { id: "crm", labelKey: "adminGroupCrm", sectionIds: ["customers", "enrollments", "waitlist"] },
-  { id: "catalog", labelKey: "adminGroupCatalog", sectionIds: ["products", "seasons", "pricelist", "assessment"] },
+  { id: "catalog", labelKey: "adminGroupCatalog", sectionIds: ["products", "seasons", "season_planning", "pricelist", "assessment"] },
   { id: "operations", labelKey: "adminGroupOperations", sectionIds: ["operations", "attendance", "utilization", "alerts"] },
   { id: "insights", labelKey: "adminGroupInsights", sectionIds: ["dashboard", "health", "students", "instructors"] },
   { id: "finance", labelKey: "adminGroupFinance", sectionIds: ["finance", "revenue_forecast", "payroll"] },
@@ -49,6 +50,7 @@ const ADMIN_SECTION_LABEL_KEYS = {
   products: "tabProducts",
   pricelist: "tabPriceList",
   seasons: "tabSeasons",
+  season_planning: "tabSeasonPlanning",
   assessment: "tabAssessment",
   marketing: "tabMarketing",
   attendance: "tabAttendance",

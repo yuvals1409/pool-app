@@ -17,6 +17,7 @@ import {
 import { useLang } from "../i18n.jsx";
 import { useIsDesktop } from "../lib/useBreakpoint.js";
 import { seasonOptionLabel } from "../lib/bidi.js";
+import { seasonLifecycle } from "../lib/seasonPlanning.js";
 import GroupFormCard from "./GroupFormCard.jsx";
 import {
   Button,
@@ -223,7 +224,7 @@ export default function AdminProductsTab({ toast }) {
       <div className="filter-bar">
         <Select value={seasonId} onChange={(e) => setSeasonId(e.target.value)} style={{ minWidth: 160 }}>
           {seasons.map((s) => (
-            <option key={s.id} value={s.id}>{seasonOptionLabel(s.name, { active: s.active, activeLabel: t("active") })}</option>
+            <option key={s.id} value={s.id}>{seasonOptionLabel(s.name, { active: s.active, activeLabel: t("active"), planningLabel: seasonLifecycle(s) === "ended" ? t("seasonEnded") : t("seasonPlanning"), lifecycle: seasonLifecycle(s) })}</option>
           ))}
         </Select>
         <Button type="button" variant="primary" size="sm" onClick={() => { resetForm(); setShowForm(true); setFormState(createEmptyFormState()); }}>

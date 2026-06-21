@@ -108,7 +108,7 @@ export default function OfficeTab({ toast }) {
         .select(`
           id, payment_status, valid_until, active,
           participant:participants(id, full_name),
-          product:products(id, name, day_of_week, start_time, end_time, instructor_name, level, level_label, target_audience, gender, schedule_pattern, season_id, product_templates(code))
+          product:products(id, name, day_of_week, start_time, end_time, instructor_name, level, level_label, target_audience, gender, schedule_pattern, season_id, product_templates(code), season:seasons(active))
         `)
         .in("participant_id", [...participantIds])
         .eq("active", true)
@@ -190,9 +190,11 @@ export default function OfficeTab({ toast }) {
           {paymentLabel(status)}
         </Button>
       ))}
-      <Button size="sm" variant="outline" onClick={() => copyTicketLink(row.id)}>
-        {t("copyTicketLink")}
-      </Button>
+      {row.product?.season?.active === true && (
+        <Button size="sm" variant="outline" onClick={() => copyTicketLink(row.id)}>
+          {t("copyTicketLink")}
+        </Button>
+      )}
     </div>
   );
 

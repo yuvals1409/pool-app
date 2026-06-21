@@ -1,0 +1,140 @@
+import { supabase } from "./supabase.js";
+
+const DAY_NUM_TO_NAME = {
+  0: "ראשון",
+  1: "שני",
+  2: "שלישי",
+  3: "רביעי",
+  4: "חמישי",
+  5: "שישי",
+  6: "שבת",
+};
+
+export function productKeyFromRow(product) {
+  if (!product) return "";
+  const day = DAY_NUM_TO_NAME[product.day_of_week] ?? String(product.day_of_week ?? "");
+  const start = String(product.start_time || "").slice(0, 8);
+  const end = String(product.end_time || "").slice(0, 8);
+  return `${day}|${product.instructor_name || ""}|${start}|${end}|${product.name || ""}`;
+}
+
+export function seasonLifecycle(season, today = new Date()) {
+  if (!season) return "unknown";
+  const todayStr = today.toISOString().slice(0, 10);
+  if (season.active) return "active";
+  if (season.end_date && season.end_date < todayStr) return "ended";
+  if (season.start_date && season.start_date > todayStr) return "planning";
+  return "planning";
+}
+
+export function suggestNextSeasonDates(today = new Date()) {
+  const y = today.getFullYear();
+  const m = today.getMonth() + 1;
+  const startYear = m >= 9 ? y + 1 : y;
+  const endYear = startYear + 1;
+  return {
+    name: `${startYear}/${String(endYear).slice(-2)}`,
+    start_date: `${startYear}-09-01`,
+    end_date: `${endYear}-06-30`,
+    kind: "annual",
+  };
+}
+
+export async function listSeasons() {
+  const { data, error } = await supabase
+    .from("seasons")
+    .select("id, name, start_date, end_date, active, kind")
+    .order("start_date", { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getActiveSeason() {
+  const { data, error } = await supabase
+    .from("seasons")
+    .select("id, name, start_date, end_date, active, kind")
+    .eq("active", true)
+    .order("start_date", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function getPlanningSeason() {
+  const today = new Date().toISOString().slice(0, 10);
+  const { data, error } = await supabase
+    .from("seasons")
+    .select("id, name, start_date, end_date, active, kind")
+    .eq("active", false)
+    .eq("kind", "annual")
+    .gt("start_date", today)
+    .order("start_date", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function suggestNextSeason() {
+  const { data, error } = await supabase.rpc("suggest_next_season");
+  if (error) throw error;
+  if (data?.result !== "ok") throw new Error(data?.result || "suggest_failed");
+  return data;
+}
+
+export async function createPlanningSeason({ name, startDate, endDate, kind } = {}) {
+  const { data, error } = await supabase.rpc("create_planning_season", {
+    p_name: name || null,
+    p_start_date: startDate || null,
+    p_end_date: endDate || null,
+    p_kind: kind || "annual",
+  });
+  if (error) throw error;
+  if (data?.result === "duplicate_name") {
+    throw new Error("duplicate_season_name");
+  }
+  if (data?.result !== "ok") throw new Error(data?.result || "create_failed");
+  return data;
+}
+
+export async function cloneSeasonProducts(sourceSeasonId, targetSeasonId) {
+  const { data, error } = await supabase.rpc("clone_season_products", {
+    p_source_season_id: sourceSeasonId,
+    p_target_season_id: targetSeasonId,
+  });
+  if (error) throw error;
+  if (data?.result !== "ok") throw new Error(data?.result || "clone_failed");
+  return data;
+}
+
+export async function carryForwardEnrollments(sourceSeasonId, targetSeasonId, dryRun = false) {
+  const { data, error } = await supabase.rpc("carry_forward_enrollments", {
+    p_source_season_id: sourceSeasonId || null,
+    p_target_season_id: targetSeasonId,
+    p_dry_run: dryRun,
+  });
+  if (error) throw error;
+  if (data?.result !== "ok") throw new Error(data?.result || "carry_forward_failed");
+  return data;
+}
+
+export async function getSeasonPlanningSummary(targetSeasonId, sourceSeasonId = null) {
+  const { data, error } = await supabase.rpc("get_season_planning_summary", {
+    p_target_season_id: targetSeasonId,
+    p_source_season_id: sourceSeasonId || null,
+  });
+  if (error) throw error;
+  if (data?.result !== "ok") throw new Error(data?.result || "summary_failed");
+  return data;
+}
+
+export async function activateSeason(seasonId) {
+  const { data, error } = await supabase.rpc("activate_season", {
+    p_season_id: seasonId,
+  });
+  if (error) throw error;
+  if (data?.result === "already_active") return data;
+  if (data?.result !== "ok") throw new Error(data?.result || "activate_failed");
+  return data;
+}

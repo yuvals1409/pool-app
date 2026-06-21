@@ -6,6 +6,7 @@
  *   node scripts/resync-from-sheets.mjs --annual "/path/to/annual.xlsx" [--dry-run]
  *   node scripts/resync-from-sheets.mjs --summer "/path/to/summer.xlsx" [--dry-run]
  *   node scripts/resync-from-sheets.mjs --both --annual "..." --summer "..."
+ *   node scripts/resync-from-sheets.mjs --annual "..." --season 2026/27 [--dry-run]
  */
 
 import { createClient } from "@supabase/supabase-js";
@@ -16,6 +17,8 @@ import { normalizeName, normalizePhone, normalizeSheetGender } from "./lib/sheet
 import {
   parseAnnualData,
   ANNUAL_SEASON_NAME,
+  configureAnnualSeason,
+  getAnnualSeasonConfig,
   productKey as annualProductKey,
   DAY_MAP,
   matchProductFromPlacement,
@@ -37,6 +40,8 @@ const doAnnual = args.includes("--annual") || args.includes("--both");
 const doSummer = args.includes("--summer") || args.includes("--both");
 const annualPath = args.includes("--annual") ? args[args.indexOf("--annual") + 1] : null;
 const summerPath = args.includes("--summer") ? args[args.indexOf("--summer") + 1] : null;
+const seasonArg = args.includes("--season") ? args[args.indexOf("--season") + 1] : null;
+if (seasonArg) configureAnnualSeason(seasonArg);
 
 function loadEnv() {
   const envPath = resolve(process.cwd(), ".env");
@@ -257,12 +262,14 @@ async function resyncAnnual(xlsxPath) {
   const sheets = loadWorkbook(resolve(xlsxPath));
   const data = parseAnnualData(sheets);
 
+  const annualSeason = getAnnualSeasonConfig();
+
   const { data: season } = await supabase
     .from("seasons")
     .select("id")
-    .eq("name", ANNUAL_SEASON_NAME)
+    .eq("name", annualSeason.name)
     .maybeSingle();
-  if (!season) throw new Error(`Season ${ANNUAL_SEASON_NAME} not found in DB`);
+  if (!season) throw new Error(`Season ${annualSeason.name} not found in DB`);
 
   const { data: dbProducts } = await supabase
     .from("products")

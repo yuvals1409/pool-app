@@ -5,8 +5,12 @@ export function ltrIsolate(text) {
 }
 
 /** Season <option> label — keeps year/name LTR and Hebrew suffix readable. */
-export function seasonOptionLabel(name, { active = false, activeLabel = "" } = {}) {
+export function seasonOptionLabel(name, { active = false, activeLabel = "", planningLabel = "", lifecycle = "" } = {}) {
   const isolated = ltrIsolate(name);
-  if (!active || !activeLabel) return isolated;
-  return `${isolated} (${activeLabel})`;
+  const tags = [];
+  if (active && activeLabel) tags.push(activeLabel);
+  else if (lifecycle === "planning" && planningLabel) tags.push(planningLabel);
+  else if (lifecycle === "ended" && planningLabel) tags.push(planningLabel);
+  if (!tags.length) return isolated;
+  return `${isolated} (${tags.join(", ")})`;
 }

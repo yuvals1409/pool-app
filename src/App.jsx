@@ -34,6 +34,7 @@ import AdminEnrollmentsTab from "./components/AdminEnrollmentsTab.jsx";
 import AdminAssessmentTab from "./components/AdminAssessmentTab.jsx";
 import AdminProductsTab from "./components/AdminProductsTab.jsx";
 import AdminSeasonsTab from "./components/AdminSeasonsTab.jsx";
+import AdminSeasonPlanningTab from "./components/AdminSeasonPlanningTab.jsx";
 import AdminAttendanceTab from "./components/AdminAttendanceTab.jsx";
 import AdminAlertsTab from "./components/AdminAlertsTab.jsx";
 import AdminOperationsTab from "./components/AdminOperationsTab.jsx";
@@ -853,6 +854,7 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
   const { t, roleLabel } = useLang();
   const isDesktop = useIsDesktop();
   const setAdminSection = onAdminSectionChange;
+  const [planningSeasonId, setPlanningSeasonId] = useState(null);
   const [users,    setUsers]    = useState([]);
   const [invites,  setInvites]  = useState([]);
   const [loading,  setLoading]  = useState(true);
@@ -1038,7 +1040,15 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
       ) : adminSection === "pricelist" ? (
         <AdminPriceListTab toast={toast} profile={profile} />
       ) : adminSection === "seasons" ? (
-        <AdminSeasonsTab toast={toast} />
+        <AdminSeasonsTab
+          toast={toast}
+          onOpenPlanning={(id) => {
+            setPlanningSeasonId(id);
+            setAdminSection("season_planning");
+          }}
+        />
+      ) : adminSection === "season_planning" ? (
+        <AdminSeasonPlanningTab toast={toast} initialSeasonId={planningSeasonId} />
       ) : adminSection === "assessment" ? (
         <AdminAssessmentTab toast={toast} />
       ) : adminSection === "marketing" ? (

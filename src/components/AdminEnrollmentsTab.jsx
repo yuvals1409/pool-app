@@ -13,6 +13,8 @@ import { useStudentProfile } from "../lib/StudentProfileContext.jsx";
 import { fmt_time } from "../lib/lessonDates.js";
 import { cancelEnrollment as cancelEnrollmentRpc } from "../lib/waitlist.js";
 import { useIsDesktop } from "../lib/useBreakpoint.js";
+import { seasonOptionLabel } from "../lib/bidi.js";
+import { getPlanningSeason, listSeasons, seasonLifecycle } from "../lib/seasonPlanning.js";
 import {
   PARTICIPANT_GRADES,
   gradeRequired,
@@ -48,7 +50,10 @@ export default function AdminEnrollmentsTab({ toast }) {
   const { openProfile } = useStudentProfile();
   const isDesktop = useIsDesktop();
   const [products, setProducts] = useState([]);
+  const [seasons, setSeasons] = useState([]);
+  const [seasonId, setSeasonId] = useState("");
   const [season, setSeason] = useState(null);
+  const [planningSeason, setPlanningSeason] = useState(null);
   const [selectedProductId, setSelectedProductId] = useState("");
   const [historyFilter, setHistoryFilter] = useState("active");
   const [rows, setRows] = useState([]);
@@ -100,32 +105,50 @@ export default function AdminEnrollmentsTab({ toast }) {
     product:products(id, name, day_of_week, start_time, end_time, instructor_name, level, level_label, target_audience, gender, schedule_pattern, product_templates(code))
   `;
 
+  const seasonIsLive = Boolean(season?.active);
+
+  const loadProductsForSeason = useCallback(async (sid) => {
+    if (!sid) {
+      setProducts([]);
+      return;
+    }
+    const { data: prods, error } = await supabase
+      .from("products")
+      .select("id, name, day_of_week, start_time, end_time, instructor_name, level, level_label, target_audience, gender, schedule_pattern, product_templates(code)")
+      .eq("season_id", sid)
+      .order("name");
+    if (error) toast.show(error.message);
+    else {
+      setProducts(prods || []);
+      if (prods?.length === 1) {
+        setSelectedProductId(prods[0].id);
+        setAddProductId(prods[0].id);
+      } else {
+        setSelectedProductId((prev) => (prev && prods?.some((p) => p.id === prev) ? prev : ""));
+      }
+    }
+  }, [toast]);
+
   useEffect(() => {
     (async () => {
-      const { data: seasonRow } = await supabase
-        .from("seasons")
-        .select("id, name, start_date, end_date")
-        .eq("active", true)
-        .order("start_date", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      setSeason(seasonRow);
-      if (!seasonRow) return;
-      const { data: prods, error } = await supabase
-        .from("products")
-        .select("id, name, day_of_week, start_time, end_time, instructor_name, level, level_label, target_audience, gender, schedule_pattern, product_templates(code)")
-        .eq("season_id", seasonRow.id)
-        .order("name");
-      if (error) toast.show(error.message);
-      else {
-        setProducts(prods || []);
-        if (prods?.length === 1) {
-          setSelectedProductId(prods[0].id);
-          setAddProductId(prods[0].id);
-        }
+      const [seasonRows, planning] = await Promise.all([
+        listSeasons(),
+        getPlanningSeason(),
+      ]);
+      setSeasons(seasonRows);
+      setPlanningSeason(planning);
+      const active = seasonRows.find((s) => s.active) || seasonRows[0];
+      if (active) {
+        setSeasonId(active.id);
       }
     })();
   }, []);
+
+  useEffect(() => {
+    const row = seasons.find((s) => s.id === seasonId);
+    setSeason(row || null);
+    if (seasonId) loadProductsForSeason(seasonId);
+  }, [seasonId, seasons, loadProductsForSeason]);
 
   const loadUtilization = useCallback(async (enrollmentRows, productId = null) => {
     const active = (enrollmentRows || []).filter((r) => r.active);
@@ -256,6 +279,7 @@ export default function AdminEnrollmentsTab({ toast }) {
   };
 
   const syncSessionsForProduct = async (productId) => {
+    if (!seasonIsLive) return;
     const code = productTemplateCode(productId);
     if (code === "summer_course") {
       await ensureCourseSeriesSessions(productId);
@@ -580,23 +604,27 @@ export default function AdminEnrollmentsTab({ toast }) {
     <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
       {row.active && (
         <>
-          {utilizationMap[row.id]?.shortfall > 0 && (
+          {seasonIsLive && utilizationMap[row.id]?.shortfall > 0 && (
             <Button variant="primary" size="sm" onClick={() => openMakeup(row)}>
               {t("bookMakeup")}
             </Button>
           )}
           <Button variant="secondary" size="sm" onClick={() => startEdit(row)}>{t("editEnrollment")}</Button>
-          {billingTypeForTemplate(row.product?.product_templates?.code) && (
+          {seasonIsLive && billingTypeForTemplate(row.product?.product_templates?.code) && (
             <Button variant="primary" size="sm" onClick={() => setBillingRow(row)}>
               {t("billingRecordPayment")}
             </Button>
           )}
-          <Button variant="secondary" size="sm" onClick={() => copyEnrollmentTicketLink(row.id, { toast, t })}>
-            {t("copyTicketLink")}
-          </Button>
-          <Button variant="secondary" size="sm" disabled={savingId === row.id} onClick={() => handleRegeneratePasses(row)}>
-            {t("regeneratePasses")}
-          </Button>
+          {seasonIsLive && (
+            <>
+              <Button variant="secondary" size="sm" onClick={() => copyEnrollmentTicketLink(row.id, { toast, t })}>
+                {t("copyTicketLink")}
+              </Button>
+              <Button variant="secondary" size="sm" disabled={savingId === row.id} onClick={() => handleRegeneratePasses(row)}>
+                {t("regeneratePasses")}
+              </Button>
+            </>
+          )}
           <Button variant="danger" size="sm" disabled={savingId === row.id} onClick={() => cancelEnrollment(row)}>
             {savingId === row.id ? "..." : t("cancelEnrollment")}
           </Button>
@@ -716,6 +744,37 @@ export default function AdminEnrollmentsTab({ toast }) {
         <div className="page-header">
           <h1 className="page-title">{t("tabEnrollments")}</h1>
         </div>
+      )}
+
+      <div className="filter-bar" style={{ marginBottom: 12, display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+        <Select
+          value={seasonId}
+          onChange={(e) => setSeasonId(e.target.value)}
+          style={{ minWidth: 160 }}
+        >
+          {seasons.map((s) => (
+            <option key={s.id} value={s.id}>
+              {seasonOptionLabel(s.name, {
+                active: s.active,
+                activeLabel: t("active"),
+                planningLabel: seasonLifecycle(s) === "ended" ? t("seasonEnded") : t("seasonPlanning"),
+                lifecycle: seasonLifecycle(s),
+              })}
+            </option>
+          ))}
+        </Select>
+        {planningSeason && seasonId !== planningSeason.id && (
+          <Button variant="secondary" size="sm" onClick={() => setSeasonId(planningSeason.id)}>
+            {t("seasonSwitchToPlanning", { name: planningSeason.name })}
+          </Button>
+        )}
+      </div>
+
+      {!seasonIsLive && season && (
+        <Card style={{ marginBottom: 16, borderColor: "var(--warn-border, var(--border))" }}>
+          <div style={{ fontWeight: 600, marginBottom: 4 }}>{t("seasonPlanningBannerTitle")}</div>
+          <p className="page-sub" style={{ margin: 0 }}>{t("seasonPlanningBannerBody")}</p>
+        </Card>
       )}
 
       <div

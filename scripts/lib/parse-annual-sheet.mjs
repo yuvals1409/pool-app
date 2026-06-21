@@ -14,22 +14,49 @@ export const ANNUAL_SEASON_NAME = "2025/26";
 export const ANNUAL_SEASON_START = "2025-09-01";
 export const ANNUAL_SEASON_END = "2026-06-30";
 
+let annualSeasonConfig = {
+  name: ANNUAL_SEASON_NAME,
+  start: ANNUAL_SEASON_START,
+  end: ANNUAL_SEASON_END,
+};
+
+/** Override target season for resync backup imports, e.g. configureAnnualSeason("2026/27") */
+export function configureAnnualSeason(name) {
+  const m = String(name || "").match(/^(\d{4})\/(\d{2})$/);
+  if (!m) throw new Error(`Invalid season name "${name}" — expected format 2026/27`);
+  const y1 = Number(m[1]);
+  const y2 = 2000 + Number(m[2]);
+  annualSeasonConfig = {
+    name: String(name),
+    start: `${y1}-09-01`,
+    end: `${y2}-06-30`,
+  };
+  return annualSeasonConfig;
+}
+
+export function getAnnualSeasonConfig() {
+  return { ...annualSeasonConfig };
+}
+
 export function productKey(day, instructor, start, end, classType) {
   return `${day}|${instructor}|${start}|${end}|${classType}`;
 }
 
 export function parsePeriod(periodText, subscriptionText) {
   const text = `${periodText || ""} ${subscriptionText || ""}`;
-  let validFrom = ANNUAL_SEASON_START;
-  let validUntil = ANNUAL_SEASON_END;
+  let validFrom = annualSeasonConfig.start;
+  let validUntil = annualSeasonConfig.end;
 
-  if (/אמצע\s*אוקטובר|אמצע-אוקטובר/i.test(text)) validFrom = "2025-10-15";
-  else if (/אוקטובר/i.test(text) && !/ספטמבר/i.test(periodText || "")) validFrom = "2025-10-01";
-  else if (/דצמבר/i.test(periodText || "")) validFrom = "2025-12-01";
-  else if (/נובמבר/i.test(periodText || "")) validFrom = "2025-11-01";
+  const startYear = annualSeasonConfig.start.slice(0, 4);
+  const endYear = annualSeasonConfig.end.slice(0, 4);
 
-  if (/עד\s*סוף\s*מאי|עד\s*מאי/i.test(subscriptionText || "")) validUntil = "2026-05-31";
-  else if (/עד\s*סוף\s*מרץ|עד\s*מרץ/i.test(subscriptionText || "")) validUntil = "2026-03-31";
+  if (/אמצע\s*אוקטובר|אמצע-אוקטובר/i.test(text)) validFrom = `${startYear}-10-15`;
+  else if (/אוקטובר/i.test(text) && !/ספטמבר/i.test(periodText || "")) validFrom = `${startYear}-10-01`;
+  else if (/דצמבר/i.test(periodText || "")) validFrom = `${startYear}-12-01`;
+  else if (/נובמבר/i.test(periodText || "")) validFrom = `${startYear}-11-01`;
+
+  if (/עד\s*סוף\s*מאי|עד\s*מאי/i.test(subscriptionText || "")) validUntil = `${endYear}-05-31`;
+  else if (/עד\s*סוף\s*מרץ|עד\s*מרץ/i.test(subscriptionText || "")) validUntil = `${endYear}-03-31`;
 
   return { validFrom, validUntil };
 }

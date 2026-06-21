@@ -6,6 +6,7 @@ import { useIsDesktop } from "../lib/useBreakpoint.js";
 import { PARTICIPANT_GRADES, genderLabel } from "../lib/participantFields.js";
 import { useStudentProfile } from "../lib/StudentProfileContext.jsx";
 import { upsertAnnualPackage } from "../lib/annualPackage.js";
+import { getPlanningSeason } from "../lib/seasonPlanning.js";
 import { purchasePrivatePackage, listPackagesForFamily } from "../lib/privatePackages.js";
 import {
   Badge,
@@ -25,6 +26,7 @@ const PAYMENT_FILTERS = ["any", "unpaid", "all_paid", "waived"];
 const EMAIL_FILTERS = ["any", "has", "missing"];
 const CHILDREN_FILTERS = ["any", "one", "multiple"];
 const WAITLIST_FILTERS = ["any", "yes", "no"];
+const RENEWAL_FILTERS = ["any", "renewed", "missing"];
 const SORT_OPTIONS = ["newest", "oldest", "parent_name", "phone", "most_children"];
 
 function normalizePhone(phone) {
@@ -106,6 +108,25 @@ function matchesAgeRange(participants, minAge, maxAge) {
   });
 }
 
+function participantActiveInSeason(participant, seasonId) {
+  if (!seasonId) return false;
+  return (participant.enrollments || []).some(
+    (e) => e.active && e.product?.season_id === seasonId
+      && e.product?.product_templates?.code === "annual_section",
+  );
+}
+
+function familyRenewalStatus(family, activeSeasonId, planningSeasonId) {
+  if (!activeSeasonId || !planningSeasonId) return "any";
+  const participants = family.participants || [];
+  const hasActiveNow = participants.some((p) => participantActiveInSeason(p, activeSeasonId));
+  if (!hasActiveNow) return "any";
+  const allRenewed = participants
+    .filter((p) => participantActiveInSeason(p, activeSeasonId))
+    .every((p) => participantActiveInSeason(p, planningSeasonId));
+  return allRenewed ? "renewed" : "missing";
+}
+
 function matchesCreatedRange(createdAt, from, to) {
   if (!from && !to) return true;
   const created = createdAt?.slice(0, 10);
@@ -147,6 +168,8 @@ export default function AdminCustomersTab({ toast }) {
   const [editBirthDate, setEditBirthDate] = useState("");
   const [editMembershipTier, setEditMembershipTier] = useState("external");
   const [activeSeasonId, setActiveSeasonId] = useState("");
+  const [planningSeasonId, setPlanningSeasonId] = useState("");
+  const [renewalFilter, setRenewalFilter] = useState("any");
   const [savingShareholderId, setSavingShareholderId] = useState(null);
   const [packageSavingId, setPackageSavingId] = useState(null);
   const [familyPackages, setFamilyPackages] = useState({});
@@ -176,19 +199,21 @@ export default function AdminCustomersTab({ toast }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [{ data: familyRows, error }, { data: seasonRows }, { data: waitlistRows }] = await Promise.all([
+      const [{ data: familyRows, error }, { data: seasonRows }, { data: waitlistRows }, planning] = await Promise.all([
         supabase.from("families").select(familySelect).order("created_at", { ascending: false }),
         supabase.from("seasons").select("id, name, active").order("start_date", { ascending: false }),
         supabase
           .from("waitlist_entries")
           .select("phone, family_id")
           .in("status", ["waiting", "notified"]),
+        getPlanningSeason(),
       ]);
       if (error) throw error;
       setFamilies(familyRows || []);
       setSeasons(seasonRows || []);
       const active = (seasonRows || []).find((s) => s.active);
       if (active) setActiveSeasonId(active.id);
+      if (planning) setPlanningSeasonId(planning.id);
       const phones = new Set(
         (waitlistRows || []).map((row) => normalizePhone(row.phone)).filter(Boolean),
       );
@@ -324,10 +349,11 @@ export default function AdminCustomersTab({ toast }) {
     if (createdFrom || createdTo) count += 1;
     if (ageMin || ageMax) count += 1;
     if (sortBy !== "newest") count += 1;
+    if (renewalFilter !== "any") count += 1;
     return count;
   }, [
     searchQuery, enrollmentFilter, paymentFilter, productId, seasonId, gender,
-    emailFilter, childrenFilter, waitlistFilter, createdFrom, createdTo, ageMin, ageMax, sortBy,
+    emailFilter, childrenFilter, waitlistFilter, createdFrom, createdTo, ageMin, ageMax, sortBy, renewalFilter,
   ]);
 
   const filteredFamilies = useMemo(() => {
@@ -382,6 +408,12 @@ export default function AdminCustomersTab({ toast }) {
       if (!matchesCreatedRange(family.created_at, createdFrom, createdTo)) return false;
       if (!matchesAgeRange(family.participants, ageMin, ageMax)) return false;
 
+      if (renewalFilter !== "any" && planningSeasonId) {
+        const status = familyRenewalStatus(family, activeSeasonId, planningSeasonId);
+        if (renewalFilter === "renewed" && status !== "renewed") return false;
+        if (renewalFilter === "missing" && status !== "missing") return false;
+      }
+
       return true;
     });
 
@@ -403,7 +435,7 @@ export default function AdminCustomersTab({ toast }) {
   }, [
     families, searchQuery, enrollmentFilter, paymentFilter, productId, seasonId, gender,
     emailFilter, childrenFilter, waitlistFilter, waitlistPhones, createdFrom, createdTo,
-    ageMin, ageMax, sortBy,
+    ageMin, ageMax, sortBy, renewalFilter, activeSeasonId, planningSeasonId,
   ]);
 
   const resetFilters = () => {
@@ -421,6 +453,7 @@ export default function AdminCustomersTab({ toast }) {
     setAgeMin("");
     setAgeMax("");
     setSortBy("newest");
+    setRenewalFilter("any");
   };
 
   const toggleExpanded = (id) => {
@@ -559,6 +592,15 @@ export default function AdminCustomersTab({ toast }) {
                   ))}
                 </Select>
               </Field>
+              {planningSeasonId && (
+                <Field label={t("customersRenewalFilter")}>
+                  <Select value={renewalFilter} onChange={(e) => setRenewalFilter(e.target.value)}>
+                    {RENEWAL_FILTERS.map((id) => (
+                      <option key={id} value={id}>{t(`customersRenewal_${id}`)}</option>
+                    ))}
+                  </Select>
+                </Field>
+              )}
               <Field label={t("customersSortLabel")}>
                 <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
                   {sortOptions.map((opt) => (

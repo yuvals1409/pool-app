@@ -3,7 +3,12 @@ import { supabase } from "../lib/supabase.js";
 import { useLang } from "../i18n.jsx";
 import { useIsDesktop } from "../lib/useBreakpoint.js";
 import {
+  createPlanningSeason,
+  seasonLifecycle,
+} from "../lib/seasonPlanning.js";
+import {
   Badge,
+  Button,
   Card,
   EmptyState,
   Spinner,
@@ -45,12 +50,20 @@ async function loadSeasonStats(seasonId) {
   };
 }
 
-export default function AdminSeasonsTab({ toast }) {
+function seasonStatusBadge(t, season) {
+  const lifecycle = seasonLifecycle(season);
+  if (lifecycle === "active") return <Badge variant="success">{t("active")}</Badge>;
+  if (lifecycle === "planning") return <Badge variant="warn">{t("seasonPlanning")}</Badge>;
+  return <Badge variant="neutral">{t("seasonEnded")}</Badge>;
+}
+
+export default function AdminSeasonsTab({ toast, onOpenPlanning }) {
   const { t, fmtDateDay } = useLang();
   const isDesktop = useIsDesktop();
   const [rows, setRows] = useState([]);
   const [statsById, setStatsById] = useState({});
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -78,6 +91,23 @@ export default function AdminSeasonsTab({ toast }) {
     return label !== key ? label : code;
   };
 
+  const handleCreateNext = async () => {
+    if (!confirm(t("seasonCreateNextConfirm"))) return;
+    setCreating(true);
+    try {
+      const result = await createPlanningSeason();
+      toast.show(t("seasonCreated", { name: result.name }));
+      await load();
+      if (onOpenPlanning) onOpenPlanning(result.season_id);
+    } catch (e) {
+      if (e.message === "duplicate_season_name") toast.show(t("seasonDuplicateName"));
+      else toast.show(e.message || t("systemError"));
+    }
+    setCreating(false);
+  };
+
+  const hasPlanningSeason = rows.some((s) => seasonLifecycle(s) === "planning");
+
   return (
     <div>
       {!isDesktop && (
@@ -91,6 +121,12 @@ export default function AdminSeasonsTab({ toast }) {
         <p className="page-sub" style={{ marginBottom: 16 }}>{t("seasonsSub")}</p>
       )}
 
+      <div className="filter-bar" style={{ marginBottom: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <Button variant="primary" size="sm" onClick={handleCreateNext} disabled={creating || hasPlanningSeason}>
+          {creating ? t("loading") : t("seasonCreateNext")}
+        </Button>
+      </div>
+
       {loading ? (
         <div style={{ display: "flex", justifyContent: "center", padding: 24 }}>
           <Spinner />
@@ -101,11 +137,12 @@ export default function AdminSeasonsTab({ toast }) {
         <div className="grouped-list">
           {rows.map((s) => {
             const stats = statsById[s.id] || {};
+            const lifecycle = seasonLifecycle(s);
             return (
               <Card key={s.id} style={{ marginBottom: 12 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
                   <div style={{ fontWeight: 600, fontSize: "var(--text-lg)", color: "var(--ink)" }}>{s.name}</div>
-                  {s.active && <Badge variant="success">{t("active")}</Badge>}
+                  {seasonStatusBadge(t, s)}
                 </div>
                 <div style={{ color: "var(--ink-soft)", marginBottom: 12 }}>
                   {fmtDateDay(s.start_date)} – {fmtDateDay(s.end_date)}
@@ -123,6 +160,13 @@ export default function AdminSeasonsTab({ toast }) {
                         {templateLabel(code)}: {count}
                       </Badge>
                     ))}
+                  </div>
+                )}
+                {(lifecycle === "planning" || !s.active) && onOpenPlanning && (
+                  <div style={{ marginTop: 12 }}>
+                    <Button variant="secondary" size="sm" onClick={() => onOpenPlanning(s.id)}>
+                      {t("seasonOpenPlanning")}
+                    </Button>
                   </div>
                 )}
               </Card>
