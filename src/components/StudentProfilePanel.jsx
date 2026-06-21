@@ -10,10 +10,14 @@ import {
 } from "../lib/commandCenter.js";
 import { AnimatedSheetOverlay, AnimatedSheetPanel } from "./ui/AnimatedSheet.jsx";
 import { Button, Card, Field, Input, Select, Spinner } from "./ui/ds/index.js";
+import PortalCredentialsCard from "./PortalCredentialsCard.jsx";
+import ParticipantPhotoEditor from "./ParticipantPhotoEditor.jsx";
+import { staffGetPortalCredentials } from "../lib/childPortal.js";
+import "../styles/child-portal.css";
 
 const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
-export default function StudentProfilePanel({ participantId, open, onClose, toast }) {
+export default function StudentProfilePanel({ participantId, profile, open, onClose, toast }) {
   const { t } = useLang();
   const [loading, setLoading] = useState(false);
   const [participant, setParticipant] = useState(null);
@@ -23,6 +27,17 @@ export default function StudentProfilePanel({ participantId, open, onClose, toas
   const [editGrade, setEditGrade] = useState("");
   const [editBirthDate, setEditBirthDate] = useState("");
   const [saving, setSaving] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState(null);
+
+  const loadPhoto = useCallback(async () => {
+    if (!participantId || !profile) return;
+    try {
+      const data = await staffGetPortalCredentials(participantId);
+      if (data?.result === "ok") setPhotoUrl(data.photo_url || null);
+    } catch {
+      setPhotoUrl(null);
+    }
+  }, [participantId, profile]);
 
   const load = useCallback(async () => {
     if (!participantId) return;
@@ -54,11 +69,12 @@ export default function StudentProfilePanel({ participantId, open, onClose, toas
       const summary = await getAttendanceSummary(from, to, "participant");
       const row = (summary || []).find((r) => r.entity_id === participantId);
       setAttendanceRate(row?.attendance_rate ?? null);
+      await loadPhoto();
     } catch (e) {
       toast?.show(e.message || t("systemError"));
     }
     setLoading(false);
-  }, [participantId, toast, t]);
+  }, [participantId, toast, t, loadPhoto]);
 
   useEffect(() => {
     if (open && participantId) load();
@@ -145,6 +161,24 @@ export default function StudentProfilePanel({ participantId, open, onClose, toas
                 <Button type="button" variant="primary" size="sm" disabled={saving} onClick={save} style={{ marginBottom: 16 }}>
                   {saving ? <Spinner size={14} /> : t("save")}
                 </Button>
+
+                {profile && (
+                  <>
+                    <PortalCredentialsCard
+                      participantId={participant.id}
+                      profile={profile}
+                      phone={participant.family?.phone}
+                      toast={toast}
+                    />
+                    <ParticipantPhotoEditor
+                      participantId={participant.id}
+                      profile={profile}
+                      photoUrl={photoUrl}
+                      toast={toast}
+                      onUpdated={loadPhoto}
+                    />
+                  </>
+                )}
 
                 <div className="section-title" style={{ fontSize: 14 }}>{t("studentCurrentGroup")}</div>
                 {activeEnrollments.length === 0 ? (

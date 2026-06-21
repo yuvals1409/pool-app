@@ -1,0 +1,88 @@
+.child-portal {
+  min-height: 100vh;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.child-portal-shell {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 20px 16px 40px;
+}
+
+.child-portal-pin-input {
+  letter-spacing: 0.35em;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 22px;
+}
+
+.child-portal-section {
+  margin-top: 20px;
+}
+
+.child-portal-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-mid);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.child-portal-qr-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+@media (min-width: 420px) {
+  .child-portal-qr-row.has-qr {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+  }
+}
+
+.child-portal-lesson-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.child-portal-photo-preview {
+  width: 96px;
+  height: 96px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.child-portal-entry-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.child-portal-entry-row:last-child {
+  border-bottom: none;
+}
+
+.child-portal-blocked {
+  text-align: center;
+  padding: 16px;
+  color: var(--ink-mid);
+  font-size: 14px;
+}
+
+.child-portal-photo-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}

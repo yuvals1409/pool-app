@@ -297,12 +297,7 @@ export default function AssessmentRegisterPage({ toast }) {
     t("landingBenefit3"),
     t("landingBenefit4"),
   ];
-  const habituationItems = [
-    t("landingHabituation1"),
-    t("landingHabituation2"),
-    t("landingHabituation3"),
-    t("landingHabituation4"),
-  ];
+  const benefitIcons = ["🏊", "👥", "⭐", "🥇"];
   const prepItems = [
     { icon: "🥽", label: t("landingPrepGoggles") },
     { icon: "👙", label: t("landingPrepSwimsuit") },
@@ -332,6 +327,11 @@ export default function AssessmentRegisterPage({ toast }) {
       </nav>
 
       <header className="landing-hero">
+        <div className="landing-hero-bubbles" aria-hidden="true">
+          <span className="landing-bubble landing-bubble-1" />
+          <span className="landing-bubble landing-bubble-2" />
+          <span className="landing-bubble landing-bubble-3" />
+        </div>
         <div className="landing-hero-inner">
           <span className="landing-badge">{t("landingHeroBadge")}</span>
           <h1>{t("landingHeroTitle")}</h1>
@@ -347,6 +347,11 @@ export default function AssessmentRegisterPage({ toast }) {
         </div>
         <WaveDivider />
       </header>
+
+      <div className="landing-required-banner" role="note">
+        <span className="landing-required-icon" aria-hidden="true">📋</span>
+        <span>{t("landingHeroNote")}</span>
+      </div>
 
       <div className="landing-stats">
         <div className="landing-stat">
@@ -370,65 +375,46 @@ export default function AssessmentRegisterPage({ toast }) {
         <h2 className="landing-section-title">{t("landingBenefitsTitle")}</h2>
         <p className="landing-section-sub">{t("landingSeasonStart")}</p>
         <div className="landing-benefits">
-          {benefits.map((text) => (
+          {benefits.map((text, index) => (
             <div key={text} className="landing-benefit">
-              <span className="landing-benefit-check" aria-hidden="true">✓</span>
+              <span className="landing-benefit-icon" aria-hidden="true">{benefitIcons[index]}</span>
               <span className="landing-benefit-text">{text}</span>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="landing-section" style={{ paddingTop: 0 }}>
-        <div className="landing-grid-2">
-          <div className="landing-card-block">
-            <h3>🏊 {t("landingCourseTitle")}</h3>
-            <p style={{ margin: "0 0 16px", color: "var(--landing-muted)", fontSize: "0.9375rem" }}>
-              {t("landingCourseSub")}
-            </p>
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: "0.8125rem", fontWeight: 600, marginBottom: 8, color: "var(--landing-muted)" }}>
-                {t("landingCourseDays")}
-              </div>
+      <section className="landing-section landing-course-section">
+        <h2 className="landing-section-title">{t("landingSeasonStart")}</h2>
+        <div className="landing-card-block landing-course-card">
+          <h3>📅 {t("landingCourseTitle")}</h3>
+          <p className="landing-course-lead">{t("landingCourseSub")}</p>
+          <div className="landing-course-grid">
+            <div className="landing-course-block">
+              <div className="landing-course-label">{t("landingCourseDays")}</div>
               <div className="landing-schedule-row">
                 {["landingDayPair1", "landingDayPair2", "landingDayPair3"].map((key) => (
                   <span key={key} className="landing-schedule-chip">{t(key)}</span>
                 ))}
               </div>
+              <div className="landing-note">{t("landingCourseNote")}</div>
             </div>
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: "0.8125rem", fontWeight: 600, marginBottom: 8, color: "var(--landing-muted)" }}>
-                {t("landingCourseWeekdayHours")}
-              </div>
+            <div className="landing-course-block">
+              <div className="landing-course-label">{t("landingCourseWeekdayHours")}</div>
               <div className="landing-schedule-times">
                 {["16:30", "17:15", "18:00"].map((time) => (
                   <span key={time} className="landing-time-chip">{time}</span>
                 ))}
               </div>
             </div>
-            <div>
-              <div style={{ fontSize: "0.8125rem", fontWeight: 600, marginBottom: 8, color: "var(--landing-muted)" }}>
-                {t("landingCourseFridayHours")}
-              </div>
+            <div className="landing-course-block">
+              <div className="landing-course-label">{t("landingCourseFridayHours")}</div>
               <div className="landing-schedule-times">
                 {["13:30", "14:15", "15:00"].map((time) => (
                   <span key={time} className="landing-time-chip">{time}</span>
                 ))}
               </div>
             </div>
-            <div className="landing-note">{t("landingCourseNote")}</div>
-          </div>
-
-          <div className="landing-card-block">
-            <h3>💧 {t("landingHabituationTitle")}</h3>
-            <p style={{ margin: "0 0 16px", color: "var(--landing-muted)", fontSize: "0.9375rem" }}>
-              {t("landingHabituationSub")}
-            </p>
-            <ul className="landing-habituation-items">
-              {habituationItems.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
           </div>
         </div>
       </section>
@@ -452,15 +438,11 @@ export default function AssessmentRegisterPage({ toast }) {
         </div>
       </section>
 
-      <section className="landing-section" style={{ paddingTop: 0 }}>
-        <div className="landing-card-block" style={{ maxWidth: 720, margin: "0 auto" }}>
-          <h3 style={{ textAlign: "center", justifyContent: "center" }}>🎯 {t("landingAssessmentTitle")}</h3>
-          <p style={{ textAlign: "center", margin: "0 0 24px", color: "var(--landing-muted)" }}>
-            {t("landingAssessmentSub")}
-          </p>
-          <div style={{ fontSize: "0.9375rem", fontWeight: 600, marginBottom: 12, textAlign: "center" }}>
-            {t("landingAssessmentBring")}
-          </div>
+      <section className="landing-section landing-assessment-section">
+        <div className="landing-card-block landing-assessment-card">
+          <h3>🎯 {t("landingAssessmentTitle")}</h3>
+          <p className="landing-assessment-lead">{t("landingAssessmentSub")}</p>
+          <div className="landing-assessment-bring">{t("landingAssessmentBring")}</div>
           <ul className="landing-prep-list">
             {prepItems.map(({ icon, label }) => (
               <li key={label}>
@@ -469,6 +451,10 @@ export default function AssessmentRegisterPage({ toast }) {
               </li>
             ))}
           </ul>
+          <div className="landing-reminder">
+            <span className="landing-reminder-icon" aria-hidden="true">🔔</span>
+            <span>{t("landingAssessmentReminder")}</span>
+          </div>
         </div>
       </section>
 
@@ -663,9 +649,9 @@ export default function AssessmentRegisterPage({ toast }) {
 
       <footer className="landing-footer">
         <div className="landing-slogan">"{t("landingSlogan")}"</div>
+        <div className="landing-footer-waiting">{t("landingFooterWaiting")}</div>
         <div className="landing-contact">
-          <div style={{ marginBottom: 8 }}>{t("landingContact")}</div>
-          <div style={{ fontWeight: 600, marginBottom: 4 }}>{t("landingContactName")}</div>
+          <div className="landing-contact-name">{t("landingContactName")}</div>
           <a href="tel:0525458965">052-5458965</a>
         </div>
         <div className="landing-location">{t("landingLocation")}</div>

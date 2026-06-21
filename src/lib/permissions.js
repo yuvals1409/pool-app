@@ -19,6 +19,13 @@ export const canViewOwnPayroll = (p) => canCreateLesson(p);
 export const canManagePriceList = (p) => canManage(p);
 export const canViewPriceList = (p) => canMarkPayment(p);
 
+export const canViewPortalCredentials = (p) =>
+  isOwner(p) || p?.role === "admin" || p?.role === "office" || p?.role === "instructor";
+
+export const canResetPortalPin = (p) => canMarkPayment(p) || isOwner(p);
+
+export const canUpdateParticipantPhoto = (p) => canViewPortalCredentials(p);
+
 export const ACTIVE_USER_ROLE_ORDER = ["admin", "office", "instructor", "guard"];
 
 export const assignableRoles = (p) => {

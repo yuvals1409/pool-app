@@ -23,7 +23,7 @@ import {
 } from "./lib/lessonDates.js";
 import {
   getLessonQrValue,
-  shareTicketViaWhatsApp, shareCancellationViaWhatsApp,
+  notifyNewLesson,
 } from "./lib/lessonNotify.js";
 import { createAndNotify } from "./lib/lessonMutations.js";
 import ParentContactPicker from "./components/ParentContactPicker.jsx";
@@ -50,12 +50,14 @@ import InstructorPersonalTab from "./components/InstructorPersonalTab.jsx";
 import { StudentProfileProvider, useStudentProfile } from "./lib/StudentProfileContext.jsx";
 import StudentProfilePanel from "./components/StudentProfilePanel.jsx";
 import AssessmentRegisterPage from "./components/AssessmentRegisterPage.jsx";
-import SummerRegisterPage from "./components/SummerRegisterPage.jsx";
+import SummerLandingPage from "./components/SummerLandingPage.jsx";
+import ChildPortalPage from "./components/ChildPortalPage.jsx";
 import { parseAssessmentRegisterPath } from "./lib/assessment.js";
 import { parseSummerRegisterPath } from "./lib/summerCourse.js";
 import {
   lookupAndRedeemPass, fetchPublicPass, parsePublicPathToken, parseAccessLogReason,
 } from "./lib/accessPass.js";
+import { parseChildPortalToken, redeemLessonQr } from "./lib/childPortal.js";
 import { markLessonScanAttendance } from "./lib/attendance.js";
 import { getOAuthRedirectUrl } from "./lib/authRedirect.js";
 import { useIsDesktop } from "./lib/useBreakpoint.js";
@@ -432,7 +434,7 @@ function InstructorTab({ profile, toast }) {
   const sendWhatsApp = async () => {
     setSharing(true);
     try {
-      await shareTicketViaWhatsApp(created, created.parent_phone, toast, i18n);
+      await notifyNewLesson(created, created.parent_phone, toast, i18n);
       await markLessonNotified(created.id);
     } catch {
       toast.show(t("shareError"));
@@ -442,9 +444,8 @@ function InstructorTab({ profile, toast }) {
 
   if (created) return (
     <div>
-      <div className="section-title">{t("barcodeReady")}</div>
-      <div className="section-sub">{created.isRecurring ? t("barcodeReadySubRecurring") : t("barcodeReadySub")}</div>
-      <TicketCard lesson={created} qrSize={200} />
+      <div className="section-title">{t("portalCardTitle")}</div>
+      <div className="section-sub">{t("portalPinSub")}</div>
       <div className="lesson-info">
         <div className="lesson-info-row"><span className="li-key">{t("child")}</span><span className="li-val">{created.child_name}</span></div>
         <div className="lesson-info-row"><span className="li-key">{t("date")}</span><span className="li-val">{fmtDateDay(created.lesson_date)}</span></div>
@@ -472,7 +473,7 @@ function InstructorTab({ profile, toast }) {
           style={{ background: "#25D366", color: "#fff", border: "1px solid #25D366" }}
           icon={sharing ? <Spinner color="#fff" /> : null}
         >
-          {sharing ? t("preparingImage") : t("sendWhatsApp")}
+          {sharing ? t("preparingImage") : t("portalSendWa")}
         </Button>
         <Button variant="outline" fullWidth onClick={() => addToCalendar(created, "instructor", i18n)}>
           📅 {t("addToCalendar")}
@@ -564,6 +565,18 @@ function InstructorTab({ profile, toast }) {
 // ─────────────────────────────────────────────────────────────
 //  GUARD TAB
 // ─────────────────────────────────────────────────────────────
+function redeemLessonMessage(redeem, t, locale) {
+  switch (redeem.result) {
+    case "unpaid": return t("entryUnpaid");
+    case "already_used":
+      return `${t("barcodeUsed")}\n${t("scannedOn")}: ${new Date(redeem.usedAt).toLocaleString(locale)}`;
+    case "too_early": return t("entryTooEarly", { time: formatEntryFromTime(new Date(redeem.validFrom), locale) });
+    case "too_late": return t("entryTooLate", { time: formatEntryFromTime(new Date(redeem.validUntil), locale) });
+    case "cancelled": return t("barcodeCancelled");
+    default: return t("barcodeNotFound");
+  }
+}
+
 function redeemPassMessage(redeem, t, locale) {
   switch (redeem.result) {
     case "unpaid": return t("entryUnpaid");
@@ -586,6 +599,8 @@ function ScanResultCard({ result, t, fmtDateDay }) {
   const reduced = useReducedMotion();
   const Icon = result.ok ? CheckCircle2 : XCircle;
   const display = result.lesson || result.pass;
+  const photoUrl = result.photoUrl || display?.photoUrl;
+  const photoMissing = result.photoMissing ?? display?.photoMissing;
   return (
     <motion.div
       className={`result-card ${result.ok ? "ok" : "err"}`}
@@ -597,8 +612,26 @@ function ScanResultCard({ result, t, fmtDateDay }) {
         <Icon size={52} strokeWidth={1.75} color={result.ok ? "var(--success)" : "var(--danger)"} />
       </div>
       <div className="result-title">{result.ok ? t("entryApproved") : t("entryDenied")}</div>
+      {result.ok && photoMissing && (
+        <div style={{
+          marginTop: 12, padding: "10px 12px", borderRadius: 8,
+          background: "var(--warn-bg, #fff8e6)", color: "var(--warn, #b45309)",
+          fontSize: 13, fontWeight: 600, textAlign: "center",
+        }}>
+          {t("guardPhotoMissing")}
+        </div>
+      )}
       {result.ok && display && (
         <div className="lesson-info" style={{ marginTop: 12 }}>
+          {photoUrl && (
+            <div style={{ textAlign: "center", marginBottom: 12 }}>
+              <img
+                src={photoUrl}
+                alt=""
+                style={{ width: 88, height: 88, borderRadius: 10, objectFit: "cover", border: "1px solid var(--border)" }}
+              />
+            </div>
+          )}
           <div className="lesson-info-row"><span className="li-key">{t("child")}</span><span className="li-val">{display.child_name || display.childName}</span></div>
           <div className="lesson-info-row"><span className="li-key">{t("date")}</span><span className="li-val">{fmtDateDay(display.lesson_date || display.sessionDate)}</span></div>
           <div className="lesson-info-row"><span className="li-key">{t("startTime")}</span><span className="li-val">{fmt_time(display.start_time || display.startTime)}</span></div>
@@ -703,32 +736,30 @@ function GuardTab({ toast }) {
   const processQR = async (uuid) => {
     pauseScan(); setLoading(true);
     try {
-      const lesson = await lookupLessonByQr(uuid);
-      if (lesson) {
-        if (lesson.cancelled) { showScanResult({ ok: false, lesson, msg: t("barcodeCancelled") }); setLoading(false); return; }
-        if (lesson.used) {
-          showScanResult({ ok: false, lesson, msg: `${t("barcodeUsed")}\n${t("scannedOn")}: ${new Date(lesson.used_at).toLocaleString(locale)}` });
-          setLoading(false);
-          return;
+      const lessonRedeem = await redeemLessonQr(uuid);
+      if (lessonRedeem.result !== "not_found") {
+        if (lessonRedeem.ok) {
+          showScanResult({
+            ok: true,
+            photoUrl: lessonRedeem.photoUrl,
+            photoMissing: lessonRedeem.photoMissing,
+            pass: {
+              childName: lessonRedeem.childName,
+              sessionDate: lessonRedeem.sessionDate,
+              startTime: lessonRedeem.startTime,
+              productName: lessonRedeem.productName,
+              instructorName: lessonRedeem.instructorName,
+            },
+          });
+          loadLog();
+        } else {
+          showScanResult({
+            ok: false,
+            msg: redeemLessonMessage(lessonRedeem, t, locale),
+            photoUrl: lessonRedeem.photoUrl,
+            photoMissing: lessonRedeem.photoMissing,
+          });
         }
-        const earliestEntry = getEarliestEntryTime(lesson);
-        const latestEntry = getLatestEntryTime(lesson);
-        const now = new Date();
-        if (now < earliestEntry) {
-          showScanResult({ ok: false, lesson, msg: t("entryTooEarly", { time: formatEntryFromTime(earliestEntry, locale) }) });
-          setLoading(false);
-          return;
-        }
-        if (now > latestEntry) {
-          showScanResult({ ok: false, lesson, msg: t("entryTooLate", { time: formatEntryFromTime(latestEntry, locale) }) });
-          setLoading(false);
-          return;
-        }
-        const { error: upErr } = await supabase.from("lessons").update({ used: true, used_at: new Date().toISOString() }).eq("id", lesson.id);
-        if (upErr) throw upErr;
-        await markLessonScanAttendance(lesson.id);
-        showScanResult({ ok: true, lesson });
-        loadLog();
         setLoading(false);
         return;
       }
@@ -737,6 +768,8 @@ function GuardTab({ toast }) {
       if (redeem.ok) {
         showScanResult({
           ok: true,
+          photoUrl: redeem.photoUrl,
+          photoMissing: redeem.photoMissing,
           pass: {
             childName: redeem.childName,
             sessionDate: redeem.sessionDate,
@@ -749,7 +782,12 @@ function GuardTab({ toast }) {
       } else if (redeem.result === "not_found") {
         showScanResult({ ok: false, msg: t("barcodeNotFound") });
       } else {
-        showScanResult({ ok: false, msg: redeemPassMessage(redeem, t, locale) });
+        showScanResult({
+          ok: false,
+          msg: redeemPassMessage(redeem, t, locale),
+          photoUrl: redeem.photoUrl,
+          photoMissing: redeem.photoMissing,
+        });
       }
     } catch { showScanResult({ ok: false, msg: t("systemError") }); }
     setLoading(false);
@@ -831,11 +869,12 @@ function roleBadgeVariant(role) {
   return "neutral";
 }
 
-function AdminStudentProfileHost({ toast }) {
+function AdminStudentProfileHost({ profile, toast }) {
   const { participantId, closeProfile } = useStudentProfile();
   return (
     <StudentProfilePanel
       participantId={participantId}
+      profile={profile}
       open={!!participantId}
       onClose={closeProfile}
       toast={toast}
@@ -1026,7 +1065,7 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
       {adminSection === "customers" ? (
         <AdminCustomersTab toast={toast} />
       ) : adminSection === "products" ? (
-        <AdminGroupsTab toast={toast} />
+        <AdminGroupsTab profile={profile} toast={toast} />
       ) : adminSection === "pricelist" ? (
         <AdminPriceListTab toast={toast} profile={profile} />
       ) : adminSection === "seasons" ? (
@@ -1154,7 +1193,7 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
         </div>
       </div>
     </div>
-    <AdminStudentProfileHost toast={toast} />
+    <AdminStudentProfileHost profile={profile} toast={toast} />
     </StudentProfileProvider>
   );
 }
@@ -1363,6 +1402,7 @@ export default function App() {
   const assessmentRegister = parseAssessmentRegisterPath();
   const summerRegister = parseSummerRegisterPath();
   const pathPassToken = parsePublicPathToken();
+  const childPortalToken = parseChildPortalToken();
 
   const loadProfile = useCallback(async (user) => {
     const email = user.email.toLowerCase();
@@ -1447,23 +1487,10 @@ export default function App() {
 
   const logout = async () => { await supabase.auth.signOut(); };
 
-  // ── Summer course registration (invite-only, no auth) ──────
+  // ── Summer landing + registration (public, no auth) ──────
   if (summerRegister) return (
     <>
-      <div className="app" dir={dir}>
-        <div className="header">
-          <div className="header-top">
-            <div className="header-logo"><BrandLogo height={32} /> {t("summerRegisterTitle")}</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <LanguageSwitcher compact />
-            </div>
-          </div>
-          <div className="header-sub">{t("neveOz")}</div>
-        </div>
-        <div className="content" style={{ paddingBottom: "var(--space-5)" }}>
-          <SummerRegisterPage toast={toast} />
-        </div>
-      </div>
+      <SummerLandingPage toast={toast} />
       <AnimatedToast msg={toast.msg} visible={toast.visible} standalone />
     </>
   );
@@ -1472,6 +1499,14 @@ export default function App() {
   if (assessmentRegister) return (
     <>
       <AssessmentRegisterPage toast={toast} />
+      <AnimatedToast msg={toast.msg} visible={toast.visible} standalone />
+    </>
+  );
+
+  // ── Child portal (public, password-gated) ─────────────────
+  if (childPortalToken) return (
+    <>
+      <ChildPortalPage portalToken={childPortalToken} toast={toast} />
       <AnimatedToast msg={toast.msg} visible={toast.visible} standalone />
     </>
   );
@@ -1611,7 +1646,7 @@ export default function App() {
           onMarkAttendance={handleMarkAttendanceFromSchedule}
         />
       );
-      case "office":     return <OfficeTab toast={toast} />;
+      case "office":     return <OfficeTab profile={profile} toast={toast} />;
       case "admin":      return (
         <AdminTab
           profile={profile}

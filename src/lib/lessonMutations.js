@@ -5,6 +5,64 @@ import { markLessonNotified } from "./supabase.js";
 import { suggestPrivateLessonPrice } from "./pricing.js";
 import { consumePackageSession } from "./privatePackages.js";
 import { recordBillingPayment } from "./billing.js";
+import { ensureParticipantPortal } from "./childPortal.js";
+
+function normalizePhone(phone) {
+  return String(phone || "").replace(/\s/g, "").trim();
+}
+
+async function findOrCreateFamily(phone, name) {
+  const { data: existing } = await supabase
+    .from("families")
+    .select("id, parent_name")
+    .eq("phone", phone)
+    .maybeSingle();
+  if (existing) {
+    if (name && name !== existing.parent_name) {
+      await supabase.from("families").update({ parent_name: name }).eq("id", existing.id);
+    }
+    return existing.id;
+  }
+  const { data: created, error } = await supabase
+    .from("families")
+    .insert({ phone, parent_name: name || null })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return created.id;
+}
+
+async function findOrCreateParticipant(familyId, fullName) {
+  const trimmed = String(fullName || "").trim();
+  const { data: siblings } = await supabase
+    .from("participants")
+    .select("id, full_name")
+    .eq("family_id", familyId);
+  const match = (siblings || []).find(
+    (p) => p.full_name.trim().toLowerCase() === trimmed.toLowerCase(),
+  );
+  if (match) return match.id;
+  const { data: created, error } = await supabase
+    .from("participants")
+    .insert({ family_id: familyId, full_name: trimmed })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return created.id;
+}
+
+async function ensureLessonParticipant(parentPhone, childName) {
+  let participantId = await resolveParticipantId(parentPhone, childName);
+  const phone = normalizePhone(parentPhone);
+  if (!phone || !String(childName || "").trim()) return null;
+  if (!participantId) {
+    const familyId = await findOrCreateFamily(phone, null);
+    participantId = await findOrCreateParticipant(familyId, childName);
+  }
+  const portal = await ensureParticipantPortal(participantId);
+  if (portal?.result !== "ok") throw new Error(portal?.result || "portal_error");
+  return participantId;
+}
 
 export const RECURRING_SCOPE = { SINGLE: "single", FORWARD: "forward" };
 
@@ -113,6 +171,13 @@ export async function createLesson({ profile, instructor, form }) {
     lesson_format: pricingInfo.lesson_format,
     private_package_id: pricingInfo.private_package_id,
   };
+
+  try {
+    const participantId = await ensureLessonParticipant(parent_phone, child_name);
+    if (participantId) lessonBase.participant_id = participantId;
+  } catch (e) {
+    return { error: e };
+  }
 
   if (lesson_type === "recurring") {
     const day_of_week = dateToDayOfWeek(lesson_date);

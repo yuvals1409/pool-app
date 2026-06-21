@@ -1,6 +1,7 @@
 import QRCode from "qrcode";
 import { VENUE_MAPS_URL } from "./config.js";
 import { fmt_time } from "./lessonDates.js";
+import { staffGetPortalCredentials, buildPortalWhatsAppUrl } from "./childPortal.js";
 
 const LOGO_SRC = "/logo.png";
 let logoCache = null;
@@ -229,11 +230,21 @@ export async function notifyLessonCancel(lesson, phone, i18n) {
 
 export async function notifyNewLesson(lesson, phone, toast, i18n) {
   if (!phone) return false;
-  try {
-    await shareTicketViaWhatsApp(lesson, phone, toast, i18n);
-    return true;
-  } catch {
-    toast.show(i18n.t("shareError"));
-    return false;
+  const { t } = i18n;
+  if (lesson.participant_id) {
+    try {
+      const data = await staffGetPortalCredentials(lesson.participant_id);
+      if (data?.result === "ok") {
+        window.open(
+          buildPortalWhatsAppUrl(phone, data.portal_token, data.portal_pin, t),
+          "_blank",
+        );
+        return true;
+      }
+    } catch {
+      // fall through
+    }
   }
+  toast?.show(t("portalCopy"));
+  return false;
 }

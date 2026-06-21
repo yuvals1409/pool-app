@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase.js";
 import { useLang } from "../i18n.jsx";
-import { copyEnrollmentTicketLink } from "../lib/accessPass.js";
+import { copyChildPortalLink } from "../lib/childPortal.js";
 import BillingPaymentModal from "./BillingPaymentModal.jsx";
 import { billingTypeForTemplate } from "../lib/billing.js";
 import { formatProductLabel } from "../lib/productLabel.js";
@@ -18,7 +18,7 @@ const paymentBadgeVariant = (status) => ({
   waived: "neutral",
 }[status] || "neutral");
 
-export default function OfficeTab({ toast }) {
+export default function OfficeTab({ profile, toast }) {
   const { t, days, fmtDateDay } = useLang();
   const isDesktop = useIsDesktop();
   const [query, setQuery] = useState("");
@@ -107,7 +107,7 @@ export default function OfficeTab({ toast }) {
         .from("enrollments")
         .select(`
           id, payment_status, valid_until, active,
-          participant:participants(id, full_name),
+          participant:participants(id, full_name, family:families(phone)),
           product:products(id, name, day_of_week, start_time, end_time, instructor_name, level, level_label, target_audience, gender, schedule_pattern, season_id, product_templates(code), season:seasons(active))
         `)
         .in("participant_id", [...participantIds])
@@ -169,7 +169,7 @@ export default function OfficeTab({ toast }) {
     setSavingId(null);
   };
 
-  const copyTicketLink = (enrollmentId) => copyEnrollmentTicketLink(enrollmentId, { toast, t });
+  const copyPortalLink = (participantId) => copyChildPortalLink(participantId, toast, t);
 
   const paymentLabel = (status) => ({
     paid: t("paymentPaid"),
@@ -190,9 +190,9 @@ export default function OfficeTab({ toast }) {
           {paymentLabel(status)}
         </Button>
       ))}
-      {row.product?.season?.active === true && (
-        <Button size="sm" variant="outline" onClick={() => copyTicketLink(row.id)}>
-          {t("copyTicketLink")}
+      {row.product?.season?.active === true && row.participant?.id && (
+        <Button size="sm" variant="outline" onClick={() => copyPortalLink(row.participant.id)}>
+          {t("portalCopy")}
         </Button>
       )}
     </div>

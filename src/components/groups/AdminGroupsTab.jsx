@@ -45,7 +45,7 @@ function normalizePhone(phone) {
   return phone.replace(/\s/g, "").trim();
 }
 
-export default function AdminGroupsTab({ toast }) {
+export default function AdminGroupsTab({ profile, toast }) {
   const { t, days } = useLang();
   const isDesktop = useIsDesktop();
 
@@ -512,6 +512,7 @@ export default function AdminGroupsTab({ toast }) {
         {detailTab === "enrollments" && selectedProductId && (
           <div style={{ marginTop: 16 }}>
             <GroupEnrollmentsPanel
+              profile={profile}
               toast={toast}
               season={season}
               seasonIsLive={seasonIsLive}
@@ -595,6 +596,7 @@ export default function AdminGroupsTab({ toast }) {
 
       {searchMode ? (
         <GroupEnrollmentsPanel
+          profile={profile}
           toast={toast}
           season={season}
           seasonIsLive={seasonIsLive}

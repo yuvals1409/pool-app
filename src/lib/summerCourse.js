@@ -9,6 +9,9 @@ export function parseSummerRegisterPath() {
   if (window.location.pathname.match(/\/register\/summer\/?$/i)) {
     return true;
   }
+  if (window.location.pathname.match(/\/summer\/?$/i)) {
+    return true;
+  }
   const params = new URLSearchParams(window.location.search);
   return params.get("register") === "summer" || !!params.get("invite") || !!params.get("offer");
 }

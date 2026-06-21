@@ -71,6 +71,8 @@ export function normalizeRedeemResult(data) {
       productName: data.product_name,
       instructorName: data.instructor_name,
       paymentStatus: data.payment_status,
+      photoUrl: data.photo_url || null,
+      photoMissing: !!data.photo_missing,
     };
   }
   return {
@@ -81,6 +83,8 @@ export function normalizeRedeemResult(data) {
     usedAt: data.used_at,
     validFrom: data.valid_from,
     validUntil: data.valid_until,
+    photoUrl: data.photo_url || null,
+    photoMissing: !!data.photo_missing,
   };
 }
 

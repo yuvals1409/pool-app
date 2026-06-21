@@ -5,7 +5,8 @@ import {
   ensureAccessPassesGenerated,
   ensureCourseSeriesSessions,
 } from "../../lib/supabase.js";
-import { copyEnrollmentTicketLink } from "../../lib/accessPass.js";
+import { copyChildPortalLink } from "../../lib/childPortal.js";
+import PortalEnrollmentModal from "../PortalEnrollmentModal.jsx";
 import { regenerateEnrollmentPasses } from "../../lib/summerCourse.js";
 import { formatProductLabel } from "../../lib/productLabel.js";
 import { useLang } from "../../i18n.jsx";
@@ -46,6 +47,7 @@ const ENROLLMENT_SELECT = `
 `;
 
 export default function GroupEnrollmentsPanel({
+  profile,
   toast,
   season,
   seasonIsLive,
@@ -76,6 +78,7 @@ export default function GroupEnrollmentsPanel({
   const [addGender, setAddGender] = useState("");
   const [addGrade, setAddGrade] = useState("");
   const [addBirthDate, setAddBirthDate] = useState("");
+  const [portalModal, setPortalModal] = useState(null);
   const [addProductId, setAddProductId] = useState("");
   const [addPaymentStatus, setAddPaymentStatus] = useState("unpaid");
 
@@ -397,6 +400,7 @@ export default function GroupEnrollmentsPanel({
       await syncSessionsForProduct(pid);
 
       toast.show(t("enrollmentAdded"));
+      setPortalModal({ participantId, phone });
       setParentPhone("");
       setParentName("");
       setChildName("");
@@ -529,8 +533,8 @@ export default function GroupEnrollmentsPanel({
           )}
           {seasonIsLive && (
             <>
-              <Button variant="secondary" size="sm" onClick={() => copyEnrollmentTicketLink(row.id, { toast, t })}>
-                {t("copyTicketLink")}
+              <Button variant="secondary" size="sm" onClick={() => copyChildPortalLink(row.participant?.id, toast, t)}>
+                {t("portalCopy")}
               </Button>
               <Button variant="secondary" size="sm" disabled={savingId === row.id} onClick={() => handleRegeneratePasses(row)}>
                 {t("regeneratePasses")}
@@ -768,6 +772,14 @@ export default function GroupEnrollmentsPanel({
           }}
         />
       )}
+      <PortalEnrollmentModal
+        open={!!portalModal}
+        participantId={portalModal?.participantId}
+        phone={portalModal?.phone}
+        profile={profile}
+        toast={toast}
+        onClose={() => setPortalModal(null)}
+      />
     </div>
   );
 }

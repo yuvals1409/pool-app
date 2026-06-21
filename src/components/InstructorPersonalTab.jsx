@@ -7,8 +7,7 @@ import {
 import ScheduleTab from "./schedule/ScheduleTab.jsx";
 import InstructorPayrollSummary from "./InstructorPayrollSummary.jsx";
 import InstructorAssessmentResults from "./InstructorAssessmentResults.jsx";
-import PendingWeeklyBarcodes from "./PendingWeeklyBarcodes.jsx";
-import { Button } from "./ui/ds/index.js";
+import { Button, Card } from "./ui/ds/index.js";
 
 export default function InstructorPersonalTab({
   profile,
@@ -42,11 +41,11 @@ export default function InstructorPersonalTab({
         return <InstructorAssessmentResults toast={toast} />;
       case "pending":
         return (
-          <PendingWeeklyBarcodes
-            profile={profile}
-            toast={toast}
-            alwaysShow
-          />
+          <Card style={{ padding: 20, marginTop: 12 }}>
+            <p style={{ fontSize: 14, color: "var(--ink-mid)", lineHeight: 1.5 }}>
+              {t("portalPinSub")}
+            </p>
+          </Card>
         );
       default:
         return null;
