@@ -43,6 +43,7 @@ import AdminUtilizationTab from "./components/AdminUtilizationTab.jsx";
 import AdminDashboardTab from "./components/AdminDashboardTab.jsx";
 import AdminStudentsTab from "./components/AdminStudentsTab.jsx";
 import AdminFinanceTab from "./components/AdminFinanceTab.jsx";
+import AdminRevenueForecastTab from "./components/AdminRevenueForecastTab.jsx";
 import AdminPriceListTab from "./components/AdminPriceListTab.jsx";
 import AdminInstructorsTab from "./components/AdminInstructorsTab.jsx";
 import AdminSheetSyncTab from "./components/AdminSheetSyncTab.jsx";
@@ -1058,6 +1059,8 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
         <AdminStudentsTab toast={toast} />
       ) : adminSection === "finance" ? (
         <AdminFinanceTab toast={toast} />
+      ) : adminSection === "revenue_forecast" ? (
+        <AdminRevenueForecastTab toast={toast} />
       ) : adminSection === "instructors" ? (
         <AdminInstructorsTab toast={toast} />
       ) : adminSection === "payroll" ? (

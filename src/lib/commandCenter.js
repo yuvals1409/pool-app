@@ -1,14 +1,11 @@
 import { supabase } from "./supabase.js";
-
-function toDateStr(d) {
-  return d.toISOString().slice(0, 10);
-}
+import { toLocalDateStr } from "./lessonDates.js";
 
 /** @param {"today"|"week"|"month"} preset */
 export function periodPresetRange(preset = "month") {
   const today = new Date();
   today.setHours(12, 0, 0, 0);
-  const asOf = toDateStr(today);
+  const asOf = toLocalDateStr(today);
 
   if (preset === "today") {
     return { from: asOf, to: asOf, asOf };
@@ -16,10 +13,10 @@ export function periodPresetRange(preset = "month") {
   if (preset === "week") {
     const start = new Date(today);
     start.setDate(start.getDate() - 6);
-    return { from: toDateStr(start), to: asOf, asOf };
+    return { from: toLocalDateStr(start), to: asOf, asOf };
   }
   const start = new Date(today.getFullYear(), today.getMonth(), 1);
-  return { from: toDateStr(start), to: asOf, asOf };
+  return { from: toLocalDateStr(start), to: asOf, asOf };
 }
 
 export async function getSchoolOverviewKpis(asOf = null, seasonId = null) {
@@ -46,6 +43,26 @@ export async function getRevenueBreakdown(from, to) {
   });
   if (error) throw error;
   return data || {};
+}
+
+export async function getRevenueForecast(from, to) {
+  const { data, error } = await supabase.rpc("get_revenue_forecast", {
+    p_from: from,
+    p_to: to,
+  });
+  if (error) throw error;
+  return data || {};
+}
+
+export function forecastDefaultRange(daysAhead = 90) {
+  const today = new Date();
+  today.setHours(12, 0, 0, 0);
+  const end = new Date(today);
+  end.setDate(end.getDate() + daysAhead);
+  return {
+    from: toLocalDateStr(today),
+    to: toLocalDateStr(end),
+  };
 }
 
 export async function getInstructorAnalytics(from, to, instructorId = null) {

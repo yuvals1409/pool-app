@@ -127,7 +127,7 @@ export default function AdminFinanceTab({ toast }) {
     const date = new Date().toISOString().slice(0, 10);
     exportCsv(
       `finance-${date}.csv`,
-      [t("financeByDomain"), t("financePaymentCount"), t("financeTotalRevenue")],
+      [t("financeByDomain"), t("financeSessionCount"), t("financeTotalRevenue")],
       [
         ...byDomain.map((row) => [row.name, row.paid_count, row.revenue]),
         [t("financeTotalRevenue"), payingCustomers, totalRevenue],
@@ -143,7 +143,6 @@ export default function AdminFinanceTab({ toast }) {
 
   const formatRevenueCell = (row) => {
     if (row.revenue > 0) return `₪${formatMoneyFull(row.revenue)}`;
-    if (row.paid_count > 0) return t("financeRevenuePending");
     return "—";
   };
 
@@ -252,7 +251,7 @@ export default function AdminFinanceTab({ toast }) {
                 <thead>
                   <tr>
                     <th>{t("financeByDomain")}</th>
-                    <th>{t("financePaymentCount")}</th>
+                    <th>{t("financeSessionCount")}</th>
                     <th>{t("financeTotalRevenue")}</th>
                   </tr>
                 </thead>
