@@ -969,6 +969,8 @@ select.input {
   font-family: var(--font-sans) !important;
   color: var(--ink-mid) !important;
   font-size: 11px !important;
+  direction: rtl;
+  unicode-bidi: plaintext;
 }
 
 .chart-canvas .recharts-default-legend {

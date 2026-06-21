@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -39,6 +39,7 @@ import {
   shortChartLabel,
   withSharePct,
   legendWithShare,
+  makeRtlCategoryYAxisTick,
 } from "../lib/chartTheme.js";
 import ChartCanvas from "./charts/ChartCanvas.jsx";
 
@@ -183,6 +184,9 @@ export default function AdminDashboardTab({ toast, onOpenHealth }) {
   const funnelYWidth = categoryYAxisWidth(funnelData.map((r) => r.stage), 88, 130);
   const productYWidth = categoryYAxisWidth(productChartData.map((r) => r.shortName), 96, 140);
   const instructorYWidth = categoryYAxisWidth(instructorChartData.map((r) => r.shortName), 96, 140);
+  const funnelYTick = useMemo(() => makeRtlCategoryYAxisTick(funnelYWidth), [funnelYWidth]);
+  const productYTick = useMemo(() => makeRtlCategoryYAxisTick(productYWidth), [productYWidth]);
+  const instructorYTick = useMemo(() => makeRtlCategoryYAxisTick(instructorYWidth), [instructorYWidth]);
 
   const exportReport = (type) => {
     const date = todayStr();
@@ -361,7 +365,7 @@ export default function AdminDashboardTab({ toast, onOpenHealth }) {
                     <BarChart data={productChartData} layout="vertical" margin={CHART_MARGIN_Y_LABELS}>
                       <CartesianGrid {...GRID_PROPS} horizontal={false} />
                       <XAxis type="number" allowDecimals={false} tick={AXIS_TICK} />
-                      <YAxis type="category" dataKey="shortName" width={productYWidth} tick={{ fontSize: 10, fill: "var(--ink-mid)" }} />
+                      <YAxis type="category" dataKey="shortName" width={productYWidth} tick={productYTick} />
                       <Tooltip
                         labelFormatter={(_, items) => items?.[0]?.payload?.product_name || ""}
                       />
@@ -387,7 +391,7 @@ export default function AdminDashboardTab({ toast, onOpenHealth }) {
                     <BarChart data={instructorChartData} layout="vertical" margin={CHART_MARGIN_Y_LABELS}>
                       <CartesianGrid {...GRID_PROPS} horizontal={false} />
                       <XAxis type="number" allowDecimals={false} tick={AXIS_TICK} />
-                      <YAxis type="category" dataKey="shortName" width={instructorYWidth} tick={{ fontSize: 10, fill: "var(--ink-mid)" }} />
+                      <YAxis type="category" dataKey="shortName" width={instructorYWidth} tick={instructorYTick} />
                       <Tooltip labelFormatter={(_, items) => items?.[0]?.payload?.instructor_name || ""} />
                       <Legend {...LEGEND_PROPS} />
                       <Bar dataKey="present_count" name={t("attendancePresent")} fill={CHART_COLORS[2]} radius={[0, 4, 4, 0]} maxBarSize={16} />
@@ -484,7 +488,7 @@ export default function AdminDashboardTab({ toast, onOpenHealth }) {
                   <BarChart data={funnelData} layout="vertical" margin={CHART_MARGIN_Y_LABELS}>
                     <CartesianGrid {...GRID_PROPS} horizontal={false} />
                     <XAxis type="number" allowDecimals={false} tick={AXIS_TICK} />
-                    <YAxis type="category" dataKey="stage" width={funnelYWidth} tick={{ fontSize: 10, fill: "var(--ink-mid)" }} />
+                    <YAxis type="category" dataKey="stage" width={funnelYWidth} tick={funnelYTick} />
                     <Tooltip />
                     <Bar dataKey="count" fill={CHART_COLORS[2]} radius={[0, 4, 4, 0]} maxBarSize={24} />
                   </BarChart>

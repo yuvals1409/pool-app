@@ -22,6 +22,8 @@ import {
   categoryYAxisWidth,
   withSharePct,
   legendWithShare,
+  makeRtlCategoryYAxisTick,
+  RtlCategoryXAxisTick,
 } from "../lib/chartTheme.js";
 import ChartCanvas from "./charts/ChartCanvas.jsx";
 import { Button, Card, Field, Select, SegmentedControl } from "./ui/ds/index.js";
@@ -142,6 +144,7 @@ export default function AdminStudentsTab({ toast }) {
   }, [demographics, t]);
 
   const tenureYWidth = categoryYAxisWidth(tenureChart.map((r) => r.name), 80, 120);
+  const tenureYTick = useMemo(() => makeRtlCategoryYAxisTick(tenureYWidth), [tenureYWidth]);
 
   const exportStudentsCsv = () => {
     const date = new Date().toISOString().slice(0, 10);
@@ -242,7 +245,7 @@ export default function AdminStudentsTab({ toast }) {
                 <ChartCanvas height={228}>
                   <BarChart data={gradeChart} margin={CHART_MARGIN_X_LABELS} barCategoryGap="28%">
                     <CartesianGrid {...GRID_PROPS} />
-                    <XAxis dataKey="name" tick={AXIS_TICK} interval={0} height={40} />
+                    <XAxis dataKey="name" tick={RtlCategoryXAxisTick} interval={0} height={48} />
                     <YAxis allowDecimals={false} width={44} tick={AXIS_TICK} />
                     <Tooltip />
                     <Bar dataKey="count" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} maxBarSize={48} />
@@ -260,7 +263,7 @@ export default function AdminStudentsTab({ toast }) {
                   <BarChart layout="vertical" data={tenureChart} margin={CHART_MARGIN_Y_LABELS}>
                     <CartesianGrid {...GRID_PROPS} horizontal={false} />
                     <XAxis type="number" allowDecimals={false} tick={AXIS_TICK} />
-                    <YAxis type="category" dataKey="name" width={tenureYWidth} tick={{ fontSize: 10, fill: "var(--ink-mid)" }} />
+                    <YAxis type="category" dataKey="name" width={tenureYWidth} tick={tenureYTick} />
                     <Tooltip />
                     <Bar dataKey="count" fill={CHART_COLORS[2]} radius={[0, 4, 4, 0]} maxBarSize={22} />
                   </BarChart>

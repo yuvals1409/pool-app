@@ -94,3 +94,5 @@ export function legendWithShare(value, entry) {
   const pct = entry?.payload?.sharePct;
   return pct != null ? `${value} (${pct}%)` : value;
 }
+
+export { makeRtlCategoryYAxisTick, RtlCategoryXAxisTick } from "../components/charts/RtlAxisTick.jsx";

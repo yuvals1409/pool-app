@@ -19,6 +19,7 @@ import {
   GRID_PROPS,
   categoryYAxisWidth,
   shortChartLabel,
+  makeRtlCategoryYAxisTick,
 } from "../lib/chartTheme.js";
 import ChartCanvas from "./charts/ChartCanvas.jsx";
 import { AnimatedSheetOverlay, AnimatedSheetPanel } from "./ui/AnimatedSheet.jsx";
@@ -318,6 +319,7 @@ function InstructorDetailPanel({ row, from, to, open, onClose, toast, onSaved })
     [attendanceByGroup],
   );
   const attendanceYWidth = categoryYAxisWidth(attendanceChart.map((r) => r.name), 88, 130);
+  const attendanceYTick = useMemo(() => makeRtlCategoryYAxisTick(attendanceYWidth), [attendanceYWidth]);
 
   return (
     <AnimatePresence>
@@ -394,7 +396,7 @@ function InstructorDetailPanel({ row, from, to, open, onClose, toast, onSaved })
                         type="category"
                         dataKey="name"
                         width={attendanceYWidth}
-                        tick={{ fontSize: 10, fill: "var(--ink-mid)" }}
+                        tick={attendanceYTick}
                       />
                       <Tooltip
                         formatter={(v) => [`${v}%`, t("instructorsAttendance")]}

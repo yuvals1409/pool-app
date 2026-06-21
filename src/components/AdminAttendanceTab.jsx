@@ -14,6 +14,7 @@ import {
   GRID_PROPS,
   categoryYAxisWidth,
   shortChartLabel,
+  makeRtlCategoryYAxisTick,
 } from "../lib/chartTheme.js";
 import ChartCanvas from "./charts/ChartCanvas.jsx";
 import {
@@ -160,6 +161,7 @@ export default function AdminAttendanceTab({ toast }) {
   }, [filteredSummary]);
 
   const chartYWidth = categoryYAxisWidth(chartData.map((r) => r.name), 88, 130);
+  const chartYTick = useMemo(() => makeRtlCategoryYAxisTick(chartYWidth), [chartYWidth]);
 
   const exportSummaryCsv = () => {
     exportCsv(
@@ -327,7 +329,7 @@ export default function AdminAttendanceTab({ toast }) {
                     type="category"
                     dataKey="name"
                     width={chartYWidth}
-                    tick={{ fontSize: 10, fill: "var(--ink-mid)" }}
+                    tick={chartYTick}
                   />
                   <Tooltip
                     formatter={(v) => [`${v}%`, t("attendanceRate")]}

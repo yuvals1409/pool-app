@@ -18,6 +18,7 @@ import {
   categoryYAxisWidth,
   withSharePct,
   legendWithShare,
+  makeRtlCategoryYAxisTick,
 } from "../lib/chartTheme.js";
 import ChartCanvas from "./charts/ChartCanvas.jsx";
 import { Button, Card, Field, Input, KpiCard, SegmentedControl } from "./ui/ds/index.js";
@@ -121,6 +122,7 @@ export default function AdminMarketingTab({ toast }) {
   }, [data.by_source, t]);
 
   const funnelYWidth = categoryYAxisWidth(funnelChart.map((r) => r.stage), 88, 128);
+  const funnelYTick = useMemo(() => makeRtlCategoryYAxisTick(funnelYWidth), [funnelYWidth]);
 
   const exportMarketingCsv = () => {
     const date = new Date().toISOString().slice(0, 10);
@@ -191,7 +193,7 @@ export default function AdminMarketingTab({ toast }) {
                 <BarChart data={funnelChart} layout="vertical" margin={CHART_MARGIN_Y_LABELS}>
                   <CartesianGrid {...GRID_PROPS} horizontal={false} />
                   <XAxis type="number" allowDecimals={false} tick={AXIS_TICK} />
-                  <YAxis type="category" dataKey="stage" width={funnelYWidth} tick={{ fontSize: 10, fill: "var(--ink-mid)" }} />
+                  <YAxis type="category" dataKey="stage" width={funnelYWidth} tick={funnelYTick} />
                   <Tooltip />
                   <Bar dataKey="count" fill={CHART_COLORS[0]} radius={[0, 4, 4, 0]} maxBarSize={28} />
                 </BarChart>
