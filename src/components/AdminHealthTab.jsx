@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { useLang } from "../i18n.jsx";
 import { useIsDesktop } from "../lib/useBreakpoint.js";
 import {
@@ -10,6 +10,14 @@ import {
   prevMonthValue,
   validateHealthSettings,
 } from "../lib/schoolHealth.js";
+import {
+  CHART_COLORS,
+  CHART_MARGIN,
+  AXIS_TICK,
+  GRID_PROPS,
+  LEGEND_PROPS,
+} from "../lib/chartTheme.js";
+import ChartCanvas from "./charts/ChartCanvas.jsx";
 import { Badge, Button, Card, Field, Input, KpiCard, Spinner } from "./ui/ds/index.js";
 
 const HEALTH_VARIANT = { green: "success", yellow: "warn", red: "danger" };
@@ -134,16 +142,17 @@ export default function AdminHealthTab({ toast }) {
             {history.length === 0 ? (
               <div className="empty-text" style={{ padding: 24 }}>{t("noResults")}</div>
             ) : (
-              <ResponsiveContainer width="100%" height={240}>
-                <LineChart data={history}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-                  <YAxis domain={[0, 100]} />
+              <ChartCanvas height={240}>
+                <LineChart data={history} margin={CHART_MARGIN}>
+                  <CartesianGrid {...GRID_PROPS} />
+                  <XAxis dataKey="label" tick={AXIS_TICK} />
+                  <YAxis domain={[0, 100]} tick={AXIS_TICK} width={40} tickFormatter={(v) => `${v}`} />
                   <Tooltip />
-                  <Line type="monotone" dataKey="score" name={t("healthScore")} stroke="#0077B6" strokeWidth={2} />
-                  <Line type="monotone" dataKey="occupancy_pct" name={t("ccOccupancy")} stroke="#00B894" strokeWidth={2} />
+                  <Legend {...LEGEND_PROPS} />
+                  <Line type="monotone" dataKey="score" name={t("healthScore")} stroke={CHART_COLORS[0]} strokeWidth={2} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="occupancy_pct" name={t("ccOccupancy")} stroke={CHART_COLORS[2]} strokeWidth={2} dot={{ r: 3 }} />
                 </LineChart>
-              </ResponsiveContainer>
+              </ChartCanvas>
             )}
           </Card>
 

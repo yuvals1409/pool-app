@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";
 import { supabase } from "../lib/supabase.js";
 import { useLang } from "../i18n.jsx";
@@ -11,9 +11,21 @@ import { genderLabel } from "../lib/participantFields.js";
 import { getStudentDemographics } from "../lib/commandCenter.js";
 import { exportCsv } from "../lib/analytics.js";
 import { useStudentProfile } from "../lib/StudentProfileContext.jsx";
+import {
+  CHART_COLORS,
+  CHART_MARGIN_X_LABELS,
+  CHART_MARGIN_Y_LABELS,
+  AXIS_TICK,
+  GRID_PROPS,
+  LEGEND_PROPS,
+  PIE_LAYOUT,
+  categoryYAxisWidth,
+  withSharePct,
+  legendWithShare,
+} from "../lib/chartTheme.js";
+import ChartCanvas from "./charts/ChartCanvas.jsx";
 import { Button, Card, Field, Select, SegmentedControl } from "./ui/ds/index.js";
 
-const PIE_COLORS = ["#0077B6", "#E17055", "#00B894", "#6C5CE7"];
 const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
 function tenureLabel(t, bucket) {
@@ -103,26 +115,33 @@ export default function AdminStudentsTab({ toast }) {
   }, [participants, seasonId, statusFilter]);
 
   const genderChart = useMemo(() => {
-    const rows = demographics.by_gender || [];
-    return rows.map((r) => ({
+    const rows = (demographics.by_gender || []).map((r) => ({
       name: r.gender === "unknown" ? t("genderUnknown") : genderLabel(t, r.gender),
-      value: r.cnt,
+      value: Number(r.cnt) || 0,
     }));
+    return withSharePct(rows);
   }, [demographics, t]);
 
   const gradeChart = useMemo(() => {
-    return (demographics.by_grade || []).map((r) => ({
-      name: r.grade || t("gradeUnknown"),
-      count: r.cnt,
-    }));
+    return (demographics.by_grade || [])
+      .map((r) => ({
+        name: r.grade || t("gradeUnknown"),
+        count: Number(r.cnt) || 0,
+      }))
+      .filter((row) => row.count > 0)
+      .sort((a, b) => b.count - a.count);
   }, [demographics, t]);
 
   const tenureChart = useMemo(() => {
-    return (demographics.by_tenure || []).map((r) => ({
-      name: tenureLabel(t, r.bucket),
-      count: r.cnt,
-    }));
+    return (demographics.by_tenure || [])
+      .map((r) => ({
+        name: tenureLabel(t, r.bucket),
+        count: Number(r.cnt) || 0,
+      }))
+      .filter((row) => row.count > 0);
   }, [demographics, t]);
+
+  const tenureYWidth = categoryYAxisWidth(tenureChart.map((r) => r.name), 80, 120);
 
   const exportStudentsCsv = () => {
     const date = new Date().toISOString().slice(0, 10);
@@ -184,57 +203,68 @@ export default function AdminStudentsTab({ toast }) {
       ) : (
         <>
           <div className="section-title" style={{ marginBottom: 12 }}>{t("studentsDemographics")}</div>
-          <div className="dashboard-charts" style={{ marginBottom: 24 }}>
-            <Card style={{ minHeight: 260 }}>
-              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>{t("participantGenderLabel")}</div>
+          <div className="dashboard-charts dashboard-charts--3" style={{ marginBottom: 24 }}>
+            <Card className="dashboard-chart-panel">
+              <div className="dashboard-chart-title">{t("participantGenderLabel")}</div>
               {genderChart.length === 0 ? (
                 <div className="empty-text" style={{ padding: 24 }}>{t("noResults")}</div>
               ) : (
-                <ResponsiveContainer width="100%" height={200}>
+                <ChartCanvas height={228}>
                   <PieChart>
-                    <Pie data={genderChart} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label>
-                      {genderChart.map((_, i) => (
-                        <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                    <Pie
+                      data={genderChart}
+                      dataKey="value"
+                      nameKey="name"
+                      {...PIE_LAYOUT}
+                      paddingAngle={genderChart.length > 1 ? 2 : 0}
+                    >
+                      {genderChart.map((row, i) => (
+                        <Cell key={row.name} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip />
-                    <Legend />
+                    <Tooltip
+                      formatter={(v, _name, item) => [
+                        `${v} (${item?.payload?.sharePct ?? 0}%)`,
+                        item?.payload?.name,
+                      ]}
+                    />
+                    <Legend {...LEGEND_PROPS} formatter={legendWithShare} />
                   </PieChart>
-                </ResponsiveContainer>
+                </ChartCanvas>
               )}
             </Card>
 
-            <Card style={{ minHeight: 260 }}>
-              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>{t("participantGradeLabel")}</div>
+            <Card className="dashboard-chart-panel">
+              <div className="dashboard-chart-title">{t("participantGradeLabel")}</div>
               {gradeChart.length === 0 ? (
                 <div className="empty-text" style={{ padding: 24 }}>{t("noResults")}</div>
               ) : (
-                <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={gradeChart}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" hide />
-                    <YAxis />
+                <ChartCanvas height={228}>
+                  <BarChart data={gradeChart} margin={CHART_MARGIN_X_LABELS} barCategoryGap="28%">
+                    <CartesianGrid {...GRID_PROPS} />
+                    <XAxis dataKey="name" tick={AXIS_TICK} interval={0} height={40} />
+                    <YAxis allowDecimals={false} width={44} tick={AXIS_TICK} />
                     <Tooltip />
-                    <Bar dataKey="count" fill="#0077B6" />
+                    <Bar dataKey="count" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} maxBarSize={48} />
                   </BarChart>
-                </ResponsiveContainer>
+                </ChartCanvas>
               )}
             </Card>
 
-            <Card style={{ minHeight: 260 }}>
-              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>{t("studentTenure")}</div>
+            <Card className="dashboard-chart-panel">
+              <div className="dashboard-chart-title">{t("studentTenure")}</div>
               {tenureChart.length === 0 ? (
                 <div className="empty-text" style={{ padding: 24 }}>{t("noResults")}</div>
               ) : (
-                <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={tenureChart}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" hide />
-                    <YAxis />
+                <ChartCanvas height={228}>
+                  <BarChart layout="vertical" data={tenureChart} margin={CHART_MARGIN_Y_LABELS}>
+                    <CartesianGrid {...GRID_PROPS} horizontal={false} />
+                    <XAxis type="number" allowDecimals={false} tick={AXIS_TICK} />
+                    <YAxis type="category" dataKey="name" width={tenureYWidth} tick={{ fontSize: 10, fill: "var(--ink-mid)" }} />
                     <Tooltip />
-                    <Bar dataKey="count" fill="#00B894" />
+                    <Bar dataKey="count" fill={CHART_COLORS[2]} radius={[0, 4, 4, 0]} maxBarSize={22} />
                   </BarChart>
-                </ResponsiveContainer>
+                </ChartCanvas>
               )}
             </Card>
           </div>
@@ -249,8 +279,8 @@ export default function AdminStudentsTab({ toast }) {
                 <thead>
                   <tr>
                     <th>{t("childName")}</th>
-                    <th>{t("participantGradeLabel")}</th>
-                    <th>{t("participantGenderLabel")}</th>
+                    <th className="col-text--mid">{t("participantGradeLabel")}</th>
+                    <th className="col-text--mid">{t("participantGenderLabel")}</th>
                     <th>{t("studentCurrentGroup")}</th>
                   </tr>
                 </thead>
@@ -263,9 +293,16 @@ export default function AdminStudentsTab({ toast }) {
                       style={{ cursor: "pointer" }}
                     >
                       <td className="col-text">{p.full_name}</td>
-                      <td>{p.grade || t("gradeUnknown")}</td>
-                      <td>{genderLabel(t, p.gender)}</td>
-                      <td className="col-text">
+                      <td className="col-text--mid">{p.grade || t("gradeUnknown")}</td>
+                      <td className="col-text--mid">{genderLabel(t, p.gender)}</td>
+                      <td
+                        className="col-text col-text--truncate"
+                        title={
+                          p.activeEnr
+                            ? formatProductLabel(p.activeEnr.product, DAY_NAMES, p.activeEnr.product?.product_templates?.code)
+                            : undefined
+                        }
+                      >
                         {p.activeEnr
                           ? formatProductLabel(p.activeEnr.product, DAY_NAMES, p.activeEnr.product?.product_templates?.code)
                           : "—"}

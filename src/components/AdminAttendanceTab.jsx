@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { supabase } from "../lib/supabase.js";
 import { listAttendanceHistory, templateLabel } from "../lib/attendance.js";
 import { getAttendanceSummary } from "../lib/commandCenter.js";
@@ -7,6 +7,15 @@ import { exportCsv } from "../lib/analytics.js";
 import { useLang } from "../i18n.jsx";
 import { fmt_time } from "../lib/lessonDates.js";
 import { useIsDesktop } from "../lib/useBreakpoint.js";
+import {
+  CHART_COLORS,
+  CHART_MARGIN_Y_LABELS,
+  AXIS_TICK,
+  GRID_PROPS,
+  categoryYAxisWidth,
+  shortChartLabel,
+} from "../lib/chartTheme.js";
+import ChartCanvas from "./charts/ChartCanvas.jsx";
 import {
   Button,
   EmptyState,
@@ -144,10 +153,13 @@ export default function AdminAttendanceTab({ toast }) {
       .sort((a, b) => (Number(b.attendance_rate) || 0) - (Number(a.attendance_rate) || 0))
       .slice(0, 10)
       .map((r) => ({
-        name: r.label?.length > 18 ? `${r.label.slice(0, 16)}…` : r.label,
+        name: shortChartLabel(r.label, 18),
+        fullName: r.label,
         rate: Number(r.attendance_rate) || 0,
       }));
   }, [filteredSummary]);
+
+  const chartYWidth = categoryYAxisWidth(chartData.map((r) => r.name), 88, 130);
 
   const exportSummaryCsv = () => {
     exportCsv(
@@ -306,16 +318,24 @@ export default function AdminAttendanceTab({ toast }) {
       ) : (
         <>
           {chartData.length > 0 && (
-            <div style={{ marginBottom: 24, height: 280 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} layout="vertical" margin={{ left: 8, right: 16 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" domain={[0, 100]} unit="%" />
-                  <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(v) => [`${v}%`, t("attendanceRate")]} />
-                  <Bar dataKey="rate" fill="#0077B6" radius={[0, 4, 4, 0]} />
+            <div style={{ marginBottom: 24 }}>
+              <ChartCanvas height={280}>
+                <BarChart data={chartData} layout="vertical" margin={CHART_MARGIN_Y_LABELS}>
+                  <CartesianGrid {...GRID_PROPS} horizontal={false} />
+                  <XAxis type="number" domain={[0, 100]} unit="%" tick={AXIS_TICK} />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    width={chartYWidth}
+                    tick={{ fontSize: 10, fill: "var(--ink-mid)" }}
+                  />
+                  <Tooltip
+                    formatter={(v) => [`${v}%`, t("attendanceRate")]}
+                    labelFormatter={(_, items) => items?.[0]?.payload?.fullName || ""}
+                  />
+                  <Bar dataKey="rate" fill={CHART_COLORS[0]} radius={[0, 4, 4, 0]} maxBarSize={18} />
                 </BarChart>
-              </ResponsiveContainer>
+              </ChartCanvas>
             </div>
           )}
           {isDesktop ? (

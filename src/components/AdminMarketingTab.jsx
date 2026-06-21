@@ -1,16 +1,26 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  PieChart, Pie, Cell, ResponsiveContainer,
+  PieChart, Pie, Cell,
 } from "recharts";
 import { supabase } from "../lib/supabase.js";
 import { useLang } from "../i18n.jsx";
 import { useIsDesktop } from "../lib/useBreakpoint.js";
 import { getMarketingFunnel, getSchoolOverviewKpis, periodPresetRange } from "../lib/commandCenter.js";
 import { exportCsv } from "../lib/analytics.js";
+import {
+  CHART_COLORS,
+  CHART_MARGIN_Y_LABELS,
+  AXIS_TICK,
+  GRID_PROPS,
+  LEGEND_PROPS,
+  PIE_LAYOUT,
+  categoryYAxisWidth,
+  withSharePct,
+  legendWithShare,
+} from "../lib/chartTheme.js";
+import ChartCanvas from "./charts/ChartCanvas.jsx";
 import { Button, Card, Field, Input, KpiCard, SegmentedControl } from "./ui/ds/index.js";
-
-const PIE_COLORS = ["#0077B6", "#E17055", "#00B894", "#6C5CE7", "#FDCB6E", "#636E72"];
 
 function sourceLabel(t, source) {
   const key = `leadSource${String(source || "").charAt(0).toUpperCase()}${String(source || "").slice(1)}`;
@@ -58,36 +68,24 @@ export default function AdminMarketingTab({ toast }) {
 
   const loadForecast = useCallback(async () => {
     try {
-      const { data: nextSeason } = await supabase
+      const { data: activeSeason } = await supabase
         .from("seasons")
         .select("id, name, start_date")
-        .eq("active", false)
-        .gt("start_date", new Date().toISOString().slice(0, 10))
-        .order("start_date", { ascending: true })
-        .limit(1)
+        .eq("active", true)
         .maybeSingle();
 
-      let season = nextSeason;
-      if (!season) {
-        const { data: activeSeason } = await supabase
-          .from("seasons")
-          .select("id, name, start_date")
-          .eq("active", true)
-          .maybeSingle();
-        season = activeSeason;
-      }
-      if (!season) {
+      if (!activeSeason) {
         setForecast(null);
         return;
       }
 
-      const kpis = await getSchoolOverviewKpis(null, season.id);
+      const kpis = await getSchoolOverviewKpis(null, activeSeason.id);
       const { count } = await supabase
         .from("waitlist_entries")
         .select("id", { count: "exact", head: true })
         .eq("status", "waiting");
       setWaitlistCount(count ?? 0);
-      setForecast({ season, kpis });
+      setForecast({ season: activeSeason, kpis });
     } catch {
       setForecast(null);
     }
@@ -115,11 +113,14 @@ export default function AdminMarketingTab({ toast }) {
   ], [data, t]);
 
   const sourceChart = useMemo(() => {
-    return (data.by_source || []).map((row) => ({
+    const rows = (data.by_source || []).map((row) => ({
       name: sourceLabel(t, row.source),
       value: row.cnt ?? 0,
     }));
+    return withSharePct(rows);
   }, [data.by_source, t]);
+
+  const funnelYWidth = categoryYAxisWidth(funnelChart.map((r) => r.stage), 88, 128);
 
   const exportMarketingCsv = () => {
     const date = new Date().toISOString().slice(0, 10);
@@ -184,42 +185,48 @@ export default function AdminMarketingTab({ toast }) {
           </div>
 
           <div className="dashboard-charts" style={{ marginBottom: 24 }}>
-            <Card style={{ minHeight: 280 }}>
-              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>{t("marketingFunnel")}</div>
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={funnelChart}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="stage" tick={{ fontSize: 11 }} />
-                  <YAxis allowDecimals={false} />
+            <Card className="dashboard-chart-panel">
+              <div className="dashboard-chart-title">{t("marketingFunnel")}</div>
+              <ChartCanvas height={260}>
+                <BarChart data={funnelChart} layout="vertical" margin={CHART_MARGIN_Y_LABELS}>
+                  <CartesianGrid {...GRID_PROPS} horizontal={false} />
+                  <XAxis type="number" allowDecimals={false} tick={AXIS_TICK} />
+                  <YAxis type="category" dataKey="stage" width={funnelYWidth} tick={{ fontSize: 10, fill: "var(--ink-mid)" }} />
                   <Tooltip />
-                  <Bar dataKey="count" fill="#0077B6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="count" fill={CHART_COLORS[0]} radius={[0, 4, 4, 0]} maxBarSize={28} />
                 </BarChart>
-              </ResponsiveContainer>
+              </ChartCanvas>
             </Card>
 
-            <Card style={{ minHeight: 280 }}>
-              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>{t("marketingBySource")}</div>
+            <Card className="dashboard-chart-panel">
+              <div className="dashboard-chart-title">{t("marketingBySource")}</div>
               {sourceChart.length === 0 ? (
                 <div className="empty-text" style={{ padding: 24 }}>{t("noResults")}</div>
               ) : (
-                <ResponsiveContainer width="100%" height={240}>
+                <ChartCanvas height={260}>
                   <PieChart>
-                    <Pie data={sourceChart} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                    <Pie
+                      data={sourceChart}
+                      dataKey="value"
+                      nameKey="name"
+                      {...PIE_LAYOUT}
+                      paddingAngle={sourceChart.length > 1 ? 2 : 0}
+                    >
                       {sourceChart.map((_, i) => (
-                        <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                        <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip />
-                    <Legend />
+                    <Tooltip formatter={(v, _n, item) => [`${v} (${item?.payload?.sharePct ?? 0}%)`, item?.payload?.name]} />
+                    <Legend {...LEGEND_PROPS} formatter={legendWithShare} />
                   </PieChart>
-                </ResponsiveContainer>
+                </ChartCanvas>
               )}
             </Card>
           </div>
 
           {forecast && (
             <Card style={{ padding: 16 }}>
-              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>{t("marketingForecast")}</div>
+              <div className="dashboard-chart-title">{t("marketingForecast")}</div>
               <div className="log-meta" style={{ marginBottom: 12 }}>
                 {forecast.season.name}
               </div>

@@ -937,7 +937,53 @@ select.input {
 }
 
 @media (min-width: 768px) {
-  .dashboard-charts { grid-template-columns: repeat(2, 1fr); }
+  .dashboard-charts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.dashboard-charts--3 {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 900px) {
+  .dashboard-charts--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* Recharts renders axes incorrectly when nested in RTL — keep canvas LTR */
+.chart-canvas {
+  direction: ltr;
+  width: 100%;
+  min-width: 0;
+}
+
+.chart-canvas .recharts-wrapper,
+.chart-canvas .recharts-surface {
+  direction: ltr;
+}
+
+.chart-canvas .recharts-cartesian-axis-tick-value {
+  font-family: var(--font-sans);
+  fill: var(--ink-mid);
+}
+
+.chart-canvas .recharts-legend-item-text {
+  font-family: var(--font-sans) !important;
+  color: var(--ink-mid) !important;
+  font-size: 11px !important;
+}
+
+.chart-canvas .recharts-default-legend {
+  margin-top: 4px !important;
+}
+
+.dashboard-chart-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 280px;
+}
+
+.dashboard-chart-panel .chart-canvas {
+  flex: 1;
+  min-height: 220px;
 }
 
 .dashboard-chart-card {

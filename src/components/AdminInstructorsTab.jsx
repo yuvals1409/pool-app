@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { AnimatePresence } from "framer-motion";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts";
 import { supabase } from "../lib/supabase.js";
 import { useLang } from "../i18n.jsx";
@@ -12,6 +12,15 @@ import {
   periodPresetRange,
 } from "../lib/commandCenter.js";
 import { exportCsv } from "../lib/analytics.js";
+import {
+  CHART_COLORS,
+  CHART_MARGIN_Y_LABELS,
+  AXIS_TICK,
+  GRID_PROPS,
+  categoryYAxisWidth,
+  shortChartLabel,
+} from "../lib/chartTheme.js";
+import ChartCanvas from "./charts/ChartCanvas.jsx";
 import { AnimatedSheetOverlay, AnimatedSheetPanel } from "./ui/AnimatedSheet.jsx";
 import {
   Button, Card, Field, Input, Select, SegmentedControl, Spinner,
@@ -302,11 +311,13 @@ function InstructorDetailPanel({ row, from, to, open, onClose, toast, onSaved })
 
   const attendanceChart = useMemo(
     () => attendanceByGroup.map((g) => ({
-      name: g.label,
+      name: shortChartLabel(g.label, 18),
+      fullName: g.label,
       rate: g.attendance_rate ?? 0,
     })),
     [attendanceByGroup],
   );
+  const attendanceYWidth = categoryYAxisWidth(attendanceChart.map((r) => r.name), 88, 130);
 
   return (
     <AnimatePresence>
@@ -375,15 +386,23 @@ function InstructorDetailPanel({ row, from, to, open, onClose, toast, onSaved })
                 {attendanceChart.length === 0 ? (
                   <p className="empty-text" style={{ marginBottom: 12 }}>{t("noResults")}</p>
                 ) : (
-                  <ResponsiveContainer width="100%" height={180}>
-                    <BarChart data={attendanceChart}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" hide />
-                      <YAxis domain={[0, 100]} />
-                      <Tooltip />
-                      <Bar dataKey="rate" name={t("instructorsAttendance")} fill="#0077B6" />
+                  <ChartCanvas height={200}>
+                    <BarChart data={attendanceChart} layout="vertical" margin={CHART_MARGIN_Y_LABELS}>
+                      <CartesianGrid {...GRID_PROPS} horizontal={false} />
+                      <XAxis type="number" domain={[0, 100]} unit="%" tick={AXIS_TICK} />
+                      <YAxis
+                        type="category"
+                        dataKey="name"
+                        width={attendanceYWidth}
+                        tick={{ fontSize: 10, fill: "var(--ink-mid)" }}
+                      />
+                      <Tooltip
+                        formatter={(v) => [`${v}%`, t("instructorsAttendance")]}
+                        labelFormatter={(_, items) => items?.[0]?.payload?.fullName || ""}
+                      />
+                      <Bar dataKey="rate" name={t("instructorsAttendance")} fill={CHART_COLORS[0]} radius={[0, 4, 4, 0]} maxBarSize={18} />
                     </BarChart>
-                  </ResponsiveContainer>
+                  </ChartCanvas>
                 )}
 
                 <p className="schedule-session-hint">{t("instructorsRevenueHint")}</p>

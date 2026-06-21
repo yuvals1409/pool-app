@@ -1,15 +1,26 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   PieChart, Pie, Cell, LineChart, Line,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";
 import { useLang } from "../i18n.jsx";
 import { useIsDesktop } from "../lib/useBreakpoint.js";
 import { getRevenueBreakdown, periodPresetRange } from "../lib/commandCenter.js";
+import { toLocalDateStr } from "../lib/lessonDates.js";
 import { exportCsv } from "../lib/analytics.js";
+import {
+  CHART_COLORS,
+  CHART_MARGIN,
+  AXIS_TICK,
+  GRID_PROPS,
+  LEGEND_PROPS,
+  PIE_LAYOUT,
+  formatAxisMoney,
+  formatMoneyFull,
+  legendWithShare,
+} from "../lib/chartTheme.js";
+import ChartCanvas from "./charts/ChartCanvas.jsx";
 import { Button, Card, Field, Input, KpiCard, SegmentedControl } from "./ui/ds/index.js";
-
-const PIE_COLORS = ["#0077B6", "#E17055", "#00B894", "#6C5CE7", "#FDCB6E"];
 
 function domainLabel(t, domain) {
   const key = `financeDomain_${domain}`;
@@ -22,15 +33,16 @@ function yearToDateRange() {
   today.setHours(12, 0, 0, 0);
   const start = new Date(today.getFullYear(), 0, 1);
   return {
-    from: start.toISOString().slice(0, 10),
-    to: today.toISOString().slice(0, 10),
+    from: toLocalDateStr(start),
+    to: toLocalDateStr(today),
   };
 }
 
-function formatMoney(n) {
-  const v = Number(n);
-  if (!Number.isFinite(v)) return "0";
-  return v.toLocaleString("he-IL", { maximumFractionDigits: 0 });
+function formatMonthLabel(monthStart) {
+  const raw = String(monthStart || "");
+  const [year, month] = raw.slice(0, 7).split("-");
+  if (!year || !month) return raw;
+  return `${month}/${year.slice(2)}`;
 }
 
 export default function AdminFinanceTab({ toast }) {
@@ -73,30 +85,52 @@ export default function AdminFinanceTab({ toast }) {
   useEffect(() => { load(); }, [load]);
 
   const byDomain = useMemo(() => {
-    return (data.by_domain || []).map((row) => ({
-      ...row,
-      name: domainLabel(t, row.domain),
-      revenue: Number(row.revenue) || 0,
-      paid_count: row.paid_count ?? 0,
-    }));
+    return (data.by_domain || [])
+      .map((row) => ({
+        ...row,
+        name: domainLabel(t, row.domain),
+        revenue: Number(row.revenue) || 0,
+        paid_count: row.paid_count ?? 0,
+      }))
+      .sort((a, b) => b.revenue - a.revenue || b.paid_count - a.paid_count);
   }, [data.by_domain, t]);
+
+  const pieChartData = useMemo(() => {
+    const rows = byDomain.filter((row) => row.revenue > 0);
+    const total = rows.reduce((sum, row) => sum + row.revenue, 0);
+    return rows.map((row) => ({
+      ...row,
+      sharePct: total > 0 ? Math.round((row.revenue / total) * 100) : 0,
+    }));
+  }, [byDomain]);
 
   const monthlyChart = useMemo(() => {
     return (data.monthly || []).map((row) => ({
       ...row,
-      label: String(row.month_start).slice(0, 7),
+      label: formatMonthLabel(row.month_start),
       revenue: Number(row.revenue) || 0,
     }));
   }, [data.monthly]);
+
+  const totalRevenue = Number(data.total_revenue) || 0;
+  const payingCustomers = Number(data.paying_customers) || 0;
+
+  const avgPerCustomer = useMemo(() => {
+    if (payingCustomers > 0 && totalRevenue > 0) {
+      return Math.round(totalRevenue / payingCustomers);
+    }
+    const fromApi = Number(data.avg_revenue_per_customer ?? data.avg_per_customer);
+    return fromApi > 0 ? Math.round(fromApi) : 0;
+  }, [data, payingCustomers, totalRevenue]);
 
   const exportFinanceCsv = () => {
     const date = new Date().toISOString().slice(0, 10);
     exportCsv(
       `finance-${date}.csv`,
-      [t("financeByDomain"), t("paymentPaid"), t("financeTotalRevenue")],
+      [t("financeByDomain"), t("financePaymentCount"), t("financeTotalRevenue")],
       [
         ...byDomain.map((row) => [row.name, row.paid_count, row.revenue]),
-        [t("financeTotalRevenue"), data.paying_customers ?? 0, data.total_revenue ?? 0],
+        [t("financeTotalRevenue"), payingCustomers, totalRevenue],
       ],
     );
   };
@@ -106,6 +140,12 @@ export default function AdminFinanceTab({ toast }) {
     { value: "month", label: t("ccPeriodMonth") },
     { value: "year", label: t("financePeriodYear") },
   ];
+
+  const formatRevenueCell = (row) => {
+    if (row.revenue > 0) return `₪${formatMoneyFull(row.revenue)}`;
+    if (row.paid_count > 0) return t("financeRevenuePending");
+    return "—";
+  };
 
   return (
     <div>
@@ -137,45 +177,71 @@ export default function AdminFinanceTab({ toast }) {
       ) : (
         <>
           <div className="dashboard-kpi-grid">
-            <KpiCard label={t("financeTotalRevenue")} value={`₪${formatMoney(data.total_revenue)}`} />
-            <KpiCard label={t("financePayingCustomers")} value={data.paying_customers ?? 0} />
-            <KpiCard label={t("financeAvgPerCustomer")} value={`₪${formatMoney(data.avg_per_customer)}`} />
+            <KpiCard label={t("financeTotalRevenue")} value={`₪${formatMoneyFull(totalRevenue)}`} />
+            <KpiCard label={t("financePayingCustomers")} value={payingCustomers} />
+            <KpiCard label={t("financeAvgPerCustomer")} value={`₪${formatMoneyFull(avgPerCustomer)}`} />
           </div>
 
           <div className="dashboard-charts" style={{ marginBottom: 24 }}>
-            <Card style={{ minHeight: 280 }}>
-              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>{t("financeByDomain")}</div>
-              {byDomain.length === 0 ? (
+            <Card className="dashboard-chart-panel">
+              <div className="dashboard-chart-title">{t("financeByDomain")}</div>
+              {pieChartData.length === 0 ? (
                 <div className="empty-text" style={{ padding: 24 }}>{t("noResults")}</div>
               ) : (
-                <ResponsiveContainer width="100%" height={220}>
+                <ChartCanvas height={240}>
                   <PieChart>
-                    <Pie data={byDomain} dataKey="revenue" nameKey="name" cx="50%" cy="50%" outerRadius={70} label>
-                      {byDomain.map((_, i) => (
-                        <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                    <Pie
+                      data={pieChartData}
+                      dataKey="revenue"
+                      nameKey="name"
+                      {...PIE_LAYOUT}
+                      paddingAngle={pieChartData.length > 1 ? 2 : 0}
+                    >
+                      {pieChartData.map((row, i) => (
+                        <Cell key={row.domain} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(v) => `₪${formatMoney(v)}`} />
-                    <Legend />
+                    <Tooltip
+                      formatter={(v, _name, item) => [
+                        `₪${formatMoneyFull(v)} (${item?.payload?.sharePct ?? 0}%)`,
+                        item?.payload?.name,
+                      ]}
+                    />
+                    <Legend {...LEGEND_PROPS} formatter={legendWithShare} />
                   </PieChart>
-                </ResponsiveContainer>
+                </ChartCanvas>
               )}
             </Card>
 
-            <Card style={{ minHeight: 280 }}>
-              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>{t("financeMonthlyTrend")}</div>
+            <Card className="dashboard-chart-panel">
+              <div className="dashboard-chart-title">{t("financeMonthlyTrend")}</div>
               {monthlyChart.length === 0 ? (
                 <div className="empty-text" style={{ padding: 24 }}>{t("noResults")}</div>
+              ) : monthlyChart.length === 1 ? (
+                <div style={{ padding: "24px 8px" }}>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 28, fontWeight: 600, color: "var(--ink)" }}>
+                    ₪{formatMoneyFull(monthlyChart[0].revenue)}
+                  </div>
+                  <div className="log-meta" style={{ marginTop: 8 }}>{monthlyChart[0].label}</div>
+                </div>
               ) : (
-                <ResponsiveContainer width="100%" height={220}>
-                  <LineChart data={monthlyChart}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="label" />
-                    <YAxis />
-                    <Tooltip formatter={(v) => `₪${formatMoney(v)}`} />
-                    <Line type="monotone" dataKey="revenue" name={t("financeTotalRevenue")} stroke="#0077B6" strokeWidth={2} />
+                <ChartCanvas height={240}>
+                  <LineChart data={monthlyChart} margin={CHART_MARGIN}>
+                    <CartesianGrid {...GRID_PROPS} />
+                    <XAxis dataKey="label" tick={AXIS_TICK} />
+                    <YAxis tickFormatter={formatAxisMoney} width={56} tick={AXIS_TICK} />
+                    <Tooltip formatter={(v) => `₪${formatMoneyFull(v)}`} />
+                    <Line
+                      type="monotone"
+                      dataKey="revenue"
+                      name={t("financeTotalRevenue")}
+                      stroke={CHART_COLORS[0]}
+                      strokeWidth={2}
+                      dot={{ r: 4, fill: CHART_COLORS[0] }}
+                      activeDot={{ r: 6 }}
+                    />
                   </LineChart>
-                </ResponsiveContainer>
+                </ChartCanvas>
               )}
             </Card>
           </div>
@@ -186,16 +252,18 @@ export default function AdminFinanceTab({ toast }) {
                 <thead>
                   <tr>
                     <th>{t("financeByDomain")}</th>
-                    <th>{t("paymentPaid")}</th>
+                    <th>{t("financePaymentCount")}</th>
                     <th>{t("financeTotalRevenue")}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {byDomain.map((row) => (
+                  {byDomain
+                    .filter((row) => row.revenue > 0 || row.paid_count > 0)
+                    .map((row) => (
                     <tr key={row.domain}>
                       <td>{row.name}</td>
                       <td className="col-num">{row.paid_count}</td>
-                      <td className="col-num">₪{formatMoney(row.revenue)}</td>
+                      <td className="col-num">{formatRevenueCell(row)}</td>
                     </tr>
                   ))}
                 </tbody>

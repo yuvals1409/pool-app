@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";
 import { supabase } from "../lib/supabase.js";
 import {
@@ -24,8 +24,24 @@ import {
 import { useLang } from "../i18n.jsx";
 import { useIsDesktop } from "../lib/useBreakpoint.js";
 import { Button, Card, Field, Input, KpiCard, Select, Badge, SegmentedControl } from "./ui/ds/index.js";
+import {
+  CHART_COLORS,
+  CHART_MARGIN,
+  CHART_MARGIN_X_LABELS,
+  CHART_MARGIN_Y_LABELS,
+  AXIS_TICK,
+  GRID_PROPS,
+  LEGEND_PROPS,
+  PIE_LAYOUT,
+  categoryYAxisWidth,
+  formatAxisMoney,
+  formatAxisCount,
+  shortChartLabel,
+  withSharePct,
+  legendWithShare,
+} from "../lib/chartTheme.js";
+import ChartCanvas from "./charts/ChartCanvas.jsx";
 
-const PIE_COLORS = ["#0077B6", "#E17055", "#00B894"];
 const HEALTH_VARIANT = { green: "success", yellow: "warn", red: "danger" };
 
 function todayStr() {
@@ -134,11 +150,11 @@ export default function AdminDashboardTab({ toast, onOpenHealth }) {
       for (const row of enroll) {
         payMap[row.payment_status] = (payMap[row.payment_status] || 0) + row.count;
       }
-      setEnrollmentPie([
+      setEnrollmentPie(withSharePct([
         { name: t("paymentPaid"), value: payMap.paid || 0 },
         { name: t("paymentUnpaid"), value: payMap.unpaid || 0 },
         { name: t("paymentWaived"), value: payMap.waived || 0 },
-      ].filter((x) => x.value > 0));
+      ]));
     } catch (e) {
       toast.show(e.message || t("systemError"));
     }
@@ -155,6 +171,18 @@ export default function AdminDashboardTab({ toast, onOpenHealth }) {
     { stage: t("dashboardFunnelSummer"), count: funnel.summer_enrolled || 0 },
     { stage: t("dashboardFunnelClass"), count: funnel.class_enrolled || 0 },
   ];
+
+  const productChartData = byProduct.slice(0, 8).map((row) => ({
+    ...row,
+    shortName: shortChartLabel(row.product_name, 18),
+  }));
+  const instructorChartData = byInstructor.slice(0, 8).map((row) => ({
+    ...row,
+    shortName: shortChartLabel(row.instructor_name, 18),
+  }));
+  const funnelYWidth = categoryYAxisWidth(funnelData.map((r) => r.stage), 88, 130);
+  const productYWidth = categoryYAxisWidth(productChartData.map((r) => r.shortName), 96, 140);
+  const instructorYWidth = categoryYAxisWidth(instructorChartData.map((r) => r.shortName), 96, 140);
 
   const exportReport = (type) => {
     const date = todayStr();
@@ -236,15 +264,15 @@ export default function AdminDashboardTab({ toast, onOpenHealth }) {
               {occupancyTrend.length === 0 ? (
                 <div className="empty-text" style={{ padding: 24 }}>{t("noResults")}</div>
               ) : (
-                <ResponsiveContainer width="100%" height={220}>
-                  <LineChart data={occupancyTrend}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="label" />
-                    <YAxis domain={[0, 100]} />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="occupancy_pct" name={t("ccOccupancy")} stroke="#0077B6" strokeWidth={2} />
+                <ChartCanvas height={220}>
+                  <LineChart data={occupancyTrend} margin={CHART_MARGIN}>
+                    <CartesianGrid {...GRID_PROPS} />
+                    <XAxis dataKey="label" tick={AXIS_TICK} />
+                    <YAxis domain={[0, 100]} tick={AXIS_TICK} width={40} tickFormatter={(v) => `${v}%`} />
+                    <Tooltip formatter={(v) => `${v}%`} />
+                    <Line type="monotone" dataKey="occupancy_pct" name={t("ccOccupancy")} stroke={CHART_COLORS[0]} strokeWidth={2} dot={{ r: 3 }} />
                   </LineChart>
-                </ResponsiveContainer>
+                </ChartCanvas>
               )}
             </Card>
 
@@ -310,15 +338,15 @@ export default function AdminDashboardTab({ toast, onOpenHealth }) {
                 {weekly.length === 0 ? (
                   <div className="empty-text" style={{ padding: 24 }}>{t("noResults")}</div>
                 ) : (
-                  <ResponsiveContainer width="100%" height={220}>
-                    <LineChart data={weekly}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="label" />
-                      <YAxis domain={[0, 100]} />
-                      <Tooltip />
-                      <Line type="monotone" dataKey="attendance_rate" name={t("dashboardAttendanceRate")} stroke="#0077B6" strokeWidth={2} />
+                  <ChartCanvas height={220}>
+                    <LineChart data={weekly} margin={CHART_MARGIN}>
+                      <CartesianGrid {...GRID_PROPS} />
+                      <XAxis dataKey="label" tick={AXIS_TICK} />
+                      <YAxis domain={[0, 100]} tick={AXIS_TICK} width={40} tickFormatter={(v) => `${v}%`} />
+                      <Tooltip formatter={(v) => `${v}%`} />
+                      <Line type="monotone" dataKey="attendance_rate" name={t("dashboardAttendanceRate")} stroke={CHART_COLORS[0]} strokeWidth={2} dot={{ r: 3 }} />
                     </LineChart>
-                  </ResponsiveContainer>
+                  </ChartCanvas>
                 )}
               </Card>
 
@@ -329,16 +357,19 @@ export default function AdminDashboardTab({ toast, onOpenHealth }) {
                 {byProduct.length === 0 ? (
                   <div className="empty-text" style={{ padding: 24 }}>{t("noResults")}</div>
                 ) : (
-                  <ResponsiveContainer width="100%" height={220}>
-                    <BarChart data={byProduct.slice(0, 8)}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="product_name" hide />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="present_count" name={t("attendancePresent")} fill="#0077B6" />
-                      <Bar dataKey="absent_count" name={t("attendanceAbsent")} fill="#E17055" />
+                  <ChartCanvas height={240}>
+                    <BarChart data={productChartData} layout="vertical" margin={CHART_MARGIN_Y_LABELS}>
+                      <CartesianGrid {...GRID_PROPS} horizontal={false} />
+                      <XAxis type="number" allowDecimals={false} tick={AXIS_TICK} />
+                      <YAxis type="category" dataKey="shortName" width={productYWidth} tick={{ fontSize: 10, fill: "var(--ink-mid)" }} />
+                      <Tooltip
+                        labelFormatter={(_, items) => items?.[0]?.payload?.product_name || ""}
+                      />
+                      <Legend {...LEGEND_PROPS} />
+                      <Bar dataKey="present_count" name={t("attendancePresent")} fill={CHART_COLORS[0]} radius={[0, 4, 4, 0]} maxBarSize={16} />
+                      <Bar dataKey="absent_count" name={t("attendanceAbsent")} fill={CHART_COLORS[1]} radius={[0, 4, 4, 0]} maxBarSize={16} />
                     </BarChart>
-                  </ResponsiveContainer>
+                  </ChartCanvas>
                 )}
               </Card>
 
@@ -352,16 +383,17 @@ export default function AdminDashboardTab({ toast, onOpenHealth }) {
                 {byInstructor.length === 0 ? (
                   <div className="empty-text" style={{ padding: 24 }}>{t("noResults")}</div>
                 ) : (
-                  <ResponsiveContainer width="100%" height={220}>
-                    <BarChart data={byInstructor.slice(0, 8)}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="instructor_name" hide />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="present_count" name={t("attendancePresent")} fill="#00B894" />
-                      <Bar dataKey="absent_count" name={t("attendanceAbsent")} fill="#E17055" />
+                  <ChartCanvas height={240}>
+                    <BarChart data={instructorChartData} layout="vertical" margin={CHART_MARGIN_Y_LABELS}>
+                      <CartesianGrid {...GRID_PROPS} horizontal={false} />
+                      <XAxis type="number" allowDecimals={false} tick={AXIS_TICK} />
+                      <YAxis type="category" dataKey="shortName" width={instructorYWidth} tick={{ fontSize: 10, fill: "var(--ink-mid)" }} />
+                      <Tooltip labelFormatter={(_, items) => items?.[0]?.payload?.instructor_name || ""} />
+                      <Legend {...LEGEND_PROPS} />
+                      <Bar dataKey="present_count" name={t("attendancePresent")} fill={CHART_COLORS[2]} radius={[0, 4, 4, 0]} maxBarSize={16} />
+                      <Bar dataKey="absent_count" name={t("attendanceAbsent")} fill={CHART_COLORS[1]} radius={[0, 4, 4, 0]} maxBarSize={16} />
                     </BarChart>
-                  </ResponsiveContainer>
+                  </ChartCanvas>
                 )}
               </Card>
 
@@ -375,18 +407,18 @@ export default function AdminDashboardTab({ toast, onOpenHealth }) {
                 {scanVs.length === 0 ? (
                   <div className="empty-text" style={{ padding: 24 }}>{t("noResults")}</div>
                 ) : (
-                  <ResponsiveContainer width="100%" height={220}>
-                    <BarChart data={scanVs}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="label" />
-                      <YAxis />
+                  <ChartCanvas height={240}>
+                    <BarChart data={scanVs} margin={CHART_MARGIN_X_LABELS}>
+                      <CartesianGrid {...GRID_PROPS} />
+                      <XAxis dataKey="label" tick={AXIS_TICK} />
+                      <YAxis allowDecimals={false} tick={AXIS_TICK} width={44} tickFormatter={formatAxisCount} />
                       <Tooltip />
-                      <Legend />
-                      <Bar dataKey="scanned" name={t("dashboardScanMarks")} fill="#0077B6" />
-                      <Bar dataKey="instructor_marked" name={t("dashboardInstructorMarks")} fill="#00B894" />
-                      <Bar dataKey="expected" name={t("dashboardExpected")} fill="#E17055" />
+                      <Legend {...LEGEND_PROPS} />
+                      <Bar dataKey="scanned" name={t("dashboardScanMarks")} fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} maxBarSize={40} />
+                      <Bar dataKey="instructor_marked" name={t("dashboardInstructorMarks")} fill={CHART_COLORS[2]} radius={[4, 4, 0, 0]} maxBarSize={40} />
+                      <Bar dataKey="expected" name={t("dashboardExpected")} fill={CHART_COLORS[1]} radius={[4, 4, 0, 0]} maxBarSize={40} />
                     </BarChart>
-                  </ResponsiveContainer>
+                  </ChartCanvas>
                 )}
               </Card>
 
@@ -400,15 +432,15 @@ export default function AdminDashboardTab({ toast, onOpenHealth }) {
                 {revenue.length === 0 ? (
                   <div className="empty-text" style={{ padding: 24 }}>{t("noResults")}</div>
                 ) : (
-                  <ResponsiveContainer width="100%" height={220}>
-                    <BarChart data={revenue}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="season_name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="gross_revenue" name={t("dashboardGrossRevenue")} fill="#0077B6" />
+                  <ChartCanvas height={240}>
+                    <BarChart data={revenue} margin={CHART_MARGIN_X_LABELS}>
+                      <CartesianGrid {...GRID_PROPS} />
+                      <XAxis dataKey="season_name" tick={AXIS_TICK} />
+                      <YAxis tickFormatter={formatAxisMoney} width={56} tick={AXIS_TICK} />
+                      <Tooltip formatter={(v) => formatAxisMoney(v)} />
+                      <Bar dataKey="gross_revenue" name={t("dashboardGrossRevenue")} fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} maxBarSize={64} />
                     </BarChart>
-                  </ResponsiveContainer>
+                  </ChartCanvas>
                 )}
               </Card>
 
@@ -419,17 +451,23 @@ export default function AdminDashboardTab({ toast, onOpenHealth }) {
                 {enrollmentPie.length === 0 ? (
                   <div className="empty-text" style={{ padding: 24 }}>{t("noResults")}</div>
                 ) : (
-                  <ResponsiveContainer width="100%" height={220}>
+                  <ChartCanvas height={240}>
                     <PieChart>
-                      <Pie data={enrollmentPie} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label>
+                      <Pie
+                        data={enrollmentPie}
+                        dataKey="value"
+                        nameKey="name"
+                        {...PIE_LAYOUT}
+                        paddingAngle={enrollmentPie.length > 1 ? 2 : 0}
+                      >
                         {enrollmentPie.map((_, i) => (
-                          <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                          <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip />
-                      <Legend />
+                      <Tooltip formatter={(v, _n, item) => [`${v} (${item?.payload?.sharePct ?? 0}%)`, item?.payload?.name]} />
+                      <Legend {...LEGEND_PROPS} formatter={legendWithShare} />
                     </PieChart>
-                  </ResponsiveContainer>
+                  </ChartCanvas>
                 )}
               </Card>
 
@@ -442,15 +480,15 @@ export default function AdminDashboardTab({ toast, onOpenHealth }) {
                   {" · "}{t("dashboardSummerConversion")}: {funnel.summer_conversion ?? 0}%
                   {" · "}{t("dashboardClassConversion")}: {funnel.class_conversion ?? 0}%
                 </p>
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={funnelData} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis type="category" dataKey="stage" width={110} />
+                <ChartCanvas height={260}>
+                  <BarChart data={funnelData} layout="vertical" margin={CHART_MARGIN_Y_LABELS}>
+                    <CartesianGrid {...GRID_PROPS} horizontal={false} />
+                    <XAxis type="number" allowDecimals={false} tick={AXIS_TICK} />
+                    <YAxis type="category" dataKey="stage" width={funnelYWidth} tick={{ fontSize: 10, fill: "var(--ink-mid)" }} />
                     <Tooltip />
-                    <Bar dataKey="count" fill="#00B894" />
+                    <Bar dataKey="count" fill={CHART_COLORS[2]} radius={[0, 4, 4, 0]} maxBarSize={24} />
                   </BarChart>
-                </ResponsiveContainer>
+                </ChartCanvas>
               </Card>
             </div>
           </>
