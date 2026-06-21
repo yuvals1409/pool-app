@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
-import { useLang } from "../i18n.jsx";
-import { useIsDesktop } from "../lib/useBreakpoint.js";
+import { useLang } from "../../i18n.jsx";
 import {
   getHealthSettings,
   updateHealthSettings,
@@ -9,16 +8,16 @@ import {
   getHealthScoreForMonth,
   prevMonthValue,
   validateHealthSettings,
-} from "../lib/schoolHealth.js";
+} from "../../lib/schoolHealth.js";
 import {
   CHART_COLORS,
   CHART_MARGIN,
   AXIS_TICK,
   GRID_PROPS,
   LEGEND_PROPS,
-} from "../lib/chartTheme.js";
-import ChartCanvas from "./charts/ChartCanvas.jsx";
-import { Badge, Button, Card, Field, Input, KpiCard, Spinner } from "./ui/ds/index.js";
+} from "../../lib/chartTheme.js";
+import ChartCanvas from "../charts/ChartCanvas.jsx";
+import { Badge, Button, Card, Field, Input, KpiCard, Spinner } from "../ui/ds/index.js";
 
 const HEALTH_VARIANT = { green: "success", yellow: "warn", red: "danger" };
 
@@ -27,9 +26,8 @@ function currentMonthValue() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
-export default function AdminHealthTab({ toast }) {
+export default function HealthInsightsPanel({ toast }) {
   const { t } = useLang();
-  const isDesktop = useIsDesktop();
   const [month, setMonth] = useState(currentMonthValue());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -100,11 +98,6 @@ export default function AdminHealthTab({ toast }) {
 
   return (
     <div>
-      {!isDesktop && (
-        <div className="page-header">
-          <h1 className="page-title">{t("tabHealth")}</h1>
-        </div>
-      )}
 
       <p className="schedule-session-hint" style={{ marginBottom: 12 }}>{t("healthOverview")}</p>
 

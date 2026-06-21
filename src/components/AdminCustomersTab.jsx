@@ -8,6 +8,7 @@ import { useStudentProfile } from "../lib/StudentProfileContext.jsx";
 import { upsertAnnualPackage } from "../lib/annualPackage.js";
 import { getPlanningSeason } from "../lib/seasonPlanning.js";
 import { purchasePrivatePackage, listPackagesForFamily } from "../lib/privatePackages.js";
+import WaitlistPanel from "./crm/WaitlistPanel.jsx";
 import {
   Badge,
   Button,
@@ -141,6 +142,7 @@ function matchesCreatedRange(createdAt, from, to) {
 
 export default function AdminCustomersTab({ toast }) {
   const { t, days, fmtDateDay } = useLang();
+  const [crmView, setCrmView] = useState("families");
   const { openProfile } = useStudentProfile();
   const isDesktop = useIsDesktop();
   const [families, setFamilies] = useState([]);
@@ -508,6 +510,11 @@ export default function AdminCustomersTab({ toast }) {
     label: t(`customersSort_${id}`),
   }));
 
+  const crmViewOptions = [
+    { value: "families", label: t("crmPanelFamilies") },
+    { value: "waitlist", label: t("crmPanelWaitlist") },
+  ];
+
   return (
     <div>
       {!isDesktop && (
@@ -517,6 +524,19 @@ export default function AdminCustomersTab({ toast }) {
         </div>
       )}
 
+      <div style={{ marginBottom: 16 }}>
+        <SegmentedControl
+          options={crmViewOptions}
+          value={crmView}
+          onChange={setCrmView}
+          size="sm"
+        />
+      </div>
+
+      {crmView === "waitlist" ? (
+        <WaitlistPanel toast={toast} />
+      ) : (
+      <>
       <Card style={{ marginBottom: 16 }}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end", marginBottom: showFilters ? 16 : 0 }}>
           <Field label={t("customersSearchLabel")} style={{ flex: 1, minWidth: 220, marginBottom: 0 }}>
@@ -900,6 +920,8 @@ export default function AdminCustomersTab({ toast }) {
             );
           })}
         </div>
+      )}
+      </>
       )}
     </div>
   );

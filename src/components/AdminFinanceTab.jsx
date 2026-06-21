@@ -5,7 +5,8 @@ import {
 } from "recharts";
 import { useLang } from "../i18n.jsx";
 import { useIsDesktop } from "../lib/useBreakpoint.js";
-import { getRevenueBreakdown, periodPresetRange } from "../lib/commandCenter.js";
+import { getRevenueBreakdown, periodPresetRange, forecastDefaultRange } from "../lib/commandCenter.js";
+import RevenueForecastPanel from "./finance/RevenueForecastPanel.jsx";
 import { toLocalDateStr } from "../lib/lessonDates.js";
 import { exportCsv } from "../lib/analytics.js";
 import {
@@ -49,9 +50,13 @@ export default function AdminFinanceTab({ toast }) {
   const { t } = useLang();
   const isDesktop = useIsDesktop();
   const monthRange = periodPresetRange("month");
+  const forecastDefault = forecastDefaultRange(90);
+  const [financeView, setFinanceView] = useState("actual");
   const [periodPreset, setPeriodPreset] = useState("month");
   const [from, setFrom] = useState(monthRange.from);
   const [to, setTo] = useState(monthRange.to);
+  const [forecastFrom, setForecastFrom] = useState(forecastDefault.from);
+  const [forecastTo, setForecastTo] = useState(forecastDefault.to);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({});
 
@@ -141,6 +146,11 @@ export default function AdminFinanceTab({ toast }) {
     { value: "year", label: t("financePeriodYear") },
   ];
 
+  const financeViewOptions = [
+    { value: "actual", label: t("financePanelActual") },
+    { value: "forecast", label: t("financePanelForecast") },
+  ];
+
   const formatRevenueCell = (row) => {
     if (row.revenue > 0) return `₪${formatMoneyFull(row.revenue)}`;
     return "—";
@@ -154,8 +164,29 @@ export default function AdminFinanceTab({ toast }) {
         </div>
       )}
 
-      <p className="schedule-session-hint" style={{ marginBottom: 12 }}>{t("financeOverview")}</p>
+      <p className="schedule-session-hint" style={{ marginBottom: 12 }}>
+        {financeView === "actual" ? t("financeOverview") : t("revenueForecastOverview")}
+      </p>
 
+      <div style={{ marginBottom: 16 }}>
+        <SegmentedControl
+          options={financeViewOptions}
+          value={financeView}
+          onChange={setFinanceView}
+          size="sm"
+        />
+      </div>
+
+      {financeView === "forecast" ? (
+        <RevenueForecastPanel
+          toast={toast}
+          from={forecastFrom}
+          to={forecastTo}
+          onFromChange={setForecastFrom}
+          onToChange={setForecastTo}
+        />
+      ) : (
+      <>
       <div className="filter-bar" style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "flex-end", marginBottom: 16 }}>
         <Field label={t("ccTrendPeriod")} style={{ marginBottom: 0 }}>
           <SegmentedControl options={periodOptions} value={periodPreset} onChange={setPeriodPreset} size="sm" />
@@ -270,6 +301,8 @@ export default function AdminFinanceTab({ toast }) {
             </div>
           )}
         </>
+      )}
+      </>
       )}
     </div>
   );

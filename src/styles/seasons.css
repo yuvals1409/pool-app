@@ -1,0 +1,122 @@
+.seasons-tab {
+  min-height: 0;
+}
+
+.seasons-master-detail {
+  display: grid;
+  grid-template-columns: min(360px, 38%) 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.seasons-list-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  min-height: 200px;
+  max-height: calc(100vh - 260px);
+  overflow-y: auto;
+}
+
+.seasons-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.seasons-list-item {
+  display: block;
+  width: 100%;
+  text-align: start;
+  padding: 14px 16px;
+  border: none;
+  border-bottom: 1px solid var(--separator);
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.seasons-list-item:last-child {
+  border-bottom: none;
+}
+
+.seasons-list-item:hover {
+  background: var(--bg-secondary);
+}
+
+.seasons-list-item--selected {
+  background: var(--bg-secondary);
+  box-shadow: inset 3px 0 0 var(--pool);
+}
+
+.seasons-list-item__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.seasons-list-item__name {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.seasons-list-item__dates {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+}
+
+.seasons-list-item__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.seasons-list-item__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.seasons-detail-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  min-height: 200px;
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+}
+
+.seasons-detail-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.seasons-detail-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.seasons-mobile-detail-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 767px) {
+  .seasons-master-detail {
+    grid-template-columns: 1fr;
+  }
+}

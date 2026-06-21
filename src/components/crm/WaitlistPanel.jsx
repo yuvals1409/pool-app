@@ -1,20 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
-import { useLang } from "../i18n.jsx";
-import { useIsDesktop } from "../lib/useBreakpoint.js";
+import { useLang } from "../../i18n.jsx";
 import {
   listWaitlist,
   listPendingWaitlistNotifications,
   markWaitlistNotified,
   getWaitlistOfferUrl,
-} from "../lib/waitlist.js";
-import { buildWaitlistOfferMessage, shareWaitlistOfferViaWhatsApp } from "../lib/lessonNotify.js";
-import { Badge, Button, Card, EmptyState, Spinner } from "./ui/ds/index.js";
+} from "../../lib/waitlist.js";
+import { buildWaitlistOfferMessage, shareWaitlistOfferViaWhatsApp } from "../../lib/lessonNotify.js";
+import { Badge, Button, Card, EmptyState, Spinner } from "../ui/ds/index.js";
 
 const WHATSAPP_BTN_STYLE = { background: "#25D366", color: "#fff", border: "1px solid #25D366" };
 
-export default function AdminWaitlistTab({ toast }) {
+export default function WaitlistPanel({ toast }) {
   const { t, fmtDateDay } = useLang();
-  const isDesktop = useIsDesktop();
   const [entries, setEntries] = useState([]);
   const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,7 +31,7 @@ export default function AdminWaitlistTab({ toast }) {
       toast.show(e.message || t("systemError"));
     }
     setLoading(false);
-  }, []);
+  }, [toast, t]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -69,13 +67,7 @@ export default function AdminWaitlistTab({ toast }) {
   }[status] || status);
 
   return (
-    <div>
-      {!isDesktop && (
-        <div className="page-header">
-          <h1 className="page-title">{t("tabWaitlist")}</h1>
-        </div>
-      )}
-
+    <div className="crm-waitlist-panel">
       {pending.length > 0 && (
         <Card style={{ marginBottom: 20, borderColor: "var(--accent)" }}>
           <div className="section-sub" style={{ marginBottom: 12 }}>{t("waitlistPendingNotify")} ({pending.length})</div>

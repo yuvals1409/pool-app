@@ -4,27 +4,23 @@ import {
   ensureWeeklySessionsGenerated,
   ensureAccessPassesGenerated,
   ensureCourseSeriesSessions,
-} from "../lib/supabase.js";
-import { copyEnrollmentTicketLink } from "../lib/accessPass.js";
-import { regenerateEnrollmentPasses } from "../lib/summerCourse.js";
-import { formatProductLabel } from "../lib/productLabel.js";
-import { useLang } from "../i18n.jsx";
-import { useStudentProfile } from "../lib/StudentProfileContext.jsx";
-import { fmt_time } from "../lib/lessonDates.js";
-import { cancelEnrollment as cancelEnrollmentRpc } from "../lib/waitlist.js";
-import { useIsDesktop } from "../lib/useBreakpoint.js";
-import { seasonOptionLabel } from "../lib/bidi.js";
-import { getPlanningSeason, listSeasons, seasonLifecycle } from "../lib/seasonPlanning.js";
+} from "../../lib/supabase.js";
+import { copyEnrollmentTicketLink } from "../../lib/accessPass.js";
+import { regenerateEnrollmentPasses } from "../../lib/summerCourse.js";
+import { formatProductLabel } from "../../lib/productLabel.js";
+import { useLang } from "../../i18n.jsx";
+import { useStudentProfile } from "../../lib/StudentProfileContext.jsx";
+import { cancelEnrollment as cancelEnrollmentRpc } from "../../lib/waitlist.js";
+import { useIsDesktop } from "../../lib/useBreakpoint.js";
 import {
   PARTICIPANT_GRADES,
   gradeRequired,
-  resolveBirthDate,
   validateParticipantFields,
-} from "../lib/participantFields.js";
-import { getEnrollmentUtilization, listUtilizationReport } from "../lib/utilization.js";
-import MakeupBookingModal from "./MakeupBookingModal.jsx";
-import BillingPaymentModal from "./BillingPaymentModal.jsx";
-import { billingTypeForTemplate } from "../lib/billing.js";
+} from "../../lib/participantFields.js";
+import { getEnrollmentUtilization, listUtilizationReport } from "../../lib/utilization.js";
+import MakeupBookingModal from "../MakeupBookingModal.jsx";
+import BillingPaymentModal from "../BillingPaymentModal.jsx";
+import { billingTypeForTemplate } from "../../lib/billing.js";
 import {
   Avatar,
   Badge,
@@ -32,38 +28,45 @@ import {
   Card,
   Field,
   Input,
-  SegmentedControl,
   Select,
   Spinner,
-} from "./ui/ds/index.js";
+} from "../ui/ds/index.js";
 
 const PAYMENT_STATUSES = ["unpaid", "paid", "waived"];
-const HISTORY_FILTERS = ["active", "all", "cancelled"];
 const PAYMENT_BADGE_VARIANT = { paid: "success", unpaid: "warn", waived: "neutral" };
 
 function normalizePhone(phone) {
   return phone.replace(/\s/g, "").trim();
 }
 
-export default function AdminEnrollmentsTab({ toast }) {
+const ENROLLMENT_SELECT = `
+  id, payment_status, valid_from, valid_until, active,
+  participant:participants(id, full_name, birth_date, gender, grade, family:families(id, phone, parent_name)),
+  product:products(id, name, day_of_week, start_time, end_time, instructor_name, level, level_label, target_audience, gender, schedule_pattern, product_templates(code))
+`;
+
+export default function GroupEnrollmentsPanel({
+  toast,
+  season,
+  seasonIsLive,
+  products,
+  productId,
+  searchMode = false,
+  searchRows = [],
+  searchLoading = false,
+  onSearchRefresh,
+  historyFilter = "active",
+  showClassColumn = false,
+  onEnrollmentChange,
+  showAddButton = true,
+}) {
   const { t, days, fmtDateDay } = useLang();
   const { openProfile } = useStudentProfile();
   const isDesktop = useIsDesktop();
-  const [products, setProducts] = useState([]);
-  const [seasons, setSeasons] = useState([]);
-  const [seasonId, setSeasonId] = useState("");
-  const [season, setSeason] = useState(null);
-  const [planningSeason, setPlanningSeason] = useState(null);
-  const [selectedProductId, setSelectedProductId] = useState("");
-  const [historyFilter, setHistoryFilter] = useState("active");
+
   const [rows, setRows] = useState([]);
   const [listLoading, setListLoading] = useState(false);
   const [savingId, setSavingId] = useState(null);
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchRows, setSearchRows] = useState([]);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [searchMode, setSearchMode] = useState(false);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [addSaving, setAddSaving] = useState(false);
@@ -99,68 +102,23 @@ export default function AdminEnrollmentsTab({ toast }) {
     waived: t("paymentWaived"),
   }[status] || status);
 
-  const enrollmentSelect = `
-    id, payment_status, valid_from, valid_until, active,
-    participant:participants(id, full_name, birth_date, gender, grade, family:families(id, phone, parent_name)),
-    product:products(id, name, day_of_week, start_time, end_time, instructor_name, level, level_label, target_audience, gender, schedule_pattern, product_templates(code))
-  `;
-
-  const seasonIsLive = Boolean(season?.active);
-
-  const loadProductsForSeason = useCallback(async (sid) => {
-    if (!sid) {
-      setProducts([]);
-      return;
-    }
-    const { data: prods, error } = await supabase
-      .from("products")
-      .select("id, name, day_of_week, start_time, end_time, instructor_name, level, level_label, target_audience, gender, schedule_pattern, product_templates(code)")
-      .eq("season_id", sid)
-      .order("name");
-    if (error) toast.show(error.message);
-    else {
-      setProducts(prods || []);
-      if (prods?.length === 1) {
-        setSelectedProductId(prods[0].id);
-        setAddProductId(prods[0].id);
-      } else {
-        setSelectedProductId((prev) => (prev && prods?.some((p) => p.id === prev) ? prev : ""));
-      }
-    }
-  }, [toast]);
+  const productLabel = (p) => formatProductLabel(p, days, p?.product_templates?.code);
 
   useEffect(() => {
-    (async () => {
-      const [seasonRows, planning] = await Promise.all([
-        listSeasons(),
-        getPlanningSeason(),
-      ]);
-      setSeasons(seasonRows);
-      setPlanningSeason(planning);
-      const active = seasonRows.find((s) => s.active) || seasonRows[0];
-      if (active) {
-        setSeasonId(active.id);
-      }
-    })();
-  }, []);
+    if (productId) setAddProductId(productId);
+  }, [productId]);
 
-  useEffect(() => {
-    const row = seasons.find((s) => s.id === seasonId);
-    setSeason(row || null);
-    if (seasonId) loadProductsForSeason(seasonId);
-  }, [seasonId, seasons, loadProductsForSeason]);
-
-  const loadUtilization = useCallback(async (enrollmentRows, productId = null) => {
+  const loadUtilization = useCallback(async (enrollmentRows, pid = null) => {
     const active = (enrollmentRows || []).filter((r) => r.active);
     if (!active.length) {
       setUtilizationMap({});
       return;
     }
     try {
-      if (productId) {
+      if (pid) {
         const report = await listUtilizationReport({
           asOf: todayStr(),
-          productId,
+          productId: pid,
           minShortfall: 0,
         });
         const map = {};
@@ -189,8 +147,8 @@ export default function AdminEnrollmentsTab({ toast }) {
     }
   }, []);
 
-  const loadByProduct = useCallback(async (productId, filter) => {
-    if (!productId) {
+  const loadByProduct = useCallback(async (pid, filter) => {
+    if (!pid) {
       setRows([]);
       setUtilizationMap({});
       return;
@@ -198,8 +156,8 @@ export default function AdminEnrollmentsTab({ toast }) {
     setListLoading(true);
     let q = supabase
       .from("enrollments")
-      .select(enrollmentSelect)
-      .eq("product_id", productId)
+      .select(ENROLLMENT_SELECT)
+      .eq("product_id", pid)
       .order("created_at", { ascending: true });
     if (filter === "active") q = q.eq("active", true);
     else if (filter === "cancelled") q = q.eq("active", false);
@@ -207,82 +165,40 @@ export default function AdminEnrollmentsTab({ toast }) {
     if (error) toast.show(error.message);
     else {
       setRows(data || []);
-      await loadUtilization(data || [], productId);
+      await loadUtilization(data || [], pid);
     }
     setListLoading(false);
-  }, [loadUtilization]);
+  }, [loadUtilization, toast]);
 
   useEffect(() => {
-    if (!searchMode) loadByProduct(selectedProductId, historyFilter);
-  }, [selectedProductId, searchMode, historyFilter, loadByProduct]);
+    if (!searchMode) loadByProduct(productId, historyFilter);
+  }, [productId, searchMode, historyFilter, loadByProduct]);
 
-  const runSearch = async () => {
-    const q = searchQuery.trim();
-    if (!q) return;
-    setSearchMode(true);
-    setSearchLoading(true);
-    try {
-      const participantIds = new Set();
-      const phoneNorm = normalizePhone(q);
-
-      const { data: byPhone } = await supabase
-        .from("families")
-        .select("id")
-        .ilike("phone", `%${phoneNorm}%`);
-      if (byPhone?.length) {
-        const familyIds = byPhone.map((f) => f.id);
-        const { data: parts } = await supabase
-          .from("participants")
-          .select("id")
-          .in("family_id", familyIds);
-        parts?.forEach((p) => participantIds.add(p.id));
-      }
-
-      const { data: byName } = await supabase
-        .from("participants")
-        .select("id")
-        .ilike("full_name", `%${q}%`);
-      byName?.forEach((p) => participantIds.add(p.id));
-
-      if (!participantIds.size) {
-        setSearchRows([]);
-        setSearchLoading(false);
-        return;
-      }
-
-      let eq = supabase
-        .from("enrollments")
-        .select(enrollmentSelect)
-        .in("participant_id", [...participantIds])
-        .order("valid_until", { ascending: true });
-      if (historyFilter === "active") eq = eq.eq("active", true);
-      else if (historyFilter === "cancelled") eq = eq.eq("active", false);
-      const { data: enrollments, error } = await eq;
-      if (error) throw error;
-      setSearchRows(enrollments || []);
-      await loadUtilization(enrollments || []);
-    } catch (e) {
-      toast.show(e.message || t("systemError"));
+  useEffect(() => {
+    if (searchMode && searchRows.length) {
+      loadUtilization(searchRows);
     }
-    setSearchLoading(false);
+  }, [searchMode, searchRows, loadUtilization]);
+
+  const reload = async () => {
+    if (searchMode && onSearchRefresh) {
+      await onSearchRefresh();
+    } else if (productId) {
+      await loadByProduct(productId, historyFilter);
+    }
+    onEnrollmentChange?.();
   };
 
-  const clearSearch = () => {
-    setSearchMode(false);
-    setSearchQuery("");
-    setSearchRows([]);
-  };
-
-  const productTemplateCode = (productId) => {
-    const p = products.find((x) => x.id === productId);
+  const productTemplateCode = (pid) => {
+    const p = products.find((x) => x.id === pid);
     return p?.product_templates?.code;
   };
 
-  const syncSessionsForProduct = async (productId) => {
+  const syncSessionsForProduct = async (pid) => {
     if (!seasonIsLive) return;
-    const code = productTemplateCode(productId);
+    const code = productTemplateCode(pid);
     if (code === "summer_course") {
-      await ensureCourseSeriesSessions(productId);
+      await ensureCourseSeriesSessions(pid);
     } else {
       await ensureWeeklySessionsGenerated();
       await ensureAccessPassesGenerated();
@@ -299,8 +215,7 @@ export default function AdminEnrollmentsTab({ toast }) {
         toast.show(t("systemError"));
       } else {
         toast.show(t("enrollmentCancelled"));
-        if (searchMode) await runSearch();
-        else await loadByProduct(selectedProductId, historyFilter);
+        await reload();
       }
     } catch (e) {
       toast.show(e.message);
@@ -353,8 +268,7 @@ export default function AdminEnrollmentsTab({ toast }) {
 
       toast.show(t("enrollmentUpdated"));
       setEditingId(null);
-      if (searchMode) await runSearch();
-      else await loadByProduct(selectedProductId, historyFilter);
+      await reload();
     } catch (e) {
       toast.show(e.message || t("systemError"));
     }
@@ -430,10 +344,10 @@ export default function AdminEnrollmentsTab({ toast }) {
   const addEnrollment = async () => {
     const phone = normalizePhone(parentPhone);
     const child = childName.trim();
-    const productId = addProductId || selectedProductId;
+    const pid = addProductId || productId;
     if (!phone) return toast.show(t("phoneRequired"));
     if (!child) return toast.show(t("childRequired"));
-    if (!productId) return toast.show(t("selectClassRequired"));
+    if (!pid) return toast.show(t("selectClassRequired"));
     if (!season) return toast.show(t("systemError"));
 
     const fieldErr = validateParticipantFields({
@@ -456,7 +370,7 @@ export default function AdminEnrollmentsTab({ toast }) {
         .from("enrollments")
         .select("id")
         .eq("participant_id", participantId)
-        .eq("product_id", productId)
+        .eq("product_id", pid)
         .eq("active", true)
         .maybeSingle();
       if (existingEnr) {
@@ -466,7 +380,7 @@ export default function AdminEnrollmentsTab({ toast }) {
       }
 
       const { error: enrErr } = await supabase.from("enrollments").insert({
-        product_id: productId,
+        product_id: pid,
         participant_id: participantId,
         payment_status: addPaymentStatus,
         valid_from: season.start_date,
@@ -480,7 +394,7 @@ export default function AdminEnrollmentsTab({ toast }) {
         return;
       }
 
-      await syncSessionsForProduct(productId);
+      await syncSessionsForProduct(pid);
 
       toast.show(t("enrollmentAdded"));
       setParentPhone("");
@@ -490,8 +404,7 @@ export default function AdminEnrollmentsTab({ toast }) {
       setAddGrade("");
       setAddBirthDate("");
       setShowAddForm(false);
-      if (searchMode) await runSearch();
-      else if (productId === selectedProductId) await loadByProduct(selectedProductId, historyFilter);
+      await reload();
     } catch (e) {
       toast.show(e.message || t("systemError"));
     }
@@ -500,8 +413,7 @@ export default function AdminEnrollmentsTab({ toast }) {
 
   const displayRows = searchMode ? searchRows : rows;
   const displayLoading = searchMode ? searchLoading : listLoading;
-
-  const productLabel = (p) => formatProductLabel(p, days, p?.product_templates?.code);
+  const colCount = showClassColumn ? 7 : 6;
 
   const renderParticipantFields = (gender, setGender, grade, setGrade, birthDate, setBirthDate) => {
     const needsGrade = gradeRequired({ birthDate: birthDate || null });
@@ -591,7 +503,7 @@ export default function AdminEnrollmentsTab({ toast }) {
 
   const refreshUtilization = async () => {
     if (searchMode) await loadUtilization(searchRows);
-    else await loadUtilization(rows, selectedProductId);
+    else await loadUtilization(rows, productId);
   };
 
   const renderUtilization = (row) => {
@@ -638,7 +550,7 @@ export default function AdminEnrollmentsTab({ toast }) {
     if (isEditing) {
       return (
         <tr key={row.id} className="data-table-edit-row">
-          <td colSpan={7}>{renderEditFields(row)}</td>
+          <td colSpan={colCount}>{renderEditFields(row)}</td>
         </tr>
       );
     }
@@ -664,7 +576,9 @@ export default function AdminEnrollmentsTab({ toast }) {
           </div>
         </td>
         <td className="col-phone" dir="ltr">{row.participant?.family?.phone || "—"}</td>
-        <td className="col-text col-text--mid">{productLabel(row.product)}</td>
+        {showClassColumn && (
+          <td className="col-text col-text--mid">{productLabel(row.product)}</td>
+        )}
         <td className="col-badge">
           <Badge
             variant={PAYMENT_BADGE_VARIANT[row.payment_status] || "neutral"}
@@ -702,7 +616,7 @@ export default function AdminEnrollmentsTab({ toast }) {
                   )}
                 </span>
               </div>
-              {(searchMode || historyFilter !== "active") && (
+              {(showClassColumn || historyFilter !== "active") && (
                 <div className="log-meta">{productLabel(row.product)}</div>
               )}
               <div className="log-meta">
@@ -733,115 +647,26 @@ export default function AdminEnrollmentsTab({ toast }) {
     );
   };
 
-  const historyFilterOptions = HISTORY_FILTERS.map((f) => ({
-    value: f,
-    label: t(`enrollmentFilter${f.charAt(0).toUpperCase()}${f.slice(1)}`),
-  }));
+  if (!searchMode && !productId) {
+    return null;
+  }
 
   return (
-    <div>
-      {!isDesktop && (
-        <div className="page-header">
-          <h1 className="page-title">{t("tabEnrollments")}</h1>
-        </div>
-      )}
-
-      <div className="filter-bar" style={{ marginBottom: 12, display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-        <Select
-          value={seasonId}
-          onChange={(e) => setSeasonId(e.target.value)}
-          style={{ minWidth: 160 }}
-        >
-          {seasons.map((s) => (
-            <option key={s.id} value={s.id}>
-              {seasonOptionLabel(s.name, {
-                active: s.active,
-                activeLabel: t("active"),
-                planningLabel: seasonLifecycle(s) === "ended" ? t("seasonEnded") : t("seasonPlanning"),
-                lifecycle: seasonLifecycle(s),
-              })}
-            </option>
-          ))}
-        </Select>
-        {planningSeason && seasonId !== planningSeason.id && (
-          <Button variant="secondary" size="sm" onClick={() => setSeasonId(planningSeason.id)}>
-            {t("seasonSwitchToPlanning", { name: planningSeason.name })}
-          </Button>
-        )}
-      </div>
-
-      {!seasonIsLive && season && (
-        <Card style={{ marginBottom: 16, borderColor: "var(--warn-border, var(--border))" }}>
-          <div style={{ fontWeight: 600, marginBottom: 4 }}>{t("seasonPlanningBannerTitle")}</div>
-          <p className="page-sub" style={{ margin: 0 }}>{t("seasonPlanningBannerBody")}</p>
-        </Card>
-      )}
-
-      <div
-        style={isDesktop ? {
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-          marginBottom: 16,
-          flexWrap: "wrap",
-        } : { marginBottom: 12 }}
-      >
-        <SegmentedControl
-          options={historyFilterOptions}
-          value={historyFilter}
-          onChange={setHistoryFilter}
-          size="sm"
-        />
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", flex: isDesktop ? "none" : 1 }}>
-          <div style={{ width: isDesktop ? 220 : "100%", minWidth: 0, flex: isDesktop ? "none" : 1 }}>
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t("searchByPhoneOrChild")}
-              onKeyDown={(e) => e.key === "Enter" && runSearch()}
-            />
-          </div>
-          <Button variant="primary" size="sm" onClick={runSearch} disabled={searchLoading}>
-            {searchLoading ? "..." : t("search")}
-          </Button>
-          {searchMode && (
-            <Button variant="secondary" size="sm" onClick={clearSearch}>
-              {t("clearSearch")}
-            </Button>
-          )}
-          {isDesktop && (
-            <Button variant="primary" size="md" onClick={() => setShowAddForm((v) => !v)}>
-              {showAddForm ? t("hideAddEnrollment") : t("addEnrollment")}
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {!searchMode && (
-        <Field label={t("selectClass")} style={{ marginBottom: 16, maxWidth: isDesktop ? 420 : undefined }}>
-          <Select
-            value={selectedProductId}
-            onChange={(e) => setSelectedProductId(e.target.value)}
+    <div className="groups-enrollments-panel">
+      {showAddButton && (
+        <div style={{ marginBottom: 12, display: "flex", justifyContent: "flex-end" }}>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setShowAddForm((v) => !v)}
           >
-            <option value="">{t("selectClassPlaceholder")}</option>
-            {products.map((p) => (
-              <option key={p.id} value={p.id}>{productLabel(p)}</option>
-            ))}
-          </Select>
-        </Field>
-      )}
-
-      {!isDesktop && (
-        <div style={{ marginBottom: 16 }}>
-          <Button variant="secondary" size="sm" onClick={() => setShowAddForm((v) => !v)}>
             {showAddForm ? t("hideAddEnrollment") : t("addEnrollment")}
           </Button>
         </div>
       )}
 
       {showAddForm && (
-        <Card style={{ marginBottom: 20 }}>
+        <Card style={{ marginBottom: 16 }}>
           <Field label={t("parentPhone")}>
             <Input type="tel" dir="ltr" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} />
           </Field>
@@ -854,14 +679,16 @@ export default function AdminEnrollmentsTab({ toast }) {
           {renderParticipantFields(
             addGender, setAddGender, addGrade, setAddGrade, addBirthDate, setAddBirthDate,
           )}
-          <Field label={t("selectClass")}>
-            <Select value={addProductId} onChange={(e) => setAddProductId(e.target.value)}>
-              <option value="">{t("selectClassPlaceholder")}</option>
-              {products.map((p) => (
-                <option key={p.id} value={p.id}>{productLabel(p)}</option>
-              ))}
-            </Select>
-          </Field>
+          {!productId && (
+            <Field label={t("selectClass")}>
+              <Select value={addProductId} onChange={(e) => setAddProductId(e.target.value)}>
+                <option value="">{t("selectClassPlaceholder")}</option>
+                {products.map((p) => (
+                  <option key={p.id} value={p.id}>{productLabel(p)}</option>
+                ))}
+              </Select>
+            </Field>
+          )}
           <Field label={t("paymentStatus")}>
             <Select value={addPaymentStatus} onChange={(e) => setAddPaymentStatus(e.target.value)}>
               {PAYMENT_STATUSES.map((s) => (
@@ -878,12 +705,12 @@ export default function AdminEnrollmentsTab({ toast }) {
       {displayLoading ? (
         <div style={{ textAlign: "center", padding: 32, color: "var(--ink-soft)" }}>{t("loading")}</div>
       ) : displayRows.length === 0 ? (
-        <div style={{ marginTop: 24, color: "var(--ink-soft)", textAlign: "center" }}>
-          {searchMode && searchQuery.trim() ? t("noEnrollmentsFound") : t("noEnrollmentsInClass")}
+        <div style={{ padding: 24, color: "var(--ink-soft)", textAlign: "center" }}>
+          {searchMode ? t("noEnrollmentsFound") : t("noEnrollmentsInClass")}
         </div>
       ) : isDesktop ? (
         <div className="data-table-wrap">
-          {!searchMode && selectedProductId && (
+          {!searchMode && productId && (
             <div className="data-table-header">
               {historyFilter === "active" ? t("activeEnrollments") : t("enrollmentHistory")} ({displayRows.length})
             </div>
@@ -893,7 +720,7 @@ export default function AdminEnrollmentsTab({ toast }) {
               <tr>
                 <th className="col-text">{t("child")}</th>
                 <th className="col-phone">{t("parentPhone")}</th>
-                <th className="col-text">{t("sectionClass")}</th>
+                {showClassColumn && <th className="col-text">{t("sectionClass")}</th>}
                 <th className="col-badge">{t("paymentStatus")}</th>
                 <th className="col-num">{t("utilizationBalance")}</th>
                 <th className="col-date">{t("validUntil")}</th>
@@ -906,19 +733,13 @@ export default function AdminEnrollmentsTab({ toast }) {
           </table>
         </div>
       ) : (
-        <div className="grouped-list" style={{ marginTop: 12 }}>
-          {!searchMode && selectedProductId && (
+        <div className="grouped-list">
+          {!searchMode && productId && (
             <div className="grouped-list-header">
               {historyFilter === "active" ? t("activeEnrollments") : t("enrollmentHistory")} ({displayRows.length})
             </div>
           )}
           {displayRows.map(renderRow)}
-        </div>
-      )}
-
-      {!displayLoading && displayRows.length > 0 && season && (
-        <div style={{ marginTop: 10, fontSize: 12, color: "var(--ink-soft)" }}>
-          {displayRows.length} · {season.name}
         </div>
       )}
 
@@ -943,8 +764,7 @@ export default function AdminEnrollmentsTab({ toast }) {
           onClose={() => setBillingRow(null)}
           onSaved={async () => {
             setBillingRow(null);
-            if (searchMode) await runSearch();
-            else if (selectedProductId) await loadByProduct(selectedProductId, historyFilter);
+            await reload();
           }}
         />
       )}

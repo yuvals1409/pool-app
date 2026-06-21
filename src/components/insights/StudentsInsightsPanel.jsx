@@ -3,14 +3,14 @@ import {
   BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";
-import { supabase } from "../lib/supabase.js";
-import { useLang } from "../i18n.jsx";
-import { useIsDesktop } from "../lib/useBreakpoint.js";
-import { formatProductLabel } from "../lib/productLabel.js";
-import { genderLabel } from "../lib/participantFields.js";
-import { getStudentDemographics } from "../lib/commandCenter.js";
-import { exportCsv } from "../lib/analytics.js";
-import { useStudentProfile } from "../lib/StudentProfileContext.jsx";
+import { supabase } from "../../lib/supabase.js";
+import { useLang } from "../../i18n.jsx";
+import { useIsDesktop } from "../../lib/useBreakpoint.js";
+import { formatProductLabel } from "../../lib/productLabel.js";
+import { genderLabel } from "../../lib/participantFields.js";
+import { getStudentDemographics } from "../../lib/commandCenter.js";
+import { exportCsv } from "../../lib/analytics.js";
+import { useStudentProfile } from "../../lib/StudentProfileContext.jsx";
 import {
   CHART_COLORS,
   CHART_MARGIN_X_LABELS,
@@ -24,9 +24,9 @@ import {
   legendWithShare,
   makeRtlCategoryYAxisTick,
   RtlCategoryXAxisTick,
-} from "../lib/chartTheme.js";
-import ChartCanvas from "./charts/ChartCanvas.jsx";
-import { Button, Card, Field, Select, SegmentedControl } from "./ui/ds/index.js";
+} from "../../lib/chartTheme.js";
+import ChartCanvas from "../charts/ChartCanvas.jsx";
+import { Button, Card, Field, Select, SegmentedControl } from "../ui/ds/index.js";
 
 const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
@@ -49,7 +49,7 @@ function paymentLabel(t, status) {
   return t("paymentUnpaid");
 }
 
-export default function AdminStudentsTab({ toast }) {
+export default function StudentsInsightsPanel({ toast }) {
   const { t } = useLang();
   const isDesktop = useIsDesktop();
   const { openProfile } = useStudentProfile();
@@ -179,11 +179,6 @@ export default function AdminStudentsTab({ toast }) {
 
   return (
     <div>
-      {!isDesktop && (
-        <div className="page-header">
-          <h1 className="page-title">{t("tabStudents")}</h1>
-        </div>
-      )}
 
       <div className="filter-bar" style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "flex-end", marginBottom: 16 }}>
         <Field label={t("season")} style={{ marginBottom: 0, minWidth: 160 }}>

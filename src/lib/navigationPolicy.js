@@ -11,34 +11,27 @@ import {
 export const ADMIN_SECTION_IDS = [
   "customers",
   "users",
-  "enrollments",
   "products",
   "pricelist",
   "seasons",
-  "season_planning",
   "assessment",
   "marketing",
   "attendance",
   "alerts",
   "operations",
   "utilization",
-  "waitlist",
   "dashboard",
-  "health",
-  "students",
   "finance",
-  "revenue_forecast",
-  "instructors",
   "payroll",
   "sheets",
 ];
 
 export const ADMIN_NAV_GROUPS = [
-  { id: "crm", labelKey: "adminGroupCrm", sectionIds: ["customers", "enrollments", "waitlist"] },
-  { id: "catalog", labelKey: "adminGroupCatalog", sectionIds: ["products", "seasons", "season_planning", "pricelist", "assessment"] },
+  { id: "crm", labelKey: "adminGroupCrm", sectionIds: ["customers"] },
+  { id: "catalog", labelKey: "adminGroupCatalog", sectionIds: ["products", "seasons", "pricelist", "assessment"] },
   { id: "operations", labelKey: "adminGroupOperations", sectionIds: ["operations", "attendance", "utilization", "alerts"] },
-  { id: "insights", labelKey: "adminGroupInsights", sectionIds: ["dashboard", "health", "students", "instructors"] },
-  { id: "finance", labelKey: "adminGroupFinance", sectionIds: ["finance", "revenue_forecast", "payroll"] },
+  { id: "insights", labelKey: "adminGroupInsights", sectionIds: ["dashboard"] },
+  { id: "finance", labelKey: "adminGroupFinance", sectionIds: ["finance", "payroll"] },
   { id: "team", labelKey: "adminGroupTeam", sectionIds: ["users"] },
   { id: "system", labelKey: "adminGroupSystem", sectionIds: ["marketing", "sheets"] },
 ];
@@ -46,24 +39,17 @@ export const ADMIN_NAV_GROUPS = [
 const ADMIN_SECTION_LABEL_KEYS = {
   customers: "tabCustomers",
   users: "adminSectionUsers",
-  enrollments: "tabEnrollments",
   products: "tabProducts",
   pricelist: "tabPriceList",
   seasons: "tabSeasons",
-  season_planning: "tabSeasonPlanning",
   assessment: "tabAssessment",
   marketing: "tabMarketing",
   attendance: "tabAttendance",
   alerts: "tabAlerts",
   operations: "tabOperations",
   utilization: "tabUtilization",
-  waitlist: "tabWaitlist",
   dashboard: "tabDashboard",
-  health: "tabHealth",
-  students: "tabStudents",
   finance: "tabFinance",
-  revenue_forecast: "tabRevenueForecast",
-  instructors: "tabInstructorsAnalytics",
   payroll: "tabPayroll",
   sheets: "tabSheetSync",
 };
@@ -78,9 +64,8 @@ export const PERSONAL_SECTION_IDS = [
 const ADMIN_MOBILE_SECTION_IDS = [
   "customers",
   "users",
-  "enrollments",
+  "products",
   "attendance",
-  "waitlist",
   "assessment",
 ];
 
@@ -230,6 +215,11 @@ export function sanitizeActiveTab(currentTab, profile, isDesktop) {
 }
 
 export function sanitizeAdminSection(currentSection, profile, isDesktop) {
+  if (currentSection === "enrollments") return "products";
+  if (currentSection === "waitlist") return "customers";
+  if (currentSection === "revenue_forecast") return "finance";
+  if (currentSection === "season_planning") return "seasons";
+  if (currentSection === "health" || currentSection === "students" || currentSection === "instructors") return "dashboard";
   const sections = getAdminSections(profile, isDesktop);
   if (sections.includes(currentSection)) return currentSection;
   return sections[0] || "customers";

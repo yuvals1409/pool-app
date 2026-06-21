@@ -3,15 +3,15 @@ import { AnimatePresence } from "framer-motion";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts";
-import { supabase } from "../lib/supabase.js";
-import { useLang } from "../i18n.jsx";
-import { useIsDesktop } from "../lib/useBreakpoint.js";
+import { supabase } from "../../lib/supabase.js";
+import { useLang } from "../../i18n.jsx";
+import { useIsDesktop } from "../../lib/useBreakpoint.js";
 import {
   getInstructorAnalytics,
   getAttendanceSummary,
   periodPresetRange,
-} from "../lib/commandCenter.js";
-import { exportCsv } from "../lib/analytics.js";
+} from "../../lib/commandCenter.js";
+import { exportCsv } from "../../lib/analytics.js";
 import {
   CHART_COLORS,
   CHART_MARGIN_Y_LABELS,
@@ -20,12 +20,12 @@ import {
   categoryYAxisWidth,
   shortChartLabel,
   makeRtlCategoryYAxisTick,
-} from "../lib/chartTheme.js";
-import ChartCanvas from "./charts/ChartCanvas.jsx";
-import { AnimatedSheetOverlay, AnimatedSheetPanel } from "./ui/AnimatedSheet.jsx";
+} from "../../lib/chartTheme.js";
+import ChartCanvas from "../charts/ChartCanvas.jsx";
+import { AnimatedSheetOverlay, AnimatedSheetPanel } from "../ui/AnimatedSheet.jsx";
 import {
   Button, Card, Field, Input, Select, SegmentedControl, Spinner,
-} from "./ui/ds/index.js";
+} from "../ui/ds/index.js";
 
 function yearToDateRange() {
   const today = new Date();
@@ -43,7 +43,7 @@ function formatMoney(n) {
   return v.toLocaleString("he-IL", { maximumFractionDigits: 0 });
 }
 
-export default function AdminInstructorsTab({ toast }) {
+export default function InstructorsInsightsPanel({ toast }) {
   const { t } = useLang();
   const isDesktop = useIsDesktop();
   const monthRange = periodPresetRange("month");
@@ -134,11 +134,6 @@ export default function AdminInstructorsTab({ toast }) {
 
   return (
     <div>
-      {!isDesktop && (
-        <div className="page-header">
-          <h1 className="page-title">{t("tabInstructorsAnalytics")}</h1>
-        </div>
-      )}
 
       <p className="schedule-session-hint" style={{ marginBottom: 4 }}>{t("instructorsOverview")}</p>
       <p className="schedule-session-hint" style={{ marginBottom: 12 }}>{t("instructorsPayrollHint")}</p>

@@ -3,10 +3,9 @@ import {
   BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";
-import { useLang } from "../i18n.jsx";
-import { useIsDesktop } from "../lib/useBreakpoint.js";
-import { getRevenueForecast, forecastDefaultRange } from "../lib/commandCenter.js";
-import { exportCsv } from "../lib/analytics.js";
+import { useLang } from "../../i18n.jsx";
+import { getRevenueForecast } from "../../lib/commandCenter.js";
+import { exportCsv } from "../../lib/analytics.js";
 import {
   CHART_COLORS,
   CHART_MARGIN_X_LABELS,
@@ -17,9 +16,9 @@ import {
   formatAxisMoney,
   formatMoneyFull,
   legendWithShare,
-} from "../lib/chartTheme.js";
-import ChartCanvas from "./charts/ChartCanvas.jsx";
-import { Button, Card, Field, Input, KpiCard } from "./ui/ds/index.js";
+} from "../../lib/chartTheme.js";
+import ChartCanvas from "../charts/ChartCanvas.jsx";
+import { Button, Card, Field, Input, KpiCard } from "../ui/ds/index.js";
 
 function domainLabel(t, domain) {
   const key = `financeDomain_${domain}`;
@@ -34,12 +33,8 @@ function formatWeekLabel(dateStr) {
   return `${day}/${month}`;
 }
 
-export default function AdminRevenueForecastTab({ toast }) {
+export default function RevenueForecastPanel({ toast, from, to, onFromChange, onToChange }) {
   const { t } = useLang();
-  const isDesktop = useIsDesktop();
-  const defaultRange = forecastDefaultRange(90);
-  const [from, setFrom] = useState(defaultRange.from);
-  const [to, setTo] = useState(defaultRange.to);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({});
 
@@ -110,21 +105,15 @@ export default function AdminRevenueForecastTab({ toast }) {
   const realizedInRange = Number(data.realized_in_range) || 0;
 
   return (
-    <div>
-      {!isDesktop && (
-        <div className="page-header">
-          <h1 className="page-title">{t("tabRevenueForecast")}</h1>
-        </div>
-      )}
-
+    <div className="finance-forecast-panel">
       <p className="schedule-session-hint" style={{ marginBottom: 12 }}>{t("revenueForecastOverview")}</p>
 
       <div className="filter-bar" style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "flex-end", marginBottom: 16 }}>
         <Field label={t("validFrom")} style={{ marginBottom: 0, minWidth: 140 }}>
-          <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} dir="ltr" />
+          <Input type="date" value={from} onChange={(e) => onFromChange(e.target.value)} dir="ltr" />
         </Field>
         <Field label={t("validUntil")} style={{ marginBottom: 0, minWidth: 140 }}>
-          <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} dir="ltr" />
+          <Input type="date" value={to} onChange={(e) => onToChange(e.target.value)} dir="ltr" />
         </Field>
         <Button variant="secondary" size="sm" onClick={exportForecastCsv} disabled={!participants.length}>
           {t("financeExportCsv")}

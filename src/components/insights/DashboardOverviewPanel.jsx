@@ -3,7 +3,7 @@ import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";
-import { supabase } from "../lib/supabase.js";
+import { supabase } from "../../lib/supabase.js";
 import {
   getDashboardSummary,
   getAttendanceByWeek,
@@ -14,16 +14,16 @@ import {
   getAssessmentConversionFunnel,
   getEnrollmentStats,
   exportCsv,
-} from "../lib/analytics.js";
+} from "../../lib/analytics.js";
 import {
   getSchoolOverviewKpis,
   getOccupancyTrend,
   getSchoolHealthScore,
   periodPresetRange,
-} from "../lib/commandCenter.js";
-import { useLang } from "../i18n.jsx";
-import { useIsDesktop } from "../lib/useBreakpoint.js";
-import { Button, Card, Field, Input, KpiCard, Select, Badge, SegmentedControl } from "./ui/ds/index.js";
+} from "../../lib/commandCenter.js";
+import { useLang } from "../../i18n.jsx";
+import { useIsDesktop } from "../../lib/useBreakpoint.js";
+import { Button, Card, Field, Input, KpiCard, Select, Badge, SegmentedControl } from "../ui/ds/index.js";
 import {
   CHART_COLORS,
   CHART_MARGIN,
@@ -40,8 +40,8 @@ import {
   withSharePct,
   legendWithShare,
   makeRtlCategoryYAxisTick,
-} from "../lib/chartTheme.js";
-import ChartCanvas from "./charts/ChartCanvas.jsx";
+} from "../../lib/chartTheme.js";
+import ChartCanvas from "../charts/ChartCanvas.jsx";
 
 const HEALTH_VARIANT = { green: "success", yellow: "warn", red: "danger" };
 
@@ -55,7 +55,7 @@ function monthAgoStr() {
   return d.toISOString().slice(0, 10);
 }
 
-export default function AdminDashboardTab({ toast, onOpenHealth }) {
+export default function DashboardOverviewPanel({ toast, onNavigateHealth }) {
   const { t } = useLang();
   const isDesktop = useIsDesktop();
   const [periodPreset, setPeriodPreset] = useState("month");
@@ -213,11 +213,6 @@ export default function AdminDashboardTab({ toast, onOpenHealth }) {
 
   return (
     <div>
-      {!isDesktop && (
-        <div className="page-header">
-          <h1 className="page-title">{t("tabDashboard")}</h1>
-        </div>
-      )}
 
       <div className="filter-bar" style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "flex-end", marginBottom: 16 }}>
         <Field label={t("season")} style={{ marginBottom: 0, minWidth: 160 }}>
@@ -290,8 +285,8 @@ export default function AdminDashboardTab({ toast, onOpenHealth }) {
                 {" · "}{t("ccNewThisMonth")}: {health.new_count ?? 0}
                 {" · "}{t("ccChurnedThisMonth")}: {health.churn_count ?? 0}
               </div>
-              {onOpenHealth && (
-                <Button size="sm" variant="outline" onClick={onOpenHealth}>
+              {onNavigateHealth && (
+                <Button size="sm" variant="outline" onClick={onNavigateHealth}>
                   {t("healthOpenSettings")}
                 </Button>
               )}

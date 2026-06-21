@@ -30,25 +30,18 @@ import ParentContactPicker from "./components/ParentContactPicker.jsx";
 import TimeScrollPicker from "./components/TimeScrollPicker.jsx";
 import ScheduleTab from "./components/schedule/ScheduleTab.jsx";
 import OfficeTab from "./components/OfficeTab.jsx";
-import AdminEnrollmentsTab from "./components/AdminEnrollmentsTab.jsx";
+import AdminGroupsTab from "./components/groups/AdminGroupsTab.jsx";
 import AdminAssessmentTab from "./components/AdminAssessmentTab.jsx";
-import AdminProductsTab from "./components/AdminProductsTab.jsx";
-import AdminSeasonsTab from "./components/AdminSeasonsTab.jsx";
-import AdminSeasonPlanningTab from "./components/AdminSeasonPlanningTab.jsx";
+import AdminSeasonsTab from "./components/seasons/AdminSeasonsTab.jsx";
 import AdminAttendanceTab from "./components/AdminAttendanceTab.jsx";
 import AdminAlertsTab from "./components/AdminAlertsTab.jsx";
 import AdminOperationsTab from "./components/AdminOperationsTab.jsx";
-import AdminHealthTab from "./components/AdminHealthTab.jsx";
 import AdminMarketingTab from "./components/AdminMarketingTab.jsx";
 import AdminUtilizationTab from "./components/AdminUtilizationTab.jsx";
-import AdminDashboardTab from "./components/AdminDashboardTab.jsx";
-import AdminStudentsTab from "./components/AdminStudentsTab.jsx";
 import AdminFinanceTab from "./components/AdminFinanceTab.jsx";
-import AdminRevenueForecastTab from "./components/AdminRevenueForecastTab.jsx";
 import AdminPriceListTab from "./components/AdminPriceListTab.jsx";
-import AdminInstructorsTab from "./components/AdminInstructorsTab.jsx";
+import AdminInsightsTab from "./components/insights/AdminInsightsTab.jsx";
 import AdminSheetSyncTab from "./components/AdminSheetSyncTab.jsx";
-import AdminWaitlistTab from "./components/AdminWaitlistTab.jsx";
 import AdminInstructorPayrollTab from "./components/AdminInstructorPayrollTab.jsx";
 import AdminCustomersTab from "./components/AdminCustomersTab.jsx";
 import { AdminGroupNav, AdminSectionSubNav } from "./components/admin/AdminSectionNav.jsx";
@@ -854,8 +847,6 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
   const { t, roleLabel } = useLang();
   const isDesktop = useIsDesktop();
   const setAdminSection = onAdminSectionChange;
-  const [planningSeasonId, setPlanningSeasonId] = useState(null);
-  const [planningMode, setPlanningMode] = useState("annual");
   const [users,    setUsers]    = useState([]);
   const [invites,  setInvites]  = useState([]);
   const [loading,  setLoading]  = useState(true);
@@ -1034,27 +1025,12 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
 
       {adminSection === "customers" ? (
         <AdminCustomersTab toast={toast} />
-      ) : adminSection === "enrollments" ? (
-        <AdminEnrollmentsTab toast={toast} />
       ) : adminSection === "products" ? (
-        <AdminProductsTab toast={toast} />
+        <AdminGroupsTab toast={toast} />
       ) : adminSection === "pricelist" ? (
         <AdminPriceListTab toast={toast} profile={profile} />
       ) : adminSection === "seasons" ? (
-        <AdminSeasonsTab
-          toast={toast}
-          onOpenPlanning={(id, mode = "annual") => {
-            setPlanningSeasonId(id);
-            setPlanningMode(mode);
-            setAdminSection("season_planning");
-          }}
-        />
-      ) : adminSection === "season_planning" ? (
-        <AdminSeasonPlanningTab
-          toast={toast}
-          initialSeasonId={planningSeasonId}
-          initialMode={planningMode}
-        />
+        <AdminSeasonsTab toast={toast} />
       ) : adminSection === "assessment" ? (
         <AdminAssessmentTab toast={toast} />
       ) : adminSection === "marketing" ? (
@@ -1068,21 +1044,11 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
       ) : adminSection === "utilization" ? (
         <AdminUtilizationTab toast={toast} />
       ) : adminSection === "dashboard" ? (
-        <AdminDashboardTab toast={toast} onOpenHealth={() => onAdminSectionChange("health")} />
-      ) : adminSection === "health" ? (
-        <AdminHealthTab toast={toast} />
-      ) : adminSection === "students" ? (
-        <AdminStudentsTab toast={toast} />
+        <AdminInsightsTab toast={toast} />
       ) : adminSection === "finance" ? (
         <AdminFinanceTab toast={toast} />
-      ) : adminSection === "revenue_forecast" ? (
-        <AdminRevenueForecastTab toast={toast} />
-      ) : adminSection === "instructors" ? (
-        <AdminInstructorsTab toast={toast} />
       ) : adminSection === "payroll" ? (
         <AdminInstructorPayrollTab toast={toast} />
-      ) : adminSection === "waitlist" ? (
-        <AdminWaitlistTab toast={toast} />
       ) : adminSection === "sheets" ? (
         <AdminSheetSyncTab toast={toast} />
       ) : (
