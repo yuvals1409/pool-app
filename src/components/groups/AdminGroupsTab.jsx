@@ -126,18 +126,17 @@ export default function AdminGroupsTab({ toast }) {
   };
 
   const refreshOccupancy = useCallback(async (productList) => {
-    const list = productList || products;
-    if (!list.length) {
+    if (!productList?.length) {
       setOccupancyMap({});
       return;
     }
     try {
-      const counts = await fetchActiveEnrollmentCounts(list.map((p) => p.id));
+      const counts = await fetchActiveEnrollmentCounts(productList.map((p) => p.id));
       setOccupancyMap(counts);
     } catch {
       setOccupancyMap({});
     }
-  }, [products]);
+  }, []);
 
   const loadAudienceOptions = useCallback(async () => {
     const { data, error } = await supabase
@@ -158,11 +157,14 @@ export default function AdminGroupsTab({ toast }) {
     setTemplates(templateRows || []);
     setInstructors(instructorRows || []);
     setPlanningSeason(planning);
-    if (!seasonId && seasonRows?.length) {
-      const active = seasonRows.find((s) => s.active) || seasonRows[0];
-      setSeasonId(active.id);
+    if (seasonRows?.length) {
+      setSeasonId((prev) => {
+        if (prev) return prev;
+        const active = seasonRows.find((s) => s.active) || seasonRows[0];
+        return active.id;
+      });
     }
-  }, [seasonId]);
+  }, []);
 
   const loadProducts = useCallback(async (sid) => {
     if (!sid) return;
@@ -182,7 +184,7 @@ export default function AdminGroupsTab({ toast }) {
       setSelectedProductId((prev) => (prev && list.some((p) => p.id === prev) ? prev : ""));
     }
     setLoading(false);
-  }, [toast, refreshOccupancy]);
+  }, [refreshOccupancy, toast.show]);
 
   useEffect(() => {
     (async () => {
@@ -194,8 +196,11 @@ export default function AdminGroupsTab({ toast }) {
   useEffect(() => {
     const row = seasons.find((s) => s.id === seasonId);
     setSeason(row || null);
+  }, [seasonId, seasons]);
+
+  useEffect(() => {
     if (seasonId) loadProducts(seasonId);
-  }, [seasonId, seasons, loadProducts]);
+  }, [seasonId, loadProducts]);
 
   useEffect(() => {
     setFilterInstructorId("");
@@ -366,7 +371,7 @@ export default function AdminGroupsTab({ toast }) {
   };
 
   const handleEnrollmentChange = () => {
-    refreshOccupancy();
+    refreshOccupancy(products);
   };
 
   const historyFilterOptions = HISTORY_FILTERS.map((f) => ({
