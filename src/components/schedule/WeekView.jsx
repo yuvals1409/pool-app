@@ -3,6 +3,7 @@ import {
   SCHEDULE_HOURS, getWeekBounds, isToday, toLocalDateStr, timeToMinutes,
 } from "../../lib/lessonDates.js";
 import { eventDurationMinutes } from "../../lib/scheduleEvents.js";
+import { assignEventColumns, buildTimedEventStyle } from "../../lib/scheduleLayout.js";
 import LessonBlock from "./LessonBlock.jsx";
 import CurrentTimeLine from "./CurrentTimeLine.jsx";
 
@@ -89,6 +90,7 @@ export default function WeekView({
           const dateStr = toLocalDateStr(day);
           const today = isToday(day);
           const dayLessons = byDate[dateStr] || [];
+          const columnLayout = assignEventColumns(dayLessons);
 
           return (
             <div
@@ -113,19 +115,17 @@ export default function WeekView({
                 const mins = timeToMinutes(lesson.start_time);
                 const startSlot = (mins - SCHEDULE_HOURS[0] * 60) / 30;
                 if (startSlot < 0 || startSlot >= totalSlots) return null;
+                const duration = eventDurationMinutes(lesson);
                 return (
                   <LessonBlock
                     key={lesson.id}
                     lesson={lesson}
                     t={t}
                     onClick={onLessonClick}
-                    style={{
-                      position: "absolute",
-                      insetInline: 3,
+                    style={buildTimedEventStyle(lesson, columnLayout, {
                       top: slotTop(startSlot) + 1,
-                      height: Math.max(lessonHeight(eventDurationMinutes(lesson)), SLOT_H) - 3,
-                      zIndex: 2,
-                    }}
+                      height: Math.max(lessonHeight(duration), SLOT_H) - 3,
+                    })}
                   />
                 );
               })}

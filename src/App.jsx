@@ -855,6 +855,7 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
   const isDesktop = useIsDesktop();
   const setAdminSection = onAdminSectionChange;
   const [planningSeasonId, setPlanningSeasonId] = useState(null);
+  const [planningMode, setPlanningMode] = useState("annual");
   const [users,    setUsers]    = useState([]);
   const [invites,  setInvites]  = useState([]);
   const [loading,  setLoading]  = useState(true);
@@ -1042,13 +1043,18 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
       ) : adminSection === "seasons" ? (
         <AdminSeasonsTab
           toast={toast}
-          onOpenPlanning={(id) => {
+          onOpenPlanning={(id, mode = "annual") => {
             setPlanningSeasonId(id);
+            setPlanningMode(mode);
             setAdminSection("season_planning");
           }}
         />
       ) : adminSection === "season_planning" ? (
-        <AdminSeasonPlanningTab toast={toast} initialSeasonId={planningSeasonId} />
+        <AdminSeasonPlanningTab
+          toast={toast}
+          initialSeasonId={planningSeasonId}
+          initialMode={planningMode}
+        />
       ) : adminSection === "assessment" ? (
         <AdminAssessmentTab toast={toast} />
       ) : adminSection === "marketing" ? (

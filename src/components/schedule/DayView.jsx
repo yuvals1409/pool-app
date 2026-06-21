@@ -3,6 +3,7 @@ import {
   SCHEDULE_HOURS, isToday, toLocalDateStr, timeToMinutes,
 } from "../../lib/lessonDates.js";
 import { eventDurationMinutes } from "../../lib/scheduleEvents.js";
+import { assignEventColumns, buildTimedEventStyle } from "../../lib/scheduleLayout.js";
 import LessonBlock from "./LessonBlock.jsx";
 import CurrentTimeLine from "./CurrentTimeLine.jsx";
 
@@ -33,6 +34,7 @@ export default function DayView({
   const { t, fmtDateDay } = useLang();
   const dateStr = toLocalDateStr(anchorDate);
   const dayLessons = lessons.filter(l => l.lesson_date === dateStr);
+  const columnLayout = assignEventColumns(dayLessons);
   const totalSlots = SCHEDULE_HOURS.length * 2;
   const today = isToday(anchorDate);
 
@@ -73,19 +75,17 @@ export default function DayView({
               const mins = timeToMinutes(lesson.start_time);
               const startSlot = (mins - 5 * 60) / 30;
               if (startSlot < 0 || startSlot >= totalSlots) return null;
+              const duration = eventDurationMinutes(lesson);
               return (
                 <LessonBlock
                   key={lesson.id}
                   lesson={lesson}
                   t={t}
                   onClick={onLessonClick}
-                  style={{
-                    position: "absolute",
-                    insetInline: 3,
+                  style={buildTimedEventStyle(lesson, columnLayout, {
                     top: slotTop(startSlot) + 1,
-                    height: Math.max(lessonHeight(eventDurationMinutes(lesson)), SLOT_H) - 3,
-                    zIndex: 2,
-                  }}
+                    height: Math.max(lessonHeight(duration), SLOT_H) - 3,
+                  })}
                 />
               );
             })}

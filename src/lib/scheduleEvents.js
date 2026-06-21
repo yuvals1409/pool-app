@@ -177,10 +177,17 @@ export async function loadScheduleEvents({
     .filter((slot) => canViewAllInstructors || filterAssessmentSlotForInstructor(slot))
     .map(normalizeAssessmentSlot);
 
-  return [...privateEvents, ...groupEvents, ...assessmentEvents].sort((a, b) => {
+  const merged = [...privateEvents, ...groupEvents, ...assessmentEvents].sort((a, b) => {
     const byDate = a.lesson_date.localeCompare(b.lesson_date);
     if (byDate !== 0) return byDate;
     return a.start_time.localeCompare(b.start_time);
+  });
+
+  const seen = new Set();
+  return merged.filter((event) => {
+    if (seen.has(event.id)) return false;
+    seen.add(event.id);
+    return true;
   });
 }
 

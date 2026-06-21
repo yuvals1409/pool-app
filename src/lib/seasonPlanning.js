@@ -40,10 +40,12 @@ export function suggestNextSeasonDates(today = new Date()) {
   };
 }
 
+const SEASON_FIELDS = "id, name, start_date, end_date, active, kind, summer_planning_enabled";
+
 export async function listSeasons() {
   const { data, error } = await supabase
     .from("seasons")
-    .select("id, name, start_date, end_date, active, kind")
+    .select(SEASON_FIELDS)
     .order("start_date", { ascending: false });
   if (error) throw error;
   return data || [];
@@ -52,7 +54,7 @@ export async function listSeasons() {
 export async function getActiveSeason() {
   const { data, error } = await supabase
     .from("seasons")
-    .select("id, name, start_date, end_date, active, kind")
+    .select(SEASON_FIELDS)
     .eq("active", true)
     .order("start_date", { ascending: false })
     .limit(1)
@@ -65,9 +67,8 @@ export async function getPlanningSeason() {
   const today = new Date().toISOString().slice(0, 10);
   const { data, error } = await supabase
     .from("seasons")
-    .select("id, name, start_date, end_date, active, kind")
+    .select(SEASON_FIELDS)
     .eq("active", false)
-    .eq("kind", "annual")
     .gt("start_date", today)
     .order("start_date", { ascending: true })
     .limit(1)
@@ -98,36 +99,33 @@ export async function createPlanningSeason({ name, startDate, endDate, kind } = 
   return data;
 }
 
-export async function cloneSeasonProducts(sourceSeasonId, targetSeasonId) {
-  const { data, error } = await supabase.rpc("clone_season_products", {
-    p_source_season_id: sourceSeasonId,
-    p_target_season_id: targetSeasonId,
-  });
-  if (error) throw error;
-  if (data?.result !== "ok") throw new Error(data?.result || "clone_failed");
-  return data;
-}
+export {
+  cloneSeasonProductsSelective as cloneSeasonProducts,
+  carryForwardIntents as carryForwardEnrollments,
+  getAnnualPlanningSummary as getSeasonPlanningSummary,
+  listSourceAnnualProducts,
+  setParticipantIntent,
+  listAnnualProducts,
+  CONTINUATION_INTENTS,
+} from "./seasonPlanningAnnual.js";
 
-export async function carryForwardEnrollments(sourceSeasonId, targetSeasonId, dryRun = false) {
-  const { data, error } = await supabase.rpc("carry_forward_enrollments", {
-    p_source_season_id: sourceSeasonId || null,
-    p_target_season_id: targetSeasonId,
-    p_dry_run: dryRun,
-  });
-  if (error) throw error;
-  if (data?.result !== "ok") throw new Error(data?.result || "carry_forward_failed");
-  return data;
-}
+export {
+  getSummerPlanningSummary,
+  enableSummerPlanning,
+  listSummerProducts,
+} from "./seasonPlanningSummer.js";
 
-export async function getSeasonPlanningSummary(targetSeasonId, sourceSeasonId = null) {
-  const { data, error } = await supabase.rpc("get_season_planning_summary", {
-    p_target_season_id: targetSeasonId,
-    p_source_season_id: sourceSeasonId || null,
-  });
-  if (error) throw error;
-  if (data?.result !== "ok") throw new Error(data?.result || "summary_failed");
-  return data;
-}
+export {
+  getSeasonMasterSchedule,
+  upsertScheduleSlot,
+  assignSlotProduct,
+  deleteScheduleSlot,
+  slotToEvent,
+  buildDayLayout,
+  layoutStyleForEvent,
+  PLANNING_DAYS,
+  SCHEDULE_LAYERS,
+} from "./seasonMasterSchedule.js";
 
 export async function activateSeason(seasonId) {
   const { data, error } = await supabase.rpc("activate_season", {

@@ -163,9 +163,12 @@ export default function AdminSeasonsTab({ toast, onOpenPlanning }) {
                   </div>
                 )}
                 {(lifecycle === "planning" || !s.active) && onOpenPlanning && (
-                  <div style={{ marginTop: 12 }}>
-                    <Button variant="secondary" size="sm" onClick={() => onOpenPlanning(s.id)}>
-                      {t("seasonOpenPlanning")}
+                  <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    <Button variant="secondary" size="sm" onClick={() => onOpenPlanning(s.id, "annual")}>
+                      {t("seasonOpenPlanningAnnual")}
+                    </Button>
+                    <Button variant="secondary" size="sm" onClick={() => onOpenPlanning(s.id, "summer")}>
+                      {t("seasonOpenPlanningSummer")}
                     </Button>
                   </div>
                 )}

@@ -59,6 +59,15 @@
 
 .data-table .col-text--mid {
   color: var(--ink-mid);
+  width: 1%;
+  white-space: nowrap;
+}
+
+.data-table .col-text--truncate {
+  max-width: 20rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .data-table .col-num {

@@ -116,14 +116,17 @@ function participantActiveInSeason(participant, seasonId) {
   );
 }
 
-function familyRenewalStatus(family, activeSeasonId, planningSeasonId) {
+function familyRenewalStatus(family, activeSeasonId, planningSeasonId, intentByParticipant) {
   if (!activeSeasonId || !planningSeasonId) return "any";
   const participants = family.participants || [];
   const hasActiveNow = participants.some((p) => participantActiveInSeason(p, activeSeasonId));
   if (!hasActiveNow) return "any";
-  const allRenewed = participants
-    .filter((p) => participantActiveInSeason(p, activeSeasonId))
-    .every((p) => participantActiveInSeason(p, planningSeasonId));
+  const activeKids = participants.filter((p) => participantActiveInSeason(p, activeSeasonId));
+  const allRenewed = activeKids.every((p) => {
+    const intent = intentByParticipant?.get(p.id);
+    if (intent === "confirmed") return true;
+    return participantActiveInSeason(p, planningSeasonId);
+  });
   return allRenewed ? "renewed" : "missing";
 }
 
@@ -169,6 +172,7 @@ export default function AdminCustomersTab({ toast }) {
   const [editMembershipTier, setEditMembershipTier] = useState("external");
   const [activeSeasonId, setActiveSeasonId] = useState("");
   const [planningSeasonId, setPlanningSeasonId] = useState("");
+  const [intentByParticipant, setIntentByParticipant] = useState(() => new Map());
   const [renewalFilter, setRenewalFilter] = useState("any");
   const [savingShareholderId, setSavingShareholderId] = useState(null);
   const [packageSavingId, setPackageSavingId] = useState(null);
@@ -214,6 +218,15 @@ export default function AdminCustomersTab({ toast }) {
       const active = (seasonRows || []).find((s) => s.active);
       if (active) setActiveSeasonId(active.id);
       if (planning) setPlanningSeasonId(planning.id);
+      if (planning?.id) {
+        const { data: intentRows } = await supabase
+          .from("participant_season_intents")
+          .select("participant_id, intent")
+          .eq("season_id", planning.id);
+        setIntentByParticipant(new Map((intentRows || []).map((r) => [r.participant_id, r.intent])));
+      } else {
+        setIntentByParticipant(new Map());
+      }
       const phones = new Set(
         (waitlistRows || []).map((row) => normalizePhone(row.phone)).filter(Boolean),
       );
@@ -409,7 +422,7 @@ export default function AdminCustomersTab({ toast }) {
       if (!matchesAgeRange(family.participants, ageMin, ageMax)) return false;
 
       if (renewalFilter !== "any" && planningSeasonId) {
-        const status = familyRenewalStatus(family, activeSeasonId, planningSeasonId);
+        const status = familyRenewalStatus(family, activeSeasonId, planningSeasonId, intentByParticipant);
         if (renewalFilter === "renewed" && status !== "renewed") return false;
         if (renewalFilter === "missing" && status !== "missing") return false;
       }
@@ -435,7 +448,7 @@ export default function AdminCustomersTab({ toast }) {
   }, [
     families, searchQuery, enrollmentFilter, paymentFilter, productId, seasonId, gender,
     emailFilter, childrenFilter, waitlistFilter, waitlistPhones, createdFrom, createdTo,
-    ageMin, ageMax, sortBy, renewalFilter, activeSeasonId, planningSeasonId,
+    ageMin, ageMax, sortBy, renewalFilter, activeSeasonId, planningSeasonId, intentByParticipant,
   ]);
 
   const resetFilters = () => {
