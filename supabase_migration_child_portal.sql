@@ -659,7 +659,7 @@ $$;
 CREATE OR REPLACE FUNCTION public.staff_get_portal_credentials(p_participant_id uuid)
 RETURNS json
 LANGUAGE plpgsql
-STABLE
+VOLATILE
 SECURITY DEFINER
 SET search_path = public
 AS $$
