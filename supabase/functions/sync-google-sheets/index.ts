@@ -1,5 +1,8 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { runMasterSheetSync, MASTER_TAB, CONFIG_TAB, INCOMING_LEADS_TAB } from "./master-sync.ts";
+import { GROUPS_TAB, GROUP_SLOTS_TAB } from "./groups-sync.ts";
+import { USERS_TAB, PAY_RATES_TAB } from "./users-sync.ts";
 
 const MONTHLY_TABS = ["מאי", "יוני", "יולי"];
 const ANNUAL_DAY_TABS = ["שני", "שלישי", "רביעי", "חמישי", "שישי"];
@@ -273,12 +276,6 @@ Deno.serve(async (req) => {
   }
 
   const { direction = "both", tabs, mode = "monthly" } = await req.json().catch(() => ({}));
-  const defaultTabs = mode === "annual"
-    ? ANNUAL_DAY_TABS
-    : mode === "summer"
-      ? SUMMER_TABS
-      : MONTHLY_TABS;
-  const syncTabs: string[] = tabs?.length ? tabs : defaultTabs;
   const spreadsheetId = Deno.env.get("SHEETS_SPREADSHEET_ID");
   const saJson = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_JSON");
 
@@ -291,6 +288,83 @@ Deno.serve(async (req) => {
 
   const serviceAccount = JSON.parse(saJson);
   const token = await getGoogleAccessToken(serviceAccount);
+
+  if (mode === "master") {
+    const masterRows = await readSheetTab(token, spreadsheetId, MASTER_TAB);
+    const configRows = await readSheetTab(token, spreadsheetId, CONFIG_TAB);
+    let incomingRows: string[][] = [];
+    let groupsRows: string[][] = [];
+    let slotsRows: string[][] = [];
+    let usersRows: string[][] = [];
+    let payRatesRows: string[][] = [];
+    try {
+      incomingRows = await readSheetTab(token, spreadsheetId, INCOMING_LEADS_TAB);
+    } catch {
+      incomingRows = [];
+    }
+    try {
+      groupsRows = await readSheetTab(token, spreadsheetId, GROUPS_TAB);
+      slotsRows = await readSheetTab(token, spreadsheetId, GROUP_SLOTS_TAB);
+    } catch {
+      groupsRows = [];
+      slotsRows = [];
+    }
+    try {
+      usersRows = await readSheetTab(token, spreadsheetId, USERS_TAB);
+      payRatesRows = await readSheetTab(token, spreadsheetId, PAY_RATES_TAB);
+    } catch {
+      usersRows = [];
+      payRatesRows = [];
+    }
+    const writeTab = (tab: string, rows: string[][]) => writeSheetTab(token, spreadsheetId, tab, rows);
+
+    const { data: run } = await supabase.from("sheet_sync_runs").insert({
+      direction: "pull",
+      sheet_tab: MASTER_TAB,
+      status: "running",
+    }).select("id").single();
+
+    try {
+      const results = await runMasterSheetSync(
+        supabase,
+        masterRows,
+        configRows,
+        writeTab,
+        incomingRows,
+        groupsRows,
+        slotsRows,
+        usersRows,
+        payRatesRows,
+      );
+      await supabase.from("sheet_sync_runs").update({
+        finished_at: new Date().toISOString(),
+        rows_in: results.synced,
+        rows_out: 0,
+        errors: results.errors,
+        status: results.blocked ? "failed" : results.failed ? "partial" : "ok",
+      }).eq("id", run?.id);
+
+      return new Response(JSON.stringify({ ok: true, message: "master_sheet_sync_complete", results }), {
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      await supabase.from("sheet_sync_runs").update({
+        finished_at: new Date().toISOString(),
+        errors: [{ error: msg }],
+        status: "failed",
+      }).eq("id", run?.id);
+      return new Response(JSON.stringify({ ok: false, error: msg }), { status: 500 });
+    }
+  }
+
+  const defaultTabs = mode === "annual"
+    ? ANNUAL_DAY_TABS
+    : mode === "summer"
+      ? SUMMER_TABS
+      : MONTHLY_TABS;
+  const syncTabs: string[] = tabs?.length ? tabs : defaultTabs;
+
   const results = [];
 
   for (const tab of syncTabs) {

@@ -15,11 +15,11 @@ import { readFileSync, existsSync, mkdtempSync, rmSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { tmpdir } from "node:os";
 import { execFileSync } from "node:child_process";
+import { parseSummerData, SUMMER_IMPORT_SHEETS } from "./lib/parse-summer-sheet.mjs";
 
 const SEASON_NAME = "קיץ 2026";
 const SEASON_START = "2026-05-25";
 const SEASON_END = "2026-07-02";
-const IMPORT_SHEET = "לימוד (מאי)";
 
 const HEB_DAY_MAP = { "ב": 2, "ג": 3, "ד": 4, "ה": 4, "ו": 5 };
 
@@ -402,16 +402,19 @@ async function importToDb(data) {
 }
 
 const sheets = loadWorkbook(resolve(xlsxPath));
-const sheet = sheets[IMPORT_SHEET];
-if (!sheet) {
-  console.error(`Sheet "${IMPORT_SHEET}" not found. Available: ${Object.keys(sheets).join(", ")}`);
+const missing = SUMMER_IMPORT_SHEETS.filter((t) => !sheets[t]);
+if (missing.length === SUMMER_IMPORT_SHEETS.length) {
+  console.error(`No summer sheets found. Available: ${Object.keys(sheets).join(", ")}`);
   process.exit(1);
 }
+if (missing.length) {
+  console.warn(`Missing sheets (skipped): ${missing.join(", ")}`);
+}
 
-const data = parseSummerSheet(sheet);
+const data = parseSummerData(sheets);
 
 console.log("=== Summer course import report ===");
-console.log(`Sheet: ${IMPORT_SHEET}`);
+console.log(`Sheets: ${SUMMER_IMPORT_SHEETS.filter((t) => sheets[t]).join(", ")}`);
 console.log(`Products: ${data.stats.products}`);
 console.log(`Enrollments: ${data.stats.enrollments}`);
 console.log(`Families: ${data.families.size}`);

@@ -12,6 +12,15 @@ function fmtTimeShort(time) {
   return String(time).slice(0, 5);
 }
 
+function shortExcelSourceLabel(excelSourceName) {
+  const text = String(excelSourceName || "").trim();
+  if (!text) return "";
+  const swim = text.match(/שחייה\s*(\d+)/i);
+  if (swim) return `שחייה ${swim[1]}`;
+  if (text.length <= 28) return text;
+  return `${text.slice(0, 25)}…`;
+}
+
 function buildScheduleString(type, schedule, days) {
   const slots = (schedule || []).filter((s) => s && s.startTime);
   if (!slots.length) return "";
@@ -39,11 +48,16 @@ function buildScheduleString(type, schedule, days) {
  *   days?: string[],
  * }} params
  */
-export function buildGroupName({ type, level, gender, targetAudience, schedule, days }) {
+export function buildGroupName({ type, level, gender, targetAudience, schedule, days, excelSourceName, forceExcelLabel = false }) {
   const parts = [];
 
   const activity = ACTIVITY_TYPE_LABELS[type];
   if (activity) parts.push(activity);
+
+  if (type === GROUP_TYPE_SUMMER || forceExcelLabel) {
+    const label = shortExcelSourceLabel(excelSourceName);
+    if (label) parts.push(label);
+  }
 
   if (type === GROUP_TYPE_ANNUAL && level != null && level >= 1 && level <= 10) {
     parts.push(`רמה ${level}`);

@@ -3,13 +3,23 @@ import {
   normalizeName,
   normalizePhone,
   normalizeSheetGender,
+  birthDateFromAge,
   isPaid,
+  paymentStatusFromSheet,
 } from "./sheet-normalize.mjs";
 
 export const SUMMER_SEASON_NAME = "קיץ 2026";
 export const SUMMER_SEASON_START = "2026-05-25";
 export const SUMMER_SEASON_END = "2026-07-02";
 export const SUMMER_IMPORT_SHEETS = ["לימוד (מאי)", "לימוד (יוני)", "לימוד (יולי)"];
+export const SUMMER_SECTION_SHEET = "סקציה";
+
+function parseMembershipTier(raw) {
+  const s = String(raw ?? "").trim();
+  if (/בעל|מניות/i.test(s)) return { tier: "shareholder", label: "בעל_מניות" };
+  if (/מנוי/i.test(s)) return { tier: "subscriber", label: "מנוי" };
+  return { tier: "external", label: "חיצוני" };
+}
 
 const HEB_DAY_MAP = { ב: 2, ג: 3, ד: 4, ה: 4, ו: 5 };
 
@@ -118,21 +128,25 @@ export function parseSummerSheet(rows) {
       const parent = normalizeName(sc[6]);
       const partKey = clientId || `${childName}|${phone}`;
 
-      if (phone) families.set(phone, { phone, parentName: parent });
+      const membership = parseMembershipTier(sc[8]);
+      if (phone) families.set(phone, { phone, parentName: parent, membership });
       participants.set(partKey, {
         key: partKey,
         phone,
         fullName: childName,
         clientId,
         gender: normalizeSheetGender(sc[5]),
+        birthDate: birthDateFromAge(sc[4]),
+        membership,
       });
 
       enrollments.push({
         productKey: prod.key,
         participantKey: partKey,
-        paymentStatus: "paid",
+        paymentStatus: paymentStatusFromSheet(sc[9]),
         validFrom: courseStart,
         validUntil: courseEnd,
+        sheetTab: null,
       });
       stats.enrollments++;
       rr++;
@@ -156,6 +170,7 @@ export function parseSummerData(sheets) {
     const rows = sheets[tab];
     if (!rows) continue;
     const part = parseSummerSheet(rows);
+    for (const e of part.enrollments) e.sheetTab = tab;
     merged.products.push(...part.products);
     merged.enrollments.push(...part.enrollments);
     for (const [k, v] of part.families) merged.families.set(k, v);
@@ -165,7 +180,113 @@ export function parseSummerData(sheets) {
     merged.stats.skippedUnpaid += part.stats.skippedUnpaid;
     merged.stats.skippedEmpty += part.stats.skippedEmpty;
   }
+
+  if (sheets[SUMMER_SECTION_SHEET]) {
+    const section = parseSummerSection(sheets[SUMMER_SECTION_SHEET]);
+    merged.products.push(...section.products);
+    merged.enrollments.push(...section.enrollments);
+    for (const [k, v] of section.families) merged.families.set(k, v);
+    for (const [k, v] of section.participants) merged.participants.set(k, v);
+    merged.stats.products += section.stats.products;
+    merged.stats.enrollments += section.stats.enrollments;
+    merged.stats.skippedUnpaid += section.stats.skippedUnpaid;
+    merged.stats.skippedEmpty += section.stats.skippedEmpty;
+  }
+
   return merged;
+}
+
+/** Parse סקציה קיץ + רענון sheet (block-based layout). */
+export function parseSummerSection(rows) {
+  const stats = { products: 0, enrollments: 0, skippedUnpaid: 0, skippedEmpty: 0 };
+  const products = [];
+  const enrollments = [];
+  const families = new Map();
+  const participants = new Map();
+
+  const maxRow = Math.max(...rows.keys(), 0);
+  let r = 1;
+  while (r <= maxRow) {
+    const cells = rows.get(r) || {};
+    const blockTitle = normalizeName(cells[1]);
+    if (!blockTitle || !/סקציה|רענון/i.test(blockTitle)) {
+      r++;
+      continue;
+    }
+
+    const dayLabel = normalizeName(cells[0]) || "";
+    const prodName = blockTitle;
+    const instructor = "";
+    const times = parseTimeRange(rows.get(r + 2)?.[7] || rows.get(r + 3)?.[7] || "17:30-18:15");
+    const prod = {
+      key: `section|${prodName}|${dayLabel}|${times.start}`,
+      name: prodName,
+      instructor,
+      startTime: times.start,
+      endTime: times.end,
+      weekdays: [],
+      courseStart: SUMMER_SEASON_START,
+      courseEnd: SUMMER_SEASON_END,
+      dayLabel,
+      recordType: "section",
+    };
+    products.push(prod);
+    stats.products++;
+
+    let rr = r + 4;
+    while (rows.has(rr)) {
+      const sc = rows.get(rr) || {};
+      const col1 = normalizeName(sc[1]);
+      if (col1.includes("מס' לקוח") && rr > r + 4) break;
+      if (col1.includes("סקציה") || col1.includes("רענון")) {
+        rr++;
+        continue;
+      }
+
+      const childName = normalizeName(sc[2]);
+      if (!childName || childName.includes("ילד") || childName === "0") {
+        rr++;
+        continue;
+      }
+
+      if (!isPaid(sc[9])) {
+        stats.skippedUnpaid++;
+        rr++;
+        continue;
+      }
+
+      const clientId = normalizeClientId(sc[1]);
+      const phone = normalizePhone(sc[6]);
+      const parent = normalizeName(sc[5]);
+      const partKey = clientId || `${childName}|${phone}`;
+      const membership = parseMembershipTier(sc[8]);
+
+      if (phone) families.set(phone, { phone, parentName: parent, membership });
+      participants.set(partKey, {
+        key: partKey,
+        phone,
+        fullName: childName,
+        clientId,
+        gender: normalizeSheetGender(sc[4]),
+        birthDate: birthDateFromAge(sc[3]),
+        membership,
+      });
+
+      enrollments.push({
+        productKey: prod.key,
+        participantKey: partKey,
+        paymentStatus: paymentStatusFromSheet(sc[9]),
+        validFrom: SUMMER_SEASON_START,
+        validUntil: SUMMER_SEASON_END,
+        sheetTab: SUMMER_SECTION_SHEET,
+      });
+      stats.enrollments++;
+      rr++;
+    }
+    r = rr;
+  }
+
+  return { products, enrollments, families, participants, stats };
 }
 
 /** Parse price list tab — returns Map<courseName, price> */
