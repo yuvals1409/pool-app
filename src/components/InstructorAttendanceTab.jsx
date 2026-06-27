@@ -156,6 +156,11 @@ export default function InstructorAttendanceTab({ toast, initialFocus, onFocusHa
                       {typeLabel}
                     </Badge>
                   ) : null}
+                  {s.makeup_count > 0 && (
+                    <Badge variant="success" style={{ flexShrink: 0 }}>
+                      {t("attendanceSessionMakeupCount", { count: s.makeup_count })}
+                    </Badge>
+                  )}
                 </div>
               </div>
               <span className="btn btn-outline btn-sm" style={{ pointerEvents: "none" }}>{t("markAttendance")}</span>

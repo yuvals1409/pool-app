@@ -125,7 +125,7 @@ export default function AdminUtilizationTab({ toast }) {
     try {
       const data = await getEnrollmentUtilization(row.enrollment_id, asOf);
       setMakeupUtil(data);
-      setMakeupRow(row);
+      setMakeupRow({ ...row, id: row.enrollment_id });
     } catch (e) {
       toast.show(e.message || t("systemError"));
     }

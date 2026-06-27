@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { RefreshCw } from "lucide-react";
+import "../styles/attendance-roster.css";
 import { useLang } from "../i18n.jsx";
 import {
   submitSessionAttendance,
@@ -96,16 +98,26 @@ export default function AttendanceRoster({ session, roster, onSaved, onBack, toa
     setSaving(false);
   };
 
-  const rows = session.session_type === "private"
-    ? [{ key: "lesson", name: session.title, current: roster?.attendance_status }]
-    : roster.map((r) => ({
+  const rows = useMemo(() => {
+    if (session.session_type === "private") {
+      return [{ key: "lesson", name: session.title, current: roster?.attendance_status }];
+    }
+    return (Array.isArray(roster) ? roster : [])
+      .map((r) => ({
         key: r.enrollment_id,
         name: r.child_name,
         current: r.attendance_status,
         source: r.attendance_source,
         isMakeup: r.is_makeup || r.attendee_type === "makeup",
         homeProductName: r.home_product_name,
-      }));
+      }))
+      .sort((a, b) => {
+        if (a.isMakeup !== b.isMakeup) return a.isMakeup ? -1 : 1;
+        return (a.name || "").localeCompare(b.name || "", "he");
+      });
+  }, [session, roster]);
+
+  const makeupCount = rows.filter((r) => r.isMakeup).length;
 
   return (
     <div>
@@ -113,30 +125,43 @@ export default function AttendanceRoster({ session, roster, onSaved, onBack, toa
         ← {t("backToSessions")}
       </Button>
 
+      {makeupCount > 0 && (
+        <div className="attendance-roster-banner">
+          <RefreshCw size={16} aria-hidden />
+          <span>{t("makeupRosterBanner", { count: makeupCount })}</span>
+        </div>
+      )}
+
       <Card padded={false} style={{ overflow: "hidden" }}>
         {rows.map((row) => {
           const mark = marks[row.key];
           const showReason = REASON_STATUSES.has(mark.status);
           return (
-            <div className="user-row" key={row.key} style={{ flexWrap: "wrap", gap: 8 }}>
-              <div className="user-info" style={{ flex: "1 1 100%" }}>
-                <div className="user-display">
+            <div
+              className={`attendance-roster-row${row.isMakeup ? " attendance-roster-row--makeup" : ""}`}
+              key={row.key}
+            >
+              <div className="attendance-roster-head">
+                <div className="attendance-roster-name">
                   {row.name}
                   {row.isMakeup && (
-                    <Badge variant="success" style={{ marginInlineStart: 8 }}>{t("makeupBadge")}</Badge>
+                    <Badge variant="success">{t("makeupBadge")}</Badge>
                   )}
                 </div>
                 {row.isMakeup && row.homeProductName && (
-                  <div className="user-email">{t("makeupFromGroup")}: {row.homeProductName}</div>
+                  <div className="attendance-roster-home-group">
+                    <span>{t("makeupFromGroup")}:</span>
+                    <strong>{row.homeProductName}</strong>
+                  </div>
                 )}
                 {row.current && row.current !== "pending" && (
-                  <div className="user-email">
+                  <div className="attendance-roster-status">
                     {statusLabel(mark.status || row.current)}
                     {row.source === "guard_scan" ? ` · ${t("attendanceFromScan")}` : ""}
                   </div>
                 )}
               </div>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", flex: "1 1 100%" }}>
+              <div className="attendance-roster-actions">
                 {MARK_STATUSES.map((st) => (
                   <Button
                     key={st}
@@ -150,7 +175,7 @@ export default function AttendanceRoster({ session, roster, onSaved, onBack, toa
                 ))}
               </div>
               {showReason && (
-                <div className="field" style={{ flex: "1 1 100%", marginTop: 4 }}>
+                <div className="attendance-roster-reason field">
                   <label className="label">{t("attendanceReason")}</label>
                   <Select
                     value={mark.reasonKey}
@@ -201,7 +226,7 @@ function buildInitialMarks(session, roster) {
     return { lesson: emptyMark(st && st !== "pending" ? st : "present") };
   }
   const marks = {};
-  for (const r of roster) {
+  for (const r of roster || []) {
     marks[r.enrollment_id] = emptyMark(
       r.attendance_status && r.attendance_status !== "pending" ? r.attendance_status : "present",
     );

@@ -1,0 +1,78 @@
+.attendance-roster-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  background: var(--pool-wash);
+  border: 1px solid var(--info-border);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.attendance-roster-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.attendance-roster-row:last-child {
+  border-bottom: none;
+}
+
+.attendance-roster-row--makeup {
+  background: linear-gradient(to left, var(--surface) 0%, var(--pool-wash) 100%);
+  border-inline-start: 3px solid var(--pool);
+}
+
+.attendance-roster-head {
+  flex: 1 1 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.attendance-roster-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: var(--weight-semibold, 600);
+  color: var(--ink);
+}
+
+.attendance-roster-home-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ink-mid);
+  line-height: 1.4;
+}
+
+.attendance-roster-home-group strong {
+  font-weight: var(--weight-medium, 500);
+  color: var(--ink);
+}
+
+.attendance-roster-status {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.attendance-roster-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1 1 100%;
+}
+
+.attendance-roster-reason {
+  flex: 1 1 100%;
+  margin-top: 4px;
+}

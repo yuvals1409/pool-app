@@ -1,11 +1,20 @@
-import { useState, useEffect, useCallback } from "react";
-import "./schedule/schedule.css";
+import { useState, useEffect } from "react";
+import { X } from "lucide-react";
+import "../styles/makeup-booking.css";
 import { useLang } from "../i18n.jsx";
 import { fmt_time } from "../lib/lessonDates.js";
 import { listMakeupTargetSessions, bookMakeupSession } from "../lib/makeup.js";
 import { getPublicPassUrl } from "../lib/accessPass.js";
 import { templateLabel } from "../lib/attendance.js";
-import { Badge, Button, Card, Field, Input, Spinner } from "./ui/ds/index.js";
+import { Badge, Button, Card, EmptyState, Field, Input, Spinner } from "./ui/ds/index.js";
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function enrollmentIdOf(enrollment) {
+  return enrollment?.id ?? enrollment?.enrollment_id ?? null;
+}
 
 export default function MakeupBookingModal({
   enrollment,
@@ -22,27 +31,39 @@ export default function MakeupBookingModal({
   const [notes, setNotes] = useState("");
   const [bookedPass, setBookedPass] = useState(null);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const enrollmentId = enrollmentIdOf(enrollment);
+  const childName = enrollment?.child_name || enrollment?.participant?.full_name;
+  const productName = enrollment?.product_name || enrollment?.product?.name;
+  const shortfall = utilization?.shortfall ?? enrollment?.shortfall ?? 0;
 
-  const loadSessions = useCallback(async () => {
-    if (!enrollment?.id) return;
-    setLoading(true);
-    try {
-      const data = await listMakeupTargetSessions(enrollment.id, today);
-      setSessions(data);
-    } catch (e) {
-      toast.show(e.message || t("systemError"));
+  useEffect(() => {
+    if (!enrollmentId) {
+      setSessions([]);
+      setLoading(false);
+      return;
     }
-    setLoading(false);
-  }, [enrollment?.id, today, toast, t]);
 
-  useEffect(() => { loadSessions(); }, [loadSessions]);
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const data = await listMakeupTargetSessions(enrollmentId, todayStr());
+        if (!cancelled) setSessions(data);
+      } catch (e) {
+        if (!cancelled) toast.show(e.message || t("systemError"));
+      }
+      if (!cancelled) setLoading(false);
+    })();
+
+    return () => { cancelled = true; };
+  }, [enrollmentId, toast, t]);
 
   const book = async (sessionId) => {
+    if (!enrollmentId) return;
     setSaving(true);
     setBookingId(sessionId);
     try {
-      const data = await bookMakeupSession(enrollment.id, sessionId, { notes: notes.trim() || null });
+      const data = await bookMakeupSession(enrollmentId, sessionId, { notes: notes.trim() || null });
       if (data?.result !== "ok") {
         const msg = {
           session_full: t("makeupSessionFull"),
@@ -74,84 +95,100 @@ export default function MakeupBookingModal({
     }
   };
 
-  const childName = enrollment?.child_name || enrollment?.participant?.full_name;
-  const productName = enrollment?.product_name || enrollment?.product?.name;
-  const shortfall = utilization?.shortfall ?? enrollment?.shortfall ?? 0;
-
   return (
-    <div className="schedule-panel-overlay" onClick={onClose}>
-      <div className="schedule-panel" onClick={(e) => e.stopPropagation()}>
-        <div className="schedule-panel-handle" />
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <div className="section-title" style={{ margin: 0 }}>{t("bookMakeup")}</div>
-          <Button type="button" variant="secondary" size="sm" onClick={onClose}>{t("close")}</Button>
+    <div className="makeup-modal-overlay" onClick={onClose}>
+      <div className="makeup-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-labelledby="makeup-modal-title">
+        <div className="makeup-modal-header">
+          <h2 id="makeup-modal-title" className="makeup-modal-title">{t("bookMakeup")}</h2>
+          <Button type="button" variant="ghost" size="sm" onClick={onClose} aria-label={t("close")}>
+            <X size={18} aria-hidden />
+          </Button>
         </div>
 
-        <div className="log-meta" style={{ marginBottom: 12 }}>
-          {childName} · {productName}
-        </div>
-        <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
-          <Badge variant="warn">{t("utilizationEntitled")}: {utilization?.entitled ?? "—"}</Badge>
-          <Badge variant="success">{t("utilizationUsed")}: {utilization?.utilized ?? "—"}</Badge>
-          <Badge variant="danger">{t("utilizationShortfall")}: {shortfall}</Badge>
-        </div>
+        <div className="makeup-modal-body">
+          <div className="makeup-modal-identity">
+            {childName ? <div className="makeup-modal-child">{childName}</div> : null}
+            {productName ? <div className="makeup-modal-product">{productName}</div> : null}
+          </div>
 
-        {bookedPass?.result === "ok" ? (
-          <Card>
-            <div className="log-name">{t("makeupBooked")}</div>
-            <div className="log-meta">
-              {fmtDateDay(bookedPass.session_date)} · {fmt_time(bookedPass.start_time)} · {bookedPass.product_name}
+          <div className="makeup-stats">
+            <div className="makeup-stat makeup-stat--warn">
+              <span className="makeup-stat-label">{t("utilizationEntitled")}</span>
+              <span className="makeup-stat-value">{utilization?.entitled ?? "—"}</span>
             </div>
-            <Button type="button" variant="primary" size="sm" style={{ marginTop: 12 }} onClick={copyPassLink}>
-              {t("copyTicketLink")}
-            </Button>
-          </Card>
-        ) : (
-          <>
-            <Field label={t("makeupNotes")}>
-              <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t("makeupNotesPlaceholder")} />
-            </Field>
+            <div className="makeup-stat makeup-stat--success">
+              <span className="makeup-stat-label">{t("utilizationUsed")}</span>
+              <span className="makeup-stat-value">{utilization?.utilized ?? "—"}</span>
+            </div>
+            <div className="makeup-stat makeup-stat--danger">
+              <span className="makeup-stat-label">{t("utilizationShortfall")}</span>
+              <span className="makeup-stat-value">{shortfall}</span>
+            </div>
+          </div>
 
-            {loading ? (
-              <div style={{ display: "flex", justifyContent: "center", padding: 24 }}>
-                <Spinner />
+          {bookedPass?.result === "ok" ? (
+            <Card>
+              <div className="makeup-success-card">
+                <div className="makeup-success-title">{t("makeupBooked")}</div>
+                <div className="makeup-success-meta">
+                  {fmtDateDay(bookedPass.session_date)} · {fmt_time(bookedPass.start_time)} · {bookedPass.product_name}
+                </div>
+                <Button type="button" variant="primary" size="sm" style={{ alignSelf: "flex-start", marginTop: 4 }} onClick={copyPassLink}>
+                  {t("copyTicketLink")}
+                </Button>
               </div>
-            ) : sessions.length === 0 ? (
-              <div style={{ color: "var(--ink-soft)", textAlign: "center", padding: 16 }}>{t("noMakeupSessions")}</div>
-            ) : (
-              <div className="grouped-list" style={{ maxHeight: 360, overflowY: "auto" }}>
-                {sessions.map((s) => (
-                  <div className="user-row" key={s.session_id} style={{ flexWrap: "wrap", gap: 8 }}>
-                    <div className="user-info" style={{ flex: 1 }}>
-                      <div className="user-display" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                        {s.product_name}
-                        {s.level_match ? <Badge variant="success">{t("makeupLevelMatch")}</Badge> : null}
+            </Card>
+          ) : (
+            <>
+              <Field label={t("makeupNotes")}>
+                <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t("makeupNotesPlaceholder")} />
+              </Field>
+
+              {loading ? (
+                <div className="makeup-loading">
+                  <Spinner />
+                  <span>{t("makeupLoadingSessions")}</span>
+                </div>
+              ) : sessions.length === 0 ? (
+                <EmptyState title={t("noMakeupSessions")} style={{ padding: "24px 16px" }} />
+              ) : (
+                <>
+                  <p className="makeup-section-title">{t("makeupChooseSession")}</p>
+                  <div className="makeup-sessions">
+                    {sessions.map((s) => (
+                      <div className="makeup-session" key={s.session_id}>
+                        <div className="makeup-session-info">
+                          <div className="makeup-session-name">
+                            {s.product_name}
+                            {s.level_match ? <Badge variant="success">{t("makeupLevelMatch")}</Badge> : null}
+                          </div>
+                          <div className="makeup-session-meta">
+                            {fmtDateDay(s.session_date)} · <span dir="ltr">{fmt_time(s.start_time)}</span>
+                            {s.level_label ? ` · ${s.level_label}` : ""}
+                            {s.instructor_name ? ` · ${s.instructor_name}` : ""}
+                          </div>
+                          <div className="makeup-session-detail">
+                            {templateLabel(t, s.template_code)}
+                            {s.capacity != null ? ` · ${s.attendee_count}/${s.capacity}` : ""}
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="primary"
+                          size="sm"
+                          disabled={saving}
+                          onClick={() => book(s.session_id)}
+                        >
+                          {saving && bookingId === s.session_id ? "..." : t("bookMakeup")}
+                        </Button>
                       </div>
-                      <div className="user-email">
-                        {fmtDateDay(s.session_date)} · {fmt_time(s.start_time)}
-                        {s.level_label ? ` · ${s.level_label}` : ""}
-                        {s.instructor_name ? ` · ${s.instructor_name}` : ""}
-                      </div>
-                      <div className="user-email">
-                        {templateLabel(t, s.template_code)}
-                        {s.capacity != null ? ` · ${s.attendee_count}/${s.capacity}` : ""}
-                      </div>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="primary"
-                      size="sm"
-                      disabled={saving}
-                      onClick={() => book(s.session_id)}
-                    >
-                      {saving && bookingId === s.session_id ? "..." : t("bookMakeup")}
-                    </Button>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
+                </>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
