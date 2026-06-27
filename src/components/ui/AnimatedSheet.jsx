@@ -19,12 +19,12 @@ export function AnimatedSheetOverlay({ onClose, children }) {
   );
 }
 
-export function AnimatedSheetPanel({ children, onClick }) {
+export function AnimatedSheetPanel({ children, onClick, className = "" }) {
   const reduced = useReducedMotion();
 
   return (
     <motion.div
-      className="schedule-panel"
+      className={`schedule-panel${className ? ` ${className}` : ""}`}
       onClick={onClick}
       initial={{ y: reduced ? 0 : "100%" }}
       animate={{ y: 0 }}

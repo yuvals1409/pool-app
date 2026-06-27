@@ -1,0 +1,15 @@
+{
+  "totalRows": 272,
+  "byType": {
+    "הרשמה_שנתית_פעמיים_בשבוע": 94,
+    "הרשמה_שנתית_פעם_בשבוע": 161,
+    "קורס_קיץ": 17
+  },
+  "groups": {
+    "annualGroups": 22,
+    "summerGroups": 15,
+    "totalSlots": 55
+  },
+  "conflicts": 0,
+  "incomplete": 24
+}

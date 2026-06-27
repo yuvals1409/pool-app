@@ -140,6 +140,17 @@ function matchesCreatedRange(createdAt, from, to) {
   return true;
 }
 
+function enrollmentProductId(enrollment) {
+  return enrollment.product_id ?? enrollment.product?.id ?? null;
+}
+
+function matchesProductEnrollment(enrollment, productId, enrollmentFilter) {
+  if (enrollmentProductId(enrollment) !== productId) return false;
+  if (enrollmentFilter === "active") return enrollment.active;
+  if (enrollmentFilter === "cancelled") return !enrollment.active;
+  return true;
+}
+
 export default function AdminCustomersTab({ toast }) {
   const { t, days, fmtDateDay } = useLang();
   const [crmView, setCrmView] = useState("families");
@@ -192,7 +203,7 @@ export default function AdminCustomersTab({ toast }) {
     participants(
       id, full_name, birth_date, gender, grade, external_client_id, created_at, first_enrolled_at, membership_tier,
       enrollments(
-        id, payment_status, valid_from, valid_until, active, created_at,
+        id, product_id, payment_status, valid_from, valid_until, active, created_at,
         product:products(
           id, name, day_of_week, start_time, end_time, instructor_name,
           level, level_label, season_id, schedule_pattern,
@@ -331,24 +342,23 @@ export default function AdminCustomersTab({ toast }) {
   };
 
   useEffect(() => {
-    if (!seasonId) {
-      setProducts([]);
-      setProductId("");
-      return;
-    }
     (async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("products")
         .select("id, name, day_of_week, start_time, season_id, schedule_pattern, product_templates(code)")
-        .eq("season_id", seasonId)
         .order("name");
+      if (seasonId) query = query.eq("season_id", seasonId);
+      const { data, error } = await query;
       if (error) toast.show(error.message);
-      else {
-        setProducts(data || []);
-        if (productId && !(data || []).some((p) => p.id === productId)) setProductId("");
-      }
+      else setProducts(data || []);
     })();
-  }, [seasonId, productId]);
+  }, [seasonId]);
+
+  useEffect(() => {
+    if (productId && products.length > 0 && !products.some((p) => p.id === productId)) {
+      setProductId("");
+    }
+  }, [productId, products]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -390,7 +400,7 @@ export default function AdminCustomersTab({ toast }) {
 
       if (productId) {
         const hasProduct = flattenEnrollments(family).some(
-          ({ enrollment }) => enrollment.product?.id === productId && enrollment.active,
+          ({ enrollment }) => matchesProductEnrollment(enrollment, productId, enrollmentFilter),
         );
         if (!hasProduct) return false;
       }
@@ -585,13 +595,19 @@ export default function AdminCustomersTab({ toast }) {
                 </Select>
               </Field>
               <Field label={t("selectClass")}>
-                <Select value={productId} onChange={(e) => setProductId(e.target.value)} disabled={!seasonId}>
+                <Select value={productId} onChange={(e) => setProductId(e.target.value)}>
                   <option value="">{t("customersAnyProduct")}</option>
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {formatProductLabel(p, days, p.product_templates?.code)}
-                    </option>
-                  ))}
+                  {products.map((p) => {
+                    const seasonName = !seasonId
+                      ? seasons.find((s) => s.id === p.season_id)?.name
+                      : null;
+                    const label = formatProductLabel(p, days, p.product_templates?.code);
+                    return (
+                      <option key={p.id} value={p.id}>
+                        {seasonName ? `${seasonName} · ${label}` : label}
+                      </option>
+                    );
+                  })}
                 </Select>
               </Field>
               <Field label={t("customersGenderLabel")}>

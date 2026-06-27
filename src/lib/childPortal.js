@@ -148,6 +148,19 @@ export function normalizeScanResult(data) {
   };
 }
 
+export function todayDateStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/** External (non-member) family with guard-approved entry today */
+export function shouldShowPortalExitNotice(dashboard) {
+  if (!dashboard?.is_external) return false;
+  const up = dashboard.upcoming;
+  if (!up?.has_entry) return false;
+  if (up.session_date !== todayDateStr()) return false;
+  return !!(up.entry_scanned || up.used_at);
+}
+
 export function portalBlockedMessage(blocked, t) {
   const map = {
     unpaid: t("portalBlockedUnpaid"),

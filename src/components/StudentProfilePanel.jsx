@@ -9,13 +9,22 @@ import {
   periodPresetRange,
 } from "../lib/commandCenter.js";
 import { AnimatedSheetOverlay, AnimatedSheetPanel } from "./ui/AnimatedSheet.jsx";
-import { Button, Card, Field, Input, Select, Spinner } from "./ui/ds/index.js";
+import { Button, Field, Input, Select, Spinner } from "./ui/ds/index.js";
 import PortalCredentialsCard from "./PortalCredentialsCard.jsx";
 import ParticipantPhotoEditor from "./ParticipantPhotoEditor.jsx";
 import { staffGetPortalCredentials } from "../lib/childPortal.js";
-import "../styles/child-portal.css";
+import "../styles/student-profile.css";
 
 const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
+
+function MetaRow({ label, value, mono = true }) {
+  return (
+    <div className="sp-meta-row">
+      <span className="sp-meta-label">{label}</span>
+      <span className={`sp-meta-value${mono ? "" : " text"}`}>{value || "—"}</span>
+    </div>
+  );
+}
 
 export default function StudentProfilePanel({ participantId, profile, open, onClose, toast }) {
   const { t } = useLang();
@@ -110,57 +119,55 @@ export default function StudentProfilePanel({ participantId, profile, open, onCl
     <AnimatePresence>
       {open && (
         <AnimatedSheetOverlay onClose={onClose}>
-          <AnimatedSheetPanel onClick={(e) => e.stopPropagation()}>
-            <div className="section-title">{t("studentProfile")}</div>
+          <AnimatedSheetPanel className="student-profile-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="schedule-panel-handle" aria-hidden />
+
             {loading && !participant ? (
-              <div style={{ display: "flex", justifyContent: "center", padding: 24 }}>
-                <Spinner />
-              </div>
+              <div className="sp-loading"><Spinner /></div>
             ) : participant ? (
               <>
-                <div className="section-sub" style={{ marginBottom: 12 }}>
-                  {participant.full_name}
-                  {participant.external_client_id ? ` · #${participant.external_client_id}` : ""}
+                <header className="sp-header">
+                  <h2 className="sp-title">{t("studentProfile")}</h2>
+                  <div className="sp-subtitle">{participant.full_name}</div>
+                  {participant.external_client_id && (
+                    <span className="sp-id">#{participant.external_client_id}</span>
+                  )}
+                </header>
+
+                <div className="sp-meta-card">
+                  <MetaRow label={t("parentName")} value={participant.family?.parent_name} mono={false} />
+                  <MetaRow label={t("parentPhone")} value={participant.family?.phone} />
+                  {participant.first_enrolled_at && (
+                    <MetaRow label={t("studentTenure")} value={participant.first_enrolled_at} />
+                  )}
                 </div>
 
-                <Card style={{ marginBottom: 12, padding: 12 }}>
-                  <div className="log-meta" style={{ marginBottom: 8 }}>
-                    {t("parentName")}: {participant.family?.parent_name || "—"}
-                  </div>
-                  <div className="log-meta" style={{ marginBottom: 8 }}>
-                    {t("parentPhone")}: {participant.family?.phone || "—"}
-                  </div>
-                  {participant.first_enrolled_at && (
-                    <div className="log-meta">
-                      {t("studentTenure")}: {participant.first_enrolled_at}
-                    </div>
+                <div className="sp-form-card">
+                  <Field label={t("participantGenderLabel")}>
+                    <Select value={editGender} onChange={(e) => setEditGender(e.target.value)}>
+                      <option value="">{t("participantGenderLabel")}</option>
+                      <option value="male">{t("participantGender_male")}</option>
+                      <option value="female">{t("participantGender_female")}</option>
+                    </Select>
+                  </Field>
+                  <Field label={t("participantGradeLabel")}>
+                    <Select value={editGrade} onChange={(e) => setEditGrade(e.target.value)}>
+                      <option value="">{t("participantGradeLabel")}</option>
+                      {PARTICIPANT_GRADES.map((g) => (
+                        <option key={g} value={g}>{g}</option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <Field label={t("participantBirthDateLabel")}>
+                    <Input type="date" value={editBirthDate} onChange={(e) => setEditBirthDate(e.target.value)} dir="ltr" />
+                  </Field>
+                  {participant.gender_manual_at && (
+                    <p className="sp-form-hint">{t("sheetGenderSkippedManual")}</p>
                   )}
-                </Card>
-
-                <Field label={t("participantGenderLabel")}>
-                  <Select value={editGender} onChange={(e) => setEditGender(e.target.value)}>
-                    <option value="">{t("participantGenderLabel")}</option>
-                    <option value="male">{t("participantGender_male")}</option>
-                    <option value="female">{t("participantGender_female")}</option>
-                  </Select>
-                </Field>
-                <Field label={t("participantGradeLabel")}>
-                  <Select value={editGrade} onChange={(e) => setEditGrade(e.target.value)}>
-                    <option value="">{t("participantGradeLabel")}</option>
-                    {PARTICIPANT_GRADES.map((g) => (
-                      <option key={g} value={g}>{g}</option>
-                    ))}
-                  </Select>
-                </Field>
-                <Field label={t("participantBirthDateLabel")}>
-                  <Input type="date" value={editBirthDate} onChange={(e) => setEditBirthDate(e.target.value)} dir="ltr" />
-                </Field>
-                {participant.gender_manual_at && (
-                  <p className="schedule-session-hint">{t("sheetGenderSkippedManual")}</p>
-                )}
-                <Button type="button" variant="primary" size="sm" disabled={saving} onClick={save} style={{ marginBottom: 16 }}>
-                  {saving ? <Spinner size={14} /> : t("save")}
-                </Button>
+                  <Button type="button" variant="primary" size="lg" fullWidth disabled={saving} onClick={save}>
+                    {saving ? <Spinner size={16} /> : t("save")}
+                  </Button>
+                </div>
 
                 {profile && (
                   <>
@@ -180,41 +187,50 @@ export default function StudentProfilePanel({ participantId, profile, open, onCl
                   </>
                 )}
 
-                <div className="section-title" style={{ fontSize: 14 }}>{t("studentCurrentGroup")}</div>
-                {activeEnrollments.length === 0 ? (
-                  <p className="empty-text" style={{ marginBottom: 12 }}>{t("noResults")}</p>
-                ) : (
-                  activeEnrollments.map((enr) => (
-                    <div key={enr.id} className="log-item" style={{ marginBottom: 8 }}>
-                      <div className="log-name">{formatProductLabel(enr.product, DAY_NAMES, enr.product?.product_templates?.code)}</div>
-                      <div className="log-meta">
-                        {enr.product?.instructor_name || "—"}
-                        {" · "}{t(`payment${enr.payment_status === "paid" ? "Paid" : enr.payment_status === "waived" ? "Waived" : "Unpaid"}`)}
+                <section className="sp-section">
+                  <h3 className="sp-section-title">{t("studentCurrentGroup")}</h3>
+                  {activeEnrollments.length === 0 ? (
+                    <p className="sp-empty">{t("noResults")}</p>
+                  ) : (
+                    activeEnrollments.map((enr) => (
+                      <div key={enr.id} className="sp-enrollment-card">
+                        <div className="sp-enrollment-name">
+                          {formatProductLabel(enr.product, DAY_NAMES, enr.product?.product_templates?.code)}
+                        </div>
+                        <div className="sp-enrollment-meta">
+                          {enr.product?.instructor_name || "—"}
+                          {" · "}{t(`payment${enr.payment_status === "paid" ? "Paid" : enr.payment_status === "waived" ? "Waived" : "Unpaid"}`)}
+                        </div>
+                        {enr.notes && <div className="sp-enrollment-meta">{enr.notes}</div>}
                       </div>
-                      {enr.notes && <div className="log-meta">{enr.notes}</div>}
-                    </div>
-                  ))
-                )}
+                    ))
+                  )}
+                </section>
 
-                <div className="section-title" style={{ fontSize: 14, marginTop: 12 }}>{t("studentAttendanceRate")}</div>
-                <p className="log-meta" style={{ marginBottom: 12 }}>
-                  {attendanceRate != null ? `${attendanceRate}%` : "—"} ({t("ccPeriodMonth")})
-                </p>
+                <section className="sp-section">
+                  <h3 className="sp-section-title">{t("studentAttendanceRate")}</h3>
+                  <p className="sp-stat-value">{attendanceRate != null ? `${attendanceRate}%` : "—"}</p>
+                  <p className="sp-stat-label">{t("ccPeriodMonth")}</p>
+                </section>
 
-                <div className="section-title" style={{ fontSize: 14 }}>{t("studentEnrollmentHistory")}</div>
-                <div style={{ maxHeight: 200, overflowY: "auto" }}>
-                  {enrollments.map((enr) => (
-                    <div key={enr.id} className="log-item" style={{ marginBottom: 6, opacity: enr.active ? 1 : 0.65 }}>
-                      <div className="log-name">{formatProductLabel(enr.product, DAY_NAMES, enr.product?.product_templates?.code)}</div>
-                      <div className="log-meta">
-                        {enr.valid_from} – {enr.valid_until}
-                        {enr.active ? ` · ${t("enrollmentActiveLabel")}` : ` · ${t("enrollmentCancelled")}`}
+                <section className="sp-section">
+                  <h3 className="sp-section-title">{t("studentEnrollmentHistory")}</h3>
+                  <div className="sp-history-scroll">
+                    {enrollments.map((enr) => (
+                      <div key={enr.id} className={`sp-enrollment-card${enr.active ? "" : " inactive"}`}>
+                        <div className="sp-enrollment-name">
+                          {formatProductLabel(enr.product, DAY_NAMES, enr.product?.product_templates?.code)}
+                        </div>
+                        <div className="sp-enrollment-meta">
+                          {enr.valid_from} – {enr.valid_until}
+                          {enr.active ? ` · ${t("enrollmentActiveLabel")}` : ` · ${t("enrollmentCancelled")}`}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                </section>
 
-                <Button type="button" variant="secondary" fullWidth style={{ marginTop: 16 }} onClick={onClose}>
+                <Button type="button" variant="secondary" size="lg" fullWidth className="sp-close-btn" onClick={onClose}>
                   {t("close")}
                 </Button>
               </>
@@ -231,8 +247,10 @@ export default function StudentProfilePanel({ participantId, profile, open, onCl
 function EmptyProfile({ onClose, t }) {
   return (
     <>
-      <p className="empty-text">{t("noResults")}</p>
-      <Button type="button" variant="secondary" fullWidth onClick={onClose}>{t("close")}</Button>
+      <p className="sp-empty">{t("noResults")}</p>
+      <Button type="button" variant="secondary" size="lg" fullWidth className="sp-close-btn" onClick={onClose}>
+        {t("close")}
+      </Button>
     </>
   );
 }

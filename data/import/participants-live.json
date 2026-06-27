@@ -1,0 +1,1910 @@
+[
+  {
+    "id": "e8e762c0-8bd6-4c73-acb6-66e94b7c3eb4",
+    "full_name": "עידן חמי",
+    "external_client_id": "87307229",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "050-5615253",
+    "parent_name": "טלי"
+  },
+  {
+    "id": "ec629a1a-9612-4232-8816-f6f0e56b4667",
+    "full_name": "יותם הררי",
+    "external_client_id": "87310247",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-6337288",
+    "parent_name": "אורן"
+  },
+  {
+    "id": "ed92e157-95bb-41b6-8bee-92a4a21319c3",
+    "full_name": "טליה זהבה לרר",
+    "external_client_id": "87310635",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-8662102",
+    "parent_name": "עטי"
+  },
+  {
+    "id": "c0d05971-622e-4091-8361-35a44ef3dffc",
+    "full_name": "יהושע ספיר",
+    "external_client_id": "87311438",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "050-4756568",
+    "parent_name": "בתיה"
+  },
+  {
+    "id": "d7186eaf-65fd-4bae-8f47-d2c2b91107ff",
+    "full_name": "דניאל פודולסקי",
+    "external_client_id": "87308861",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-6850731",
+    "parent_name": "מירי"
+  },
+  {
+    "id": "c146750b-828a-4fd9-b839-05a1ee5a8071",
+    "full_name": "מיה אברמוביץ",
+    "external_client_id": "87308965",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-2004143",
+    "parent_name": "אנסטסיה"
+  },
+  {
+    "id": "9df95ab7-6585-4a1b-972e-3d3979a9c7be",
+    "full_name": "אופיר פרידמן",
+    "external_client_id": "87306322",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-2381436",
+    "parent_name": "ענבל"
+  },
+  {
+    "id": "972820a7-b7bb-4ce1-b8b0-a5e2ff2f6115",
+    "full_name": "דוד קוזניצוב",
+    "external_client_id": "87311333",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-7600512",
+    "parent_name": "מרינה"
+  },
+  {
+    "id": "b5ba111d-56cf-4d02-ad1b-34fe0942017a",
+    "full_name": "מיקה שפי",
+    "external_client_id": "87311394",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-5815563",
+    "parent_name": "מאיה"
+  },
+  {
+    "id": "bb640a1a-ca29-4f0f-8668-785b1d5e07ac",
+    "full_name": "אנאל בוייביץ",
+    "external_client_id": "87311409",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-6318343",
+    "parent_name": "יבגניה"
+  },
+  {
+    "id": "02c946cc-b2b4-4059-b261-53ebee6da9fb",
+    "full_name": "הדר שלח",
+    "external_client_id": "684406",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-2644654",
+    "parent_name": "נורית"
+  },
+  {
+    "id": "e6757646-93ee-4a5a-941c-28655f1b052b",
+    "full_name": "אמילי לוי",
+    "external_client_id": "87309824",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-6220776",
+    "parent_name": "אולגה"
+  },
+  {
+    "id": "293b24be-e6fa-4a45-aeed-1ddae37bbb1c",
+    "full_name": "אריאל שמולביץ",
+    "external_client_id": "681367",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "050-8614297",
+    "parent_name": "ימית"
+  },
+  {
+    "id": "a2b18677-36ee-4019-bc22-cd358b77835d",
+    "full_name": "אורי כהן",
+    "external_client_id": "1741051",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "050-9217948",
+    "parent_name": "דרור"
+  },
+  {
+    "id": "f13de412-a9dd-459a-964e-c20dfa956a19",
+    "full_name": "אוריה אלשייך",
+    "external_client_id": "87311049",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-3638509",
+    "parent_name": "אורלי"
+  },
+  {
+    "id": "cecb20f5-c998-46f7-861f-973aaa864393",
+    "full_name": "מיקה הררי",
+    "external_client_id": "87310616",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-6337288",
+    "parent_name": "אורן"
+  },
+  {
+    "id": "e1f7fa5a-3c80-4e71-a514-b9af3419941e",
+    "full_name": "אמיליה רוסטובסקי",
+    "external_client_id": "87310265",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "058-6963245",
+    "parent_name": "אלכסיי"
+  },
+  {
+    "id": "703432c8-62bb-427d-8d7f-d138625becf6",
+    "full_name": "שחר פרלמוטר",
+    "external_client_id": "87310941",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-3333231",
+    "parent_name": "איטה"
+  },
+  {
+    "id": "f0bc2424-c05c-41d0-acac-f85583ddbcd9",
+    "full_name": "יאן בונדנקרו",
+    "external_client_id": "684010",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-5907954",
+    "parent_name": "סרגיי"
+  },
+  {
+    "id": "03ad9b41-99de-4b20-a88e-81f7192625c7",
+    "full_name": "איתן פורשטט",
+    "external_client_id": "87309567",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-7594914",
+    "parent_name": "מילנה"
+  },
+  {
+    "id": "3ffcefae-20a3-44f3-bf22-206800a2d417",
+    "full_name": "מיכל שנקל",
+    "external_client_id": "87310764",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-2758195",
+    "parent_name": "שרית"
+  },
+  {
+    "id": "bdd632ae-df3b-429f-907b-43eaee1e00cc",
+    "full_name": "בן מולר",
+    "external_client_id": "87310248",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-4510827",
+    "parent_name": "נירית"
+  },
+  {
+    "id": "761d46d9-f8bc-4b0c-9904-1ef6e476c166",
+    "full_name": "נטע עומר",
+    "external_client_id": "87308042",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-8693200",
+    "parent_name": "אריאל"
+  },
+  {
+    "id": "2bb6f977-b965-4efc-885a-0d7a793c4824",
+    "full_name": "רון עומר",
+    "external_client_id": "87308039",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-8693200",
+    "parent_name": "אריאל"
+  },
+  {
+    "id": "26b92aad-84b3-48c0-b142-c9206099efb8",
+    "full_name": "ליאה שוורץ",
+    "external_client_id": "87310257",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-5926960",
+    "parent_name": "מאיה"
+  },
+  {
+    "id": "2d81697d-2cbd-449d-887c-fe63aed487dd",
+    "full_name": "תומר דרויש",
+    "external_client_id": "87308744",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-6134953",
+    "parent_name": "סופיה"
+  },
+  {
+    "id": "c01a1c80-7944-4d17-ae6f-817b3d88a33e",
+    "full_name": "סשה קנטור",
+    "external_client_id": "87311732",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "053-9218940",
+    "parent_name": "מיכל"
+  },
+  {
+    "id": "2d64cbab-2650-4a45-a35a-52d4381dd6ec",
+    "full_name": "נתנאל שמולבסקי",
+    "external_client_id": "87308736",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-5302139",
+    "parent_name": "מקסים"
+  },
+  {
+    "id": "8346f65b-3852-4bae-be9a-145e38fc1c48",
+    "full_name": "יולי זכאי",
+    "external_client_id": "87311138",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-6749909",
+    "parent_name": "אולגה"
+  },
+  {
+    "id": "cd473edd-d9e5-469c-9e89-88785694a7a2",
+    "full_name": "טל שפירא",
+    "external_client_id": "87306466",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-4973516",
+    "parent_name": "סיביה"
+  },
+  {
+    "id": "a911a472-d595-4067-ae07-f8797179ad9f",
+    "full_name": "עדי גנס",
+    "external_client_id": "87310336",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "058-4007917",
+    "parent_name": "בת שבע"
+  },
+  {
+    "id": "e0e026d3-7930-4eac-9817-dcb40d640575",
+    "full_name": "אגם צברי",
+    "external_client_id": "87311441",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-4663302",
+    "parent_name": "נעמה"
+  },
+  {
+    "id": "861a04f0-4778-40db-8720-2ec656a027a4",
+    "full_name": "יואב בריטבה",
+    "external_client_id": "87307288",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-5765200",
+    "parent_name": "טימור"
+  },
+  {
+    "id": "4b7002cf-70db-4ef0-a8a3-10bf4993bdf7",
+    "full_name": "יובל הרשקוביץ",
+    "external_client_id": "1388024",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-6621097",
+    "parent_name": "אורטל"
+  },
+  {
+    "id": "3e3961fc-cd57-4456-9267-10fa410c9e11",
+    "full_name": "מיכל גליק",
+    "external_client_id": "87308179",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-4598831",
+    "parent_name": "חיים"
+  },
+  {
+    "id": "dbf289ac-7746-4952-946c-3fa8beaea300",
+    "full_name": "איתן שוורץ",
+    "external_client_id": "87310256",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-5926960",
+    "parent_name": "מאיה"
+  },
+  {
+    "id": "c28ff706-109c-4f40-afde-fa59fb4de852",
+    "full_name": "עידן נהון",
+    "external_client_id": "1019059",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "050-6621914",
+    "parent_name": "דוד"
+  },
+  {
+    "id": "6cf32bae-ca91-4073-992c-b69668a3561d",
+    "full_name": "נגה טל",
+    "external_client_id": "87309664",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-4428892",
+    "parent_name": "גזית"
+  },
+  {
+    "id": "01b98615-4c91-416f-8600-b3b94d6411e7",
+    "full_name": "אביב וידנפלד",
+    "external_client_id": "87311487",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-4790044",
+    "parent_name": "ניצן"
+  },
+  {
+    "id": "a2f08fb4-5d3e-4f28-9f5b-bf4ae1723851",
+    "full_name": "אלון דר",
+    "external_client_id": "686883",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-4464116",
+    "parent_name": "גלי"
+  },
+  {
+    "id": "d1c8a1ad-4654-43e1-b3cb-0f6fd1353bfd",
+    "full_name": "רותם בכר",
+    "external_client_id": "682475",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-3316667",
+    "parent_name": "טל"
+  },
+  {
+    "id": "c5d04b0a-75bd-4e43-a4ba-61d1cabf55a6",
+    "full_name": "אופיר שרוט",
+    "external_client_id": "87311482",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "055-8860137",
+    "parent_name": "אודי"
+  },
+  {
+    "id": "effeedc1-034d-4e1c-98d4-a97f8f39d5a6",
+    "full_name": "אדם פפירוב",
+    "external_client_id": "87311416",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "050-8915561",
+    "parent_name": "דניאל"
+  },
+  {
+    "id": "8667579b-7c4b-4bb4-989b-2ee5300efb7e",
+    "full_name": "אלה רון",
+    "external_client_id": "87306629",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "050-2437008",
+    "parent_name": "טלי"
+  },
+  {
+    "id": "1f027195-5652-4a4f-af41-606cfbfa24b5",
+    "full_name": "שיר זיגנר",
+    "external_client_id": "87306799",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-7905275",
+    "parent_name": "זוהר"
+  },
+  {
+    "id": "e6764ffe-6cfb-43ee-ac60-8d1b5dbe0979",
+    "full_name": "אלכסיי רוסטובסקי",
+    "external_client_id": "87310266",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "058-6963425",
+    "parent_name": "אלכסיי"
+  },
+  {
+    "id": "9de6bc3d-6e79-42b2-b7dd-96031fab9aa9",
+    "full_name": "בל רפאלוב לוי",
+    "external_client_id": "87310917",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "050-4484480",
+    "parent_name": "כרמל"
+  },
+  {
+    "id": "7d34b0d4-00b9-4230-90ab-bee7af91f470",
+    "full_name": "רומי כהן",
+    "external_client_id": "1386906",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-7888210",
+    "parent_name": "רחלי"
+  },
+  {
+    "id": "9505c459-2bc0-4a37-b06f-2079b736c369",
+    "full_name": "ילד בדיקה",
+    "external_client_id": null,
+    "gender": null,
+    "gender_manual_at": null,
+    "phone": "0501234567",
+    "parent_name": "הורה בדיקה"
+  },
+  {
+    "id": "3ef2b787-8265-43de-b0b2-01738e3cb3da",
+    "full_name": "אביגיל רץ",
+    "external_client_id": "87306156",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "050-7751133",
+    "parent_name": "שרי"
+  },
+  {
+    "id": "ae566a9f-0de1-40a0-b445-5bd66bf6d918",
+    "full_name": "עילאי פררו",
+    "external_client_id": "680763",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-9256447",
+    "parent_name": "עדי"
+  },
+  {
+    "id": "4598a678-1622-4b31-8b02-de6138df61d3",
+    "full_name": "סוניה פולונסקי",
+    "external_client_id": "87310263",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "053-9027119",
+    "parent_name": "יבגני"
+  },
+  {
+    "id": "f8f4f804-1507-4676-99a0-c2726f89708f",
+    "full_name": "הלן פוקס",
+    "external_client_id": "1350114",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-5931517",
+    "parent_name": "קטיה"
+  },
+  {
+    "id": "9bb31191-c67d-44e3-b77d-a8a444f92709",
+    "full_name": "מישל קרייצ'רק",
+    "external_client_id": "87308687",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "058-4026444",
+    "parent_name": "ילנה"
+  },
+  {
+    "id": "ea1bcaac-45f3-44c6-8f0e-6a2ad027221f",
+    "full_name": "נגה טבע",
+    "external_client_id": "932325",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-6612354",
+    "parent_name": "נטע"
+  },
+  {
+    "id": "b0b5dc5c-0bd1-4319-a638-17ce978f11c7",
+    "full_name": "עופרי כהנוף",
+    "external_client_id": "676102",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-4954051",
+    "parent_name": "יעל"
+  },
+  {
+    "id": "299dfebc-7c76-414e-8d44-28345c0144d8",
+    "full_name": "הדסה הכט",
+    "external_client_id": "87311544",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "050-6815526",
+    "parent_name": "חיה"
+  },
+  {
+    "id": "78c1a89f-e434-404b-b4c1-547b80a5f874",
+    "full_name": "נטע כהנוב",
+    "external_client_id": "87308726",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-5577909",
+    "parent_name": "דניאל"
+  },
+  {
+    "id": "c66b3391-6374-4d34-9d19-1b71911e59b9",
+    "full_name": "ברק שטכל-שור",
+    "external_client_id": "681356",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-3218616",
+    "parent_name": "יפעת"
+  },
+  {
+    "id": "1bc7db60-4bfd-4788-a9ce-470d7a98d215",
+    "full_name": "ברק שלמון",
+    "external_client_id": "87309468",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-3818173",
+    "parent_name": "עמליה"
+  },
+  {
+    "id": "777a904b-3183-4fa5-88be-6688c6a3f085",
+    "full_name": "לילי גרינשטיין",
+    "external_client_id": "87311429",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-4236987",
+    "parent_name": "שושנה"
+  },
+  {
+    "id": "0ba2f374-b1f0-4809-8fb2-967286478d62",
+    "full_name": "אדם בונדנקרו",
+    "external_client_id": "87306137",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-5907954",
+    "parent_name": "סרגיי"
+  },
+  {
+    "id": "69269500-f2d2-4b4f-8544-f629ff087d33",
+    "full_name": "שני שאשא",
+    "external_client_id": "87306781",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-9256585",
+    "parent_name": "מלי"
+  },
+  {
+    "id": "7557b7a8-f3fe-49d5-b7b7-a04189923e07",
+    "full_name": "רז בר תקווה",
+    "external_client_id": "87306316",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-8438083",
+    "parent_name": "מעיין"
+  },
+  {
+    "id": "c1470d88-0de6-4985-8389-4ce3bb55481a",
+    "full_name": "ליעד ליסקוביץ",
+    "external_client_id": "87308728",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-5865130",
+    "parent_name": "אנה"
+  },
+  {
+    "id": "9411e043-3106-40aa-a429-225afed4ba03",
+    "full_name": "גל קרוק",
+    "external_client_id": "87309202",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-5306532",
+    "parent_name": "עדי"
+  },
+  {
+    "id": "fd5013cf-562a-42cb-860a-9d4fb09d4b26",
+    "full_name": "נדב גואקיל",
+    "external_client_id": "685083",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "050-6717775",
+    "parent_name": "הילה"
+  },
+  {
+    "id": "f3b3e0f4-32cc-4c1b-83ae-e0029972632f",
+    "full_name": "תהל ביימן",
+    "external_client_id": "87309423",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-5500148",
+    "parent_name": "ליאור"
+  },
+  {
+    "id": "732ef58f-6dcf-4be4-911a-9375660cc26d",
+    "full_name": "קאיה צלינסקי",
+    "external_client_id": "87311414",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "053-8974630",
+    "parent_name": "ויקטוריה"
+  },
+  {
+    "id": "106a013e-2729-4a4e-9767-2127440c9ef2",
+    "full_name": "ליאם זמסקי",
+    "external_client_id": "87311041",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-5758187",
+    "parent_name": "הלן"
+  },
+  {
+    "id": "b43d0a6b-5de9-4b88-8f1c-9955d2f6e322",
+    "full_name": "עידן מיכלסון",
+    "external_client_id": "1044039",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-8885464",
+    "parent_name": "מאיה"
+  },
+  {
+    "id": "6cbf352a-53c8-4d09-90e0-9a8f1dd42091",
+    "full_name": "שרה פרנקו",
+    "external_client_id": "682706",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-7008011",
+    "parent_name": "לורן"
+  },
+  {
+    "id": "6d49659e-b9bb-4595-8b24-4d8444999e9d",
+    "full_name": "עידו כביר",
+    "external_client_id": "1295559",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-3214241",
+    "parent_name": "אודליה"
+  },
+  {
+    "id": "14bdbf47-ab09-48f5-9bd0-99c39aacd87e",
+    "full_name": "רותם ויסמן",
+    "external_client_id": "87310582",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-8630547",
+    "parent_name": "אלינה"
+  },
+  {
+    "id": "3e193106-f623-40ed-baaf-28b3b4ec6b00",
+    "full_name": "אלכס מוסיאקה",
+    "external_client_id": "87311719",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "053-9338255",
+    "parent_name": "יבגניה"
+  },
+  {
+    "id": "f400fe13-319f-4773-8d59-0a479c26144e",
+    "full_name": "גל דויטש",
+    "external_client_id": "87307916",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-4597976",
+    "parent_name": "שני"
+  },
+  {
+    "id": "15b72811-6013-4813-b214-ade02ff05b9d",
+    "full_name": "ליה מינרבי",
+    "external_client_id": "87311991",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-8610353",
+    "parent_name": "אוריה"
+  },
+  {
+    "id": "6ef128bc-4ece-46b8-b10c-be51b0732215",
+    "full_name": "אלישע פולונסקי",
+    "external_client_id": "87310262",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "053-9027119",
+    "parent_name": "יבגני"
+  },
+  {
+    "id": "81564951-e601-450a-95e7-4e391659555c",
+    "full_name": "בן רחמני",
+    "external_client_id": "87309842",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "050-9419056",
+    "parent_name": "ליז"
+  },
+  {
+    "id": "13f97861-6abe-4d32-901b-69e7bdca9852",
+    "full_name": "דניאל רכטר",
+    "external_client_id": "87307238",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "050-6277055",
+    "parent_name": "יעקב"
+  },
+  {
+    "id": "1a1f2263-f9eb-48d7-b022-9532f4cafdc1",
+    "full_name": "ארבל בירן",
+    "external_client_id": "87307785",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-3828243",
+    "parent_name": "סיוון"
+  },
+  {
+    "id": "baa92018-228c-4438-af2a-0b0227d92f6d",
+    "full_name": "גבריאל רוסדזה כהן",
+    "external_client_id": "87311136",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-4857171",
+    "parent_name": "נטליה"
+  },
+  {
+    "id": "883edf9f-dac6-4cb1-9285-c7be9d10d090",
+    "full_name": "אילן קולסניקוב",
+    "external_client_id": "87307235",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-8300545",
+    "parent_name": "מריה"
+  },
+  {
+    "id": "65c95adf-89d6-4acd-97e3-8d803720bd20",
+    "full_name": "נדב רץ",
+    "external_client_id": "681050",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "050-7751133",
+    "parent_name": "שרי"
+  },
+  {
+    "id": "045e4930-835d-4c3e-9890-502749a94a31",
+    "full_name": "עומר מורדוך",
+    "external_client_id": "87311835",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-2356202",
+    "parent_name": "ליטל"
+  },
+  {
+    "id": "474f2e6c-f0e8-4674-a6a1-fc508fcaf08e",
+    "full_name": "ינאי דומב",
+    "external_client_id": "87311407",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-5858735",
+    "parent_name": "תמר"
+  },
+  {
+    "id": "66268600-17aa-4c3c-99e5-5d79570868bd",
+    "full_name": "גלי ארן",
+    "external_client_id": "685506",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "050-7496990",
+    "parent_name": "מיכל"
+  },
+  {
+    "id": "33dc9476-6057-4def-8cbb-70a3657a3f5e",
+    "full_name": "ליהי ג'ובאני",
+    "external_client_id": "87308750",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-7675751",
+    "parent_name": "אנסטסיה"
+  },
+  {
+    "id": "2b8e60cf-5fd2-441e-a17e-db94afa56f26",
+    "full_name": "עלמה דרי",
+    "external_client_id": "87307437",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "050-4328817",
+    "parent_name": "יובל"
+  },
+  {
+    "id": "c30d2496-c386-446e-98f9-f7765d3fac3c",
+    "full_name": "אל-בי דפני",
+    "external_client_id": "87308614",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-4954189",
+    "parent_name": "שירי"
+  },
+  {
+    "id": "342fd27a-8cc6-4f70-ac66-2a74f0bce29f",
+    "full_name": "דניאלה שפלה",
+    "external_client_id": "87310847",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-4806030",
+    "parent_name": "שירית"
+  },
+  {
+    "id": "9cc842c8-2eb6-41c6-90b0-a9372cdda636",
+    "full_name": "בניה נוי",
+    "external_client_id": "87309658",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-6768272",
+    "parent_name": "מיכל"
+  },
+  {
+    "id": "b5e8da36-dca2-4120-977a-39d3642ea9ea",
+    "full_name": "אגם שלח",
+    "external_client_id": "684408",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-2644654",
+    "parent_name": "נורית"
+  },
+  {
+    "id": "61d50889-6cf6-4271-8210-7b6d81c2cfdb",
+    "full_name": "ליאור פורטוגז",
+    "external_client_id": "87309627",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-4298074",
+    "parent_name": "אדוארד"
+  },
+  {
+    "id": "916d4bc9-1ffe-4646-89e6-e3741ade7219",
+    "full_name": "דויד גופמן",
+    "external_client_id": "87311522",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-7716302",
+    "parent_name": "מדלנה"
+  },
+  {
+    "id": "95834563-1910-4bad-906f-29c9210c38a0",
+    "full_name": "אברי ויצפלד",
+    "external_client_id": "87311050",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-5958675",
+    "parent_name": "דני"
+  },
+  {
+    "id": "c2599215-e92d-4f27-b2aa-a060011e28a5",
+    "full_name": "בנימין צלינסקי",
+    "external_client_id": "87311415",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "053-8974630",
+    "parent_name": "ויקטוריה"
+  },
+  {
+    "id": "68a6f453-63bf-4170-ad8d-346c8a414be0",
+    "full_name": "דור רגב",
+    "external_client_id": "1030123",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "050-9755104",
+    "parent_name": "סער"
+  },
+  {
+    "id": "a0d899d0-c0e8-49a5-a99f-415627a8bd19",
+    "full_name": "נגה שטכל-שור",
+    "external_client_id": "681357",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-3218616",
+    "parent_name": "יפעת"
+  },
+  {
+    "id": "cf46dc21-fd4f-4bdf-bd5d-dda19175ae64",
+    "full_name": "רפאל תלמי",
+    "external_client_id": "87310661",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-2427896",
+    "parent_name": "לאה"
+  },
+  {
+    "id": "2335e312-ce26-4957-9b4f-0e56f5dd14ee",
+    "full_name": "דביר פישר",
+    "external_client_id": "676024",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-7665792",
+    "parent_name": "אפרת"
+  },
+  {
+    "id": "5024ed8c-7b4c-4020-b001-8065c326796b",
+    "full_name": "איתמר זיגנר",
+    "external_client_id": "87306798",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-7905275",
+    "parent_name": "זוהר"
+  },
+  {
+    "id": "370e4709-bcbb-4bec-b5e7-4c83650b6b40",
+    "full_name": "רום לוי",
+    "external_client_id": "87310167",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-6320572",
+    "parent_name": "ביאטריס"
+  },
+  {
+    "id": "a32da51c-e44d-41f3-baef-b7ad2adff581",
+    "full_name": "גד לאון",
+    "external_client_id": "87307357",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-6440026",
+    "parent_name": "כרמית"
+  },
+  {
+    "id": "5d541229-fb4e-4eff-b293-12092ce729b0",
+    "full_name": "נויה מרדכי",
+    "external_client_id": "938499",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-5855987",
+    "parent_name": "דיקלה"
+  },
+  {
+    "id": "41e90e7f-e836-4ac4-96fb-bd4c8cea9c9d",
+    "full_name": "מיכאל אבוקסיס",
+    "external_client_id": "87309009",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "058-7111107",
+    "parent_name": "רבקה"
+  },
+  {
+    "id": "bf1b7b83-d860-47eb-a8c1-ee1cc0fc6ac5",
+    "full_name": "אלכס אולצ'יק",
+    "external_client_id": "683495",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-8888040",
+    "parent_name": "עומר"
+  },
+  {
+    "id": "72995196-6e85-4906-b134-2dace5c318c2",
+    "full_name": "להב כהן",
+    "external_client_id": "87310643",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-8814461",
+    "parent_name": "לירון"
+  },
+  {
+    "id": "8db880f2-c92b-4e06-ab7b-d5c9e7059f55",
+    "full_name": "ליה רחמני",
+    "external_client_id": "87311184",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "050-9419056",
+    "parent_name": "ליז"
+  },
+  {
+    "id": "25c53607-fc8a-4b70-a807-660b34c0c874",
+    "full_name": "אופיר אור",
+    "external_client_id": "682969",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-5634444",
+    "parent_name": "אורי"
+  },
+  {
+    "id": "c2788fea-4121-400a-b825-ead8bc562de8",
+    "full_name": "יעל מאירי",
+    "external_client_id": "87310970",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-7566989",
+    "parent_name": "נילי"
+  },
+  {
+    "id": "15ce6e6e-7996-435d-9da8-e0c9f97bf8ce",
+    "full_name": "מאור שפי",
+    "external_client_id": "87311395",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-5815563",
+    "parent_name": "מאיה"
+  },
+  {
+    "id": "829f37ff-ba0f-408d-8b0a-0d68817b9182",
+    "full_name": "גאיה דפני",
+    "external_client_id": "87307212",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-4954189",
+    "parent_name": "שירי"
+  },
+  {
+    "id": "2b2b2a2c-22d6-42f8-a50b-4b9761666448",
+    "full_name": "יעל בריטבה",
+    "external_client_id": "87311411",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-5765200",
+    "parent_name": "טימור"
+  },
+  {
+    "id": "775d784b-10ab-44dc-a5d3-c3937563c566",
+    "full_name": "עומרי מנדלסון",
+    "external_client_id": "87311838",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-4273452",
+    "parent_name": "אפי"
+  },
+  {
+    "id": "fefbc7b3-0f22-47a3-97dc-4103527749fc",
+    "full_name": "איתן אברמוביץ",
+    "external_client_id": "87908389",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-2004143",
+    "parent_name": "אנסטסיה"
+  },
+  {
+    "id": "cf5dd66a-f0c2-471a-846f-81058bb441b1",
+    "full_name": "מיה דעבול",
+    "external_client_id": "87311484",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-5503835",
+    "parent_name": "חן"
+  },
+  {
+    "id": "222b5413-4b4f-40b2-ab5b-b89c3cbe4f96",
+    "full_name": "נטע שטורך",
+    "external_client_id": "87307182",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-4954891",
+    "parent_name": "ליטל"
+  },
+  {
+    "id": "482bf73d-85e7-4e16-8d9e-8ab835730c2c",
+    "full_name": "דניאלה גואקיל",
+    "external_client_id": "685084",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "050-6717775",
+    "parent_name": "הילה"
+  },
+  {
+    "id": "7dd754ce-90cb-4936-aff2-4233ce52f37f",
+    "full_name": "שקד חיון",
+    "external_client_id": "87310379",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-6365146",
+    "parent_name": "נעמה"
+  },
+  {
+    "id": "476dd849-66df-4414-b44b-d8e140005859",
+    "full_name": "מיכאל אולצ'יק",
+    "external_client_id": "683494",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-8888040",
+    "parent_name": "עומר"
+  },
+  {
+    "id": "955dffc2-87c9-4e4b-bf24-af853d37b7ec",
+    "full_name": "אריק דוידיוק",
+    "external_client_id": "87311393",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "058-7801074",
+    "parent_name": "קטיה"
+  },
+  {
+    "id": "4f86f345-6f36-4c76-9d15-74ee78e94f89",
+    "full_name": "ליה יעקב",
+    "external_client_id": "87307172",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-8969672",
+    "parent_name": "יעל"
+  },
+  {
+    "id": "9f14d179-be67-4e32-89f8-f1813f2562c1",
+    "full_name": "מאי שכטר",
+    "external_client_id": "87309340",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-5923339",
+    "parent_name": "ירון"
+  },
+  {
+    "id": "b3d091f9-97d2-4826-bb0d-dfb0aa1904cb",
+    "full_name": "שקד שלח",
+    "external_client_id": "684407",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-2644654",
+    "parent_name": "נורית"
+  },
+  {
+    "id": "fd98dd9a-e17e-471b-aa69-bb38baceff33",
+    "full_name": "אור דר",
+    "external_client_id": "1463282",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-4464116",
+    "parent_name": "גלי"
+  },
+  {
+    "id": "a98df3e8-8222-450e-a350-9d1d4587a17d",
+    "full_name": "גילי מנו",
+    "external_client_id": "87310813",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-6331367",
+    "parent_name": "לירז"
+  },
+  {
+    "id": "eb18baea-890a-4f97-9350-98d1eb5e7f64",
+    "full_name": "יהל כהן",
+    "external_client_id": "87311413",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-2442095",
+    "parent_name": "לירון"
+  },
+  {
+    "id": "c1ab3b2a-76ab-44b1-867e-ab9dbc5d8525",
+    "full_name": "שחר הראל וילנסקי",
+    "external_client_id": "684197",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "050-4063618",
+    "parent_name": "דלית"
+  },
+  {
+    "id": "0164e876-72f8-4cb7-9f45-6432d4cc9093",
+    "full_name": "גיא מורדוך",
+    "external_client_id": "87311559",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-2356202",
+    "parent_name": "ליטל"
+  },
+  {
+    "id": "cc2776d6-14b6-435f-92a7-251d010df069",
+    "full_name": "כפיר הרשקוביץ",
+    "external_client_id": "1388023",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-6621097",
+    "parent_name": "אורטל"
+  },
+  {
+    "id": "42638d53-d6c3-479c-83dd-a63449ca01b0",
+    "full_name": "אוסקר ברידג'ס",
+    "external_client_id": "87307295",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-9937017",
+    "parent_name": "אינה"
+  },
+  {
+    "id": "7e5da2bb-a1ce-4bdf-a013-a4fb57e1e586",
+    "full_name": "אמה שחם",
+    "external_client_id": "87311124",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-4767619",
+    "parent_name": "ויקי"
+  },
+  {
+    "id": "580be241-6d5b-4faf-bf70-e0cea47a65c7",
+    "full_name": "נעמה ספיר",
+    "external_client_id": "87310273",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "050-4756568",
+    "parent_name": "בתיה"
+  },
+  {
+    "id": "4cb05b80-b3c5-463f-90b2-35a68cef89d5",
+    "full_name": "אוריין בורנשטיין",
+    "external_client_id": "87311446",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "050-4796983",
+    "parent_name": "עינת"
+  },
+  {
+    "id": "50462c75-0ec8-421e-a256-948c1fcf0f46",
+    "full_name": "איילה שפורן",
+    "external_client_id": "87310286",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "050-2037802",
+    "parent_name": "אלומה"
+  },
+  {
+    "id": "f0b1fdff-4374-44a2-bf3e-973cc6bfae72",
+    "full_name": "תומר מרק",
+    "external_client_id": "87310258",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-4827275",
+    "parent_name": "אבי"
+  },
+  {
+    "id": "33424c75-16a8-449d-80d1-4280b17653d8",
+    "full_name": "דביר יעקובוב",
+    "external_client_id": "87310748",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-2355036",
+    "parent_name": "גלית"
+  },
+  {
+    "id": "fbdef2f4-a272-4b10-b1ba-b43d243cf996",
+    "full_name": "עמליה מלעי",
+    "external_client_id": "87310260",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-6696734",
+    "parent_name": "לירון"
+  },
+  {
+    "id": "0f6704cd-5963-40cb-af2e-985cb1f99a59",
+    "full_name": "אלן רוסדזה כהן",
+    "external_client_id": "87311135",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-4857171",
+    "parent_name": "נטליה"
+  },
+  {
+    "id": "a4e3ed88-67ff-4f8b-84a6-227b798e9a81",
+    "full_name": "דולב כהן",
+    "external_client_id": "87311412",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-2442095",
+    "parent_name": "לירון"
+  },
+  {
+    "id": "474633c9-d233-4389-b8f4-1d54b1f7f390",
+    "full_name": "שקד עמבר",
+    "external_client_id": "87307911",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-4930207",
+    "parent_name": "מאיה"
+  },
+  {
+    "id": "1e0839db-0c4d-46ee-987a-588c22638770",
+    "full_name": "סופיה פריטקוב",
+    "external_client_id": "87311444",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "050-8907905",
+    "parent_name": "ואדים"
+  },
+  {
+    "id": "42ff6d0c-aa42-4ea7-b460-a09a92ab5ab0",
+    "full_name": "ליב ראובן",
+    "external_client_id": "87309554",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-2553833",
+    "parent_name": "מורן"
+  },
+  {
+    "id": "4b6f59e1-47c9-498e-810c-2e15efe1984e",
+    "full_name": "יותם שפיגלר",
+    "external_client_id": "87309251",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-6366036",
+    "parent_name": "אסנת"
+  },
+  {
+    "id": "cef8580f-95f1-40ab-9c1b-33c24526d1ba",
+    "full_name": "אדריאנה פוקס",
+    "external_client_id": "1350116",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-5931517",
+    "parent_name": "קטיה"
+  },
+  {
+    "id": "c1092b8a-3543-493e-b47f-28e490339baf",
+    "full_name": "אורי פרלמוטר",
+    "external_client_id": "87311426",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-5447171",
+    "parent_name": "אפרת"
+  },
+  {
+    "id": "2d952631-9821-4544-8b0c-6d218ff19985",
+    "full_name": "ילד אחר",
+    "external_client_id": null,
+    "gender": null,
+    "gender_manual_at": null,
+    "phone": "0509999999",
+    "parent_name": "הורה"
+  },
+  {
+    "id": "c95c39aa-5887-473a-8b20-e5d04fa7f68b",
+    "full_name": "אלמוג ברלב",
+    "external_client_id": "87308881",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "5.0128923E7",
+    "parent_name": "מירי"
+  },
+  {
+    "id": "eaa69ee4-cbc6-427e-a458-537bfe5f73d1",
+    "full_name": "אליה ראובן",
+    "external_client_id": "87311481",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-7637097",
+    "parent_name": "קרין"
+  },
+  {
+    "id": "76604140-b1d0-4826-ab3a-96a645816cdf",
+    "full_name": "איתן ונטורה",
+    "external_client_id": "87311183",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-7240446",
+    "parent_name": "נתלי"
+  },
+  {
+    "id": "22036974-cc98-4d4a-ad88-dbef66752dcc",
+    "full_name": "יובל אבני",
+    "external_client_id": "1371905",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-5772743",
+    "parent_name": "טליה"
+  },
+  {
+    "id": "9e904ac7-d7a4-4d64-91ae-95ae40ad4b16",
+    "full_name": "יונתן דומשלק",
+    "external_client_id": "87308810",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-7443012",
+    "parent_name": "מירי"
+  },
+  {
+    "id": "f8eb5612-747a-418f-83a5-197eb9c878ff",
+    "full_name": "אמה קמיר",
+    "external_client_id": "682849",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-2497134",
+    "parent_name": "שגית"
+  },
+  {
+    "id": "9cf19b8a-dce9-4dae-906a-c8ac75886a28",
+    "full_name": "אריאל הלוי",
+    "external_client_id": "87311243",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "050-8859995",
+    "parent_name": "רוני"
+  },
+  {
+    "id": "1a71e2f0-c2d3-4a8b-9ed6-fd9b84a20caa",
+    "full_name": "אופק ענבר",
+    "external_client_id": "87311483",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-5673932",
+    "parent_name": "תמר"
+  },
+  {
+    "id": "6ad275c5-9665-4309-aa87-0602597a62ce",
+    "full_name": "רום שמולביץ",
+    "external_client_id": "681368",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "050-8614297",
+    "parent_name": "ימית"
+  },
+  {
+    "id": "9c668edb-40cf-43d4-a831-54a59050e8ee",
+    "full_name": "איה מזרחי",
+    "external_client_id": "686614",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-4509203",
+    "parent_name": "יעל"
+  },
+  {
+    "id": "4ee26fb7-0ff0-4bb8-b80b-f47c8b46811c",
+    "full_name": "איתן שלם",
+    "external_client_id": "87310288",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "050-6403760",
+    "parent_name": "מזל"
+  },
+  {
+    "id": "40b93318-8979-4a20-9982-12bcaa20a93e",
+    "full_name": "יותם גרוס",
+    "external_client_id": "87309223",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "050-8123865",
+    "parent_name": "חן"
+  },
+  {
+    "id": "7af852ee-4ae4-48bb-862c-428de1c0f36e",
+    "full_name": "אווה ליסקוביץ",
+    "external_client_id": "87308729",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-5865130",
+    "parent_name": "אנה"
+  },
+  {
+    "id": "b068c08c-6e55-4ba1-ae7e-ef2a60f51142",
+    "full_name": "מיקה זינר",
+    "external_client_id": "87310173",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-5927080",
+    "parent_name": "דורין"
+  },
+  {
+    "id": "7fafbf2e-afcd-467c-8b9a-4a0c16dcfa1d",
+    "full_name": "אדר קלנטרוב",
+    "external_client_id": "684463",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-4301551",
+    "parent_name": "ריטה"
+  },
+  {
+    "id": "7ceba09f-477a-4f18-95c8-a11766d11b05",
+    "full_name": "רני שמולביץ'",
+    "external_client_id": "87308131",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "050-8614297",
+    "parent_name": "ימית"
+  },
+  {
+    "id": "98ae08ae-785a-41d0-81a1-7c73c9ff464e",
+    "full_name": "מיכאל ברושנסקיי",
+    "external_client_id": "87309694",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-5701240",
+    "parent_name": "ג'וליה"
+  },
+  {
+    "id": "6dea1ec2-61cd-42ba-9934-db5c298144ce",
+    "full_name": "אביתר סירקיס",
+    "external_client_id": "87308741",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-7551734",
+    "parent_name": "טליה"
+  },
+  {
+    "id": "377b8fa9-f02f-48a1-b433-3be335d2de05",
+    "full_name": "עידו מזרחי",
+    "external_client_id": "686615",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-4509203",
+    "parent_name": "יעל"
+  },
+  {
+    "id": "4fddefcb-aeb1-4b3d-ad20-047430b16b2b",
+    "full_name": "ריי לייבוביץ",
+    "external_client_id": "87310934",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "050-9640460",
+    "parent_name": "ליאור"
+  },
+  {
+    "id": "2e1f2f17-ae0f-4b83-bace-0e7f85889de1",
+    "full_name": "נעה כהן",
+    "external_client_id": "87309395",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "053-4220706",
+    "parent_name": "אורטל"
+  },
+  {
+    "id": "25e4dee5-e164-4888-ade8-6f45c25830fd",
+    "full_name": "שחר עמיאל",
+    "external_client_id": "87311425",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-3091400",
+    "parent_name": "עדי"
+  },
+  {
+    "id": "4f3c9549-eb28-4f4a-8a59-11786151f690",
+    "full_name": "טים צרקסקי",
+    "external_client_id": "675527",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "053-7717839",
+    "parent_name": "מקסים"
+  },
+  {
+    "id": "82da39ed-8f14-404b-b919-48ddef629166",
+    "full_name": "שחר קולקר",
+    "external_client_id": "87310240",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-8212926",
+    "parent_name": "שוש"
+  },
+  {
+    "id": "e4233c58-373a-4441-ba5f-0a006f007299",
+    "full_name": "לירוי ג'ובאני",
+    "external_client_id": "87310024",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-7675751",
+    "parent_name": "אנסטסיה"
+  },
+  {
+    "id": "ebd6b868-0e53-4556-be17-8b311953c570",
+    "full_name": "צור צדקה",
+    "external_client_id": "1445503",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "050-6292636",
+    "parent_name": "מוריאל"
+  },
+  {
+    "id": "164f9d7a-3934-4e82-be6c-f3aad91c5cd7",
+    "full_name": "אמיליה פולק צברי",
+    "external_client_id": "87311042",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-5465400",
+    "parent_name": "מיכל"
+  },
+  {
+    "id": "d3b297d3-ec45-408a-85ac-bca51cf1066a",
+    "full_name": "רננה רץ",
+    "external_client_id": "681049",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "050-7751133",
+    "parent_name": "שרי"
+  },
+  {
+    "id": "8201cf27-7829-4ce3-8259-c550bbd67005",
+    "full_name": "מעין פררו",
+    "external_client_id": "680762",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-9256447",
+    "parent_name": "עדי"
+  },
+  {
+    "id": "f97352ce-8f48-4f81-abbf-f06f450f6741",
+    "full_name": "נתנאל פודולסקי",
+    "external_client_id": "87308860",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-6850731",
+    "parent_name": "מירי"
+  },
+  {
+    "id": "b5feb9c5-98c6-4bbc-af3c-95e64ca893f3",
+    "full_name": "דניאל בגן",
+    "external_client_id": "87310340",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-8260553",
+    "parent_name": "עדי"
+  },
+  {
+    "id": "52e11c85-3b92-422f-9fb6-d0e067640605",
+    "full_name": "אליה דוידיוק",
+    "external_client_id": "87310219",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "058-7801074",
+    "parent_name": "קטיה"
+  },
+  {
+    "id": "bc4c65bb-77f6-42bf-8303-64c975bde9c7",
+    "full_name": "אריאל יצחק",
+    "external_client_id": "87310963",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "050-4555622",
+    "parent_name": "מיטל"
+  },
+  {
+    "id": "d1482ed8-86e5-4204-a6dc-1d4291288f84",
+    "full_name": "רוני מרק",
+    "external_client_id": "87310259",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-4827275",
+    "parent_name": "אבי"
+  },
+  {
+    "id": "eccf99ef-4e8f-4113-8837-2e489a1e4b92",
+    "full_name": "אורי ארפי",
+    "external_client_id": "87311330",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-8328308",
+    "parent_name": "חני"
+  },
+  {
+    "id": "15c97990-8d83-47df-8520-10838e9c4386",
+    "full_name": "נבו ורמוס",
+    "external_client_id": "685383",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-4764884",
+    "parent_name": "שני"
+  },
+  {
+    "id": "4657842f-d38a-42ce-b005-1c6164c4dc63",
+    "full_name": "גומא צדקה",
+    "external_client_id": "1445504",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "050-6292636",
+    "parent_name": "מוריאל"
+  },
+  {
+    "id": "97902aa8-5c00-4f77-bff6-ec7f839eeff9",
+    "full_name": "אביתר כהן מחלב",
+    "external_client_id": "87311448",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-6339897",
+    "parent_name": "חן"
+  },
+  {
+    "id": "d342113e-9036-4c96-846e-1d519135924d",
+    "full_name": "בר תמיר",
+    "external_client_id": "87310207",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "050-7644689",
+    "parent_name": "קרן"
+  },
+  {
+    "id": "1045d83a-e660-4540-b6b4-faa8fd4ab186",
+    "full_name": "איתן זיו-און",
+    "external_client_id": "87310958",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "053-2218182",
+    "parent_name": "הילה"
+  },
+  {
+    "id": "627f5e3d-31ec-4e41-8515-a0a38037f069",
+    "full_name": "שירה יצחק",
+    "external_client_id": "87310964",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "050-4555622",
+    "parent_name": "מיטל"
+  },
+  {
+    "id": "f6b36855-5abe-4a69-a9b3-ae812782d3dc",
+    "full_name": "תהל אור",
+    "external_client_id": "1048021",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-5634444",
+    "parent_name": "אורי"
+  },
+  {
+    "id": "457dc2b9-d6c0-4cdf-9b17-4bda56393784",
+    "full_name": "עומר מזור",
+    "external_client_id": "87307948",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-2945651",
+    "parent_name": "אורית"
+  },
+  {
+    "id": "15f92b89-cb90-4fa2-981e-2c300bce978f",
+    "full_name": "גלי אפרת",
+    "external_client_id": "87307193",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-6601085",
+    "parent_name": "אורית"
+  },
+  {
+    "id": "b944e44c-086d-425a-9da7-286b71b9b939",
+    "full_name": "פולג בירן",
+    "external_client_id": "87310278",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-3828243",
+    "parent_name": "סיוון"
+  },
+  {
+    "id": "7ee45b59-bec6-4f73-8359-12b806449a2f",
+    "full_name": "דניאל ברקת",
+    "external_client_id": "87311563",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "050-6203769",
+    "parent_name": "רותם"
+  },
+  {
+    "id": "218d0882-cef1-4604-aae4-a6b8735f1325",
+    "full_name": "שגב כהן",
+    "external_client_id": "685519",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-3426346",
+    "parent_name": "קרן"
+  },
+  {
+    "id": "08c1e14e-aaa5-4d36-ac96-78577c6d222e",
+    "full_name": "גיא מאור",
+    "external_client_id": "678739",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "050-2277666",
+    "parent_name": "שרון"
+  },
+  {
+    "id": "25623383-261d-4803-927d-bca44ffb4833",
+    "full_name": "נועה שלם",
+    "external_client_id": "87310287",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "050-6403760",
+    "parent_name": "מזל"
+  },
+  {
+    "id": "ab1263e6-2537-48bf-b24b-3b3aaa274930",
+    "full_name": "אביגיל גרינברג-פרץ",
+    "external_client_id": "87310174",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-3675454",
+    "parent_name": "עדי"
+  },
+  {
+    "id": "9b86100b-0f62-4e10-8648-2a57e72df9c9",
+    "full_name": "הראל מגד",
+    "external_client_id": "87310274",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-2229955",
+    "parent_name": "ספיר"
+  },
+  {
+    "id": "2e1f3649-2841-4186-8f6f-899f46c05ea8",
+    "full_name": "איתן זילברברג",
+    "external_client_id": "87311494",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-6135100",
+    "parent_name": "דליה (סבתא)"
+  },
+  {
+    "id": "3d853cd1-1bc8-4d04-81d7-e8ba3c8b716a",
+    "full_name": "אמיר קזנין",
+    "external_client_id": "87307225",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-6546610",
+    "parent_name": "לודמילה"
+  },
+  {
+    "id": "74e8824b-d5b1-47e9-971c-6ea5c8148835",
+    "full_name": "יובל ברמן",
+    "external_client_id": "87306531",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-2479797",
+    "parent_name": "קרין"
+  },
+  {
+    "id": "2a11614f-a551-47b5-bff2-a148f4b14f4b",
+    "full_name": "ליה זלסקי",
+    "external_client_id": "87308746",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-5206734",
+    "parent_name": "רגינה"
+  },
+  {
+    "id": "8d995f62-0e6e-41f4-b132-01a538159f94",
+    "full_name": "מיה קמיר",
+    "external_client_id": "682850",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "052-2497134",
+    "parent_name": "שגית"
+  },
+  {
+    "id": "0f21e933-569a-47c9-bd45-bb9292a4a89f",
+    "full_name": "עומרי וקסלר",
+    "external_client_id": "87311442",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-6363323",
+    "parent_name": "דן"
+  },
+  {
+    "id": "3de37246-054b-4b2e-812a-e4563506aad0",
+    "full_name": "אריאל הוברמן",
+    "external_client_id": "87311417",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-8419919",
+    "parent_name": "אייל"
+  },
+  {
+    "id": "e5ba7599-521d-41cd-9c3d-340f0651a8cb",
+    "full_name": "ירון רוזנפלד",
+    "external_client_id": "87309238",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-5757690",
+    "parent_name": "אריאל"
+  },
+  {
+    "id": "1b182ab9-d6dc-430e-82be-74061f081ebd",
+    "full_name": "דורון זייפרט",
+    "external_client_id": "87309702",
+    "gender": "female",
+    "gender_manual_at": null,
+    "phone": "054-5663976",
+    "parent_name": "גל"
+  },
+  {
+    "id": "6bf76963-55c7-4d72-a7a7-4c03f169e946",
+    "full_name": "ליאם פורמנוב",
+    "external_client_id": "87311408",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "052-6382830",
+    "parent_name": "אלינה"
+  },
+  {
+    "id": "65f1434a-7fb4-451c-84e6-28a0a2779f9d",
+    "full_name": "דניאל חלבלי",
+    "external_client_id": "87310411",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-8152261",
+    "parent_name": "סתיו"
+  },
+  {
+    "id": "29a099f9-62e4-4932-aa05-745d882b4ad9",
+    "full_name": "אייל יעקובוב",
+    "external_client_id": "87310236",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-3332064",
+    "parent_name": "אירינה"
+  },
+  {
+    "id": "d8b0b466-97cf-4bcd-8d4a-a340e843a794",
+    "full_name": "אדיר קיסר",
+    "external_client_id": "87311398",
+    "gender": "male",
+    "gender_manual_at": null,
+    "phone": "054-7276278",
+    "parent_name": "שירי"
+  }
+]

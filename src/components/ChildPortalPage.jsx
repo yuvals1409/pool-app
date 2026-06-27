@@ -12,6 +12,8 @@ import {
   savePortalSession,
   clearPortalSession,
   portalBlockedMessage,
+  shouldShowPortalExitNotice,
+  todayDateStr,
   fileToBase64,
 } from "../lib/childPortal.js";
 import { Button, Card, Field, Input, Select, Spinner } from "./ui/ds/index.js";
@@ -171,8 +173,24 @@ export default function ChildPortalPage({ portalToken, toast }) {
   };
 
   const upcoming = dashboard?.upcoming;
+  const isLessonToday = upcoming?.session_date === todayDateStr();
+  const waitingForScan = !!(
+    session?.nonce
+    && upcoming?.has_entry
+    && !upcoming?.entry_scanned
+    && isLessonToday
+  );
+  const showExitNotice = shouldShowPortalExitNotice(dashboard);
   const hasQr = upcoming?.has_entry && upcoming?.qr_token && !upcoming?.blocked_reason;
   const entries = Array.isArray(dashboard?.recent_entries) ? dashboard.recent_entries : [];
+
+  useEffect(() => {
+    if (!session?.nonce || (!waitingForScan && !showExitNotice)) return undefined;
+    const intervalId = setInterval(() => {
+      loadDashboard(session.nonce);
+    }, 4000);
+    return () => clearInterval(intervalId);
+  }, [session?.nonce, waitingForScan, showExitNotice, loadDashboard]);
 
   return (
     <div className="child-portal assessment-landing" dir={dir}>
@@ -220,6 +238,13 @@ export default function ChildPortalPage({ portalToken, toast }) {
           </div>
         ) : (
           <>
+            {showExitNotice && (
+              <div className="child-portal-exit-notice" role="status">
+                <div className="child-portal-exit-notice-title">{t("portalEntryApprovedTitle")}</div>
+                <p className="child-portal-exit-notice-body">{t("portalExitNotice")}</p>
+              </div>
+            )}
+
             <Card className="child-portal-section">
               <div className="child-portal-section-title">{t("portalUpcoming")}</div>
               {!upcoming?.has_entry ? (

@@ -1,0 +1,324 @@
+/* ── Student profile sheet ── */
+.student-profile-panel {
+  max-width: 520px;
+  padding: 24px 24px 32px;
+}
+
+.student-profile-panel .schedule-panel-handle {
+  margin-bottom: 20px;
+}
+
+/* Header */
+.sp-header {
+  text-align: center;
+  margin-bottom: var(--space-5);
+}
+
+.sp-title {
+  font-size: var(--text-title-2);
+  font-weight: var(--weight-bold);
+  color: var(--ink);
+  line-height: var(--leading-tight);
+  margin: 0;
+}
+
+.sp-subtitle {
+  margin-top: var(--space-2);
+  font-size: var(--text-title-3);
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
+  line-height: var(--leading-snug);
+}
+
+.sp-id {
+  display: inline-block;
+  margin-top: var(--space-2);
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--ink-mid);
+  letter-spacing: 0.02em;
+}
+
+/* Parent / meta card */
+.sp-meta-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.sp-meta-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-3) var(--space-4);
+  align-items: baseline;
+  padding: var(--space-3) 0;
+}
+
+.sp-meta-row:not(:last-child) {
+  border-bottom: 1px solid var(--border);
+}
+
+.sp-meta-label {
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  color: var(--ink-mid);
+  text-align: start;
+}
+
+.sp-meta-value {
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
+  text-align: end;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.sp-meta-value.text {
+  font-family: var(--font-sans);
+}
+
+/* Form block */
+.sp-form-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.sp-form-card .ds-field,
+.sp-form-card label {
+  gap: 8px;
+}
+
+.sp-form-card label > span:first-child {
+  font-size: var(--text-body) !important;
+  font-weight: var(--weight-semibold) !important;
+  color: var(--ink) !important;
+}
+
+.sp-form-card input,
+.sp-form-card select {
+  height: 44px !important;
+  font-size: var(--text-body) !important;
+}
+
+.sp-form-hint {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+  line-height: var(--leading-normal);
+}
+
+/* Portal credentials */
+.sp-portal-card {
+  margin-bottom: var(--space-5);
+  padding: var(--space-5) !important;
+}
+
+.sp-section-heading {
+  font-size: var(--text-title-3);
+  font-weight: var(--weight-bold);
+  color: var(--ink);
+  margin: 0 0 var(--space-4);
+  line-height: var(--leading-tight);
+}
+
+.sp-cred-box {
+  background: var(--pool-pale);
+  border: 1px solid var(--pool-light);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.sp-cred-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.sp-cred-block + .sp-cred-block {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--pool-light);
+}
+
+.sp-cred-label {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--ink-mid);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.sp-cred-value {
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
+  line-height: var(--leading-relaxed);
+  word-break: break-all;
+}
+
+.sp-cred-value.mono {
+  font-family: var(--font-mono);
+  font-size: 1.375rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+  padding: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.sp-cred-value.link {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  padding: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  direction: ltr;
+  text-align: left;
+}
+
+.sp-cred-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.sp-cred-actions button {
+  height: 44px !important;
+  font-size: var(--text-body) !important;
+}
+
+.sp-portal-locked {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--danger) 8%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent);
+  color: var(--danger);
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  text-align: center;
+}
+
+/* Photo */
+.sp-photo-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+  padding: var(--space-5);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.sp-photo-section .child-portal-photo-preview {
+  width: 120px;
+  height: 120px;
+  border-radius: 16px;
+}
+
+.sp-photo-section button {
+  height: 44px !important;
+  min-width: 180px;
+  font-size: var(--text-body) !important;
+}
+
+/* Content sections */
+.sp-section {
+  margin-bottom: var(--space-5);
+}
+
+.sp-section-title {
+  font-size: var(--text-title-3);
+  font-weight: var(--weight-bold);
+  color: var(--ink);
+  margin: 0 0 var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 2px solid var(--border);
+}
+
+.sp-enrollment-card {
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-3);
+}
+
+.sp-enrollment-card.inactive {
+  opacity: 0.7;
+  background: var(--bg-secondary);
+}
+
+.sp-enrollment-name {
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
+  line-height: var(--leading-snug);
+  margin-bottom: var(--space-1);
+}
+
+.sp-enrollment-meta {
+  font-size: var(--text-sm);
+  color: var(--ink-mid);
+  line-height: var(--leading-normal);
+}
+
+.sp-stat-value {
+  font-family: var(--font-mono);
+  font-size: var(--text-title-2);
+  font-weight: var(--weight-bold);
+  color: var(--pool);
+  margin: 0;
+}
+
+.sp-stat-label {
+  font-size: var(--text-sm);
+  color: var(--ink-mid);
+  margin-top: var(--space-1);
+}
+
+.sp-history-scroll {
+  max-height: 240px;
+  overflow-y: auto;
+  padding-inline-end: 4px;
+}
+
+.sp-close-btn {
+  margin-top: var(--space-2);
+  height: 48px !important;
+  font-size: var(--text-body) !important;
+}
+
+.sp-loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-8);
+}
+
+.sp-empty {
+  font-size: var(--text-body);
+  color: var(--ink-mid);
+  text-align: center;
+  padding: var(--space-4);
+}

@@ -52,7 +52,9 @@ import StudentProfilePanel from "./components/StudentProfilePanel.jsx";
 import AssessmentRegisterPage from "./components/AssessmentRegisterPage.jsx";
 import SummerLandingPage from "./components/SummerLandingPage.jsx";
 import ChildPortalPage from "./components/ChildPortalPage.jsx";
+import HealthDeclarationPage from "./components/HealthDeclarationPage.jsx";
 import { parseAssessmentRegisterPath } from "./lib/assessment.js";
+import { parseHealthDeclarationPath } from "./lib/healthDeclaration.js";
 import { parseSummerRegisterPath } from "./lib/summerCourse.js";
 import {
   lookupAndRedeemPass, fetchPublicPass, parsePublicPathToken, parseAccessLogReason,
@@ -1399,6 +1401,7 @@ export default function App() {
   const urlParams = new URLSearchParams(window.location.search);
   const ticketId = urlParams.get("ticket");
   const calendarId = urlParams.get("calendar");
+  const healthDeclaration = parseHealthDeclarationPath();
   const assessmentRegister = parseAssessmentRegisterPath();
   const summerRegister = parseSummerRegisterPath();
   const pathPassToken = parsePublicPathToken();
@@ -1486,6 +1489,9 @@ export default function App() {
   }, [profile, isDesktop]);
 
   const logout = async () => { await supabase.auth.signOut(); };
+
+  // ── Health declaration demo (public, standalone, no auth) ─
+  if (healthDeclaration) return <HealthDeclarationPage />;
 
   // ── Summer landing + registration (public, no auth) ──────
   if (summerRegister) return (

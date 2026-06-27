@@ -18,12 +18,9 @@ export default function ParticipantPhotoEditor({
   if (!canUpdateParticipantPhoto(profile)) {
     if (!photoUrl) return null;
     return (
-      <img
-        src={photoUrl}
-        alt=""
-        className="child-portal-photo-preview"
-        style={{ marginTop: 8 }}
-      />
+      <div className="sp-photo-section">
+        <img src={photoUrl} alt="" className="child-portal-photo-preview" />
+      </div>
     );
   }
 
@@ -48,19 +45,18 @@ export default function ParticipantPhotoEditor({
   };
 
   return (
-    <div style={{ marginTop: 12 }}>
+    <div className="sp-photo-section">
       {photoUrl && (
         <img src={photoUrl} alt="" className="child-portal-photo-preview" />
       )}
       <input ref={inputRef} type="file" accept="image/*" hidden onChange={handleFile} />
       <Button
         variant="outline"
-        size="sm"
-        style={{ marginTop: 8 }}
+        size="lg"
         disabled={uploading}
         onClick={() => inputRef.current?.click()}
       >
-        {uploading ? <Spinner /> : (photoUrl ? t("portalPhotoUpload") : t("portalPhotoUpload"))}
+        {uploading ? <Spinner /> : t("portalPhotoUpload")}
       </Button>
     </div>
   );

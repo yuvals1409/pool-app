@@ -1,0 +1,28 @@
+---
+description: דומיין — לוגיקה עסקית, הרשאות, flows
+globs: src/lib/**,src/components/**/*Tab*.jsx,src/components/schedule/**
+alwaysApply: false
+---
+
+# דומיין / מוצר
+
+לוגיקה עסקית של בית הספר לשחייה: לו"ז, הרשמות, QR, תפקידים, flows.
+
+## תחום
+
+- הרשאות: `src/lib/permissions.js`
+- mutations ולוגיקה: `src/lib/` (lessonMutations, attendance, accessPass, makeup, וכו')
+- מסכים: `*Tab*.jsx`, `src/components/schedule/`
+
+## עקרונות
+
+- שמור על מודל המוצר הקיים
+- שינוי UX — כן; שינוי כלל עסקי — רק באישור בעל המוצר
+- mutations דרך `src/lib/` — לא ישירות ב-UI אם יש helper קיים
+
+## מחוץ לתחום
+
+- migrations וסכמת DB → נתונים
+- בחירת רכיב UI → עיצוב
+
+Skill מורחב: `.cursor/skills/pool-domain/SKILL.md`

@@ -79,6 +79,28 @@
   font-size: 14px;
 }
 
+.child-portal-exit-notice {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--pool-blue, #0077B6);
+  background: color-mix(in srgb, var(--pool-blue, #0077B6) 8%, var(--surface));
+}
+
+.child-portal-exit-notice-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.child-portal-exit-notice-body {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
 .child-portal-photo-upload {
   display: flex;
   flex-direction: column;

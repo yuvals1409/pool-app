@@ -1,0 +1,22 @@
+---
+description: נתונים — Supabase, סכמה, RLS, migrations
+globs: supabase/**,src/lib/supabase.js
+alwaysApply: false
+---
+
+# נתונים (Supabase)
+
+סכמה, RLS, migrations, queries — בזהירות.
+
+## עקרונות
+
+- שינויי DB רק עם בדיקת השפעה על `src/lib/*` ו-queries קיימים
+- לפני שינויי schema: קרא Supabase plugin skill
+- אל תשבור RLS או queries בלי לעדכן צרכנים
+
+## מחוץ לתחום
+
+- עיצוב מסכים → עיצוב
+- copy למשתמש / flows → דומיין
+
+Skill מורחב: `.cursor/skills/pool-data/SKILL.md`

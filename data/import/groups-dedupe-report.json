@@ -1,0 +1,42 @@
+{
+  "before": 37,
+  "after": 30,
+  "removed": [
+    {
+      "reason": "subset_same_excel",
+      "name": "קורס קיץ | קיץ | ה' 16:30",
+      "src": "לימוד שחייה 1"
+    },
+    {
+      "reason": "subset_same_excel",
+      "name": "קורס קיץ | קיץ | ה' 17:15",
+      "src": "לימוד שחייה 2"
+    },
+    {
+      "reason": "summer_schedule_collision",
+      "name": "קורס קיץ | קיץ | ג' 16:30 & ה' 16:30",
+      "src": "לימוד שחייה 4"
+    },
+    {
+      "reason": "summer_schedule_collision",
+      "name": "קורס קיץ | קיץ | ג' 17:15 & ה' 17:15",
+      "src": "לימוד שחייה 5"
+    },
+    {
+      "reason": "summer_schedule_collision",
+      "name": "קורס קיץ | קיץ | ד' 16:30 & ו' 16:30",
+      "src": "לימוד שחייה 3"
+    },
+    {
+      "reason": "summer_schedule_collision",
+      "name": "קורס קיץ | קיץ | ד' 17:15 & ו' 17:15",
+      "src": "לימוד שחייה 8"
+    },
+    {
+      "reason": "summer_schedule_collision",
+      "name": "קורס קיץ | קיץ | ד' 18:00 & ו' 18:00",
+      "src": "לימוד שחייה 9"
+    }
+  ],
+  "renamed": 10
+}

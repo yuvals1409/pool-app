@@ -60,32 +60,31 @@ export default function PortalCredentialsCard({
   if (!canViewPortalCredentials(profile)) return null;
 
   return (
-    <Card style={{ marginTop: 16 }}>
-      <div className="child-portal-section-title">{t("portalCardTitle")}</div>
+    <Card className="sp-portal-card">
+      <h3 className="sp-section-heading">{t("portalCardTitle")}</h3>
       {loading && !creds ? (
-        <div style={{ display: "flex", justifyContent: "center", padding: 16 }}><Spinner /></div>
+        <div className="sp-loading"><Spinner /></div>
       ) : !creds?.portal_token ? (
-        <p style={{ fontSize: 13, color: "var(--ink-mid)" }}>{t("portalNotFound")}</p>
+        <p className="sp-empty">{t("portalNotFound")}</p>
       ) : (
         <>
           {creds.portal_locked && (
-            <p style={{ color: "var(--danger)", fontSize: 13, marginBottom: 8 }}>{t("portalLockedBadge")}</p>
+            <p className="sp-portal-locked">{t("portalLockedBadge")}</p>
           )}
-          <div className="lesson-info" style={{ marginTop: 0 }}>
-            <div className="lesson-info-row">
-              <span className="li-key">{t("portalLink")}</span>
-              <span className="li-val" style={{ fontSize: 12, wordBreak: "break-all" }}>
-                {getChildPortalUrl(creds.portal_token)}
-              </span>
+          <div className="sp-cred-box">
+            <div className="sp-cred-block">
+              <span className="sp-cred-label">{t("portalLink")}</span>
+              <span className="sp-cred-value link">{getChildPortalUrl(creds.portal_token)}</span>
             </div>
-            <div className="lesson-info-row">
-              <span className="li-key">{t("portalPin")}</span>
-              <span className="li-val" style={{ fontFamily: "var(--font-mono)" }}>{creds.portal_pin}</span>
+            <div className="sp-cred-block">
+              <span className="sp-cred-label">{t("portalPin")}</span>
+              <span className="sp-cred-value mono">{creds.portal_pin}</span>
             </div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
+          <div className="sp-cred-actions">
             <Button
               variant="outline"
+              size="lg"
               fullWidth
               onClick={() => copyPortalCredentials(creds.portal_token, creds.portal_pin, toast, t)}
             >
@@ -94,6 +93,7 @@ export default function PortalCredentialsCard({
             {phone && (
               <Button
                 variant="outline"
+                size="lg"
                 fullWidth
                 onClick={() => window.open(
                   buildPortalWhatsAppUrl(phone, creds.portal_token, creds.portal_pin, t),
@@ -104,7 +104,7 @@ export default function PortalCredentialsCard({
               </Button>
             )}
             {canResetPortalPin(profile) && (
-              <Button variant="secondary" fullWidth onClick={handleReset} disabled={loading}>
+              <Button variant="secondary" size="lg" fullWidth onClick={handleReset} disabled={loading}>
                 {t("portalResetPin")}
               </Button>
             )}

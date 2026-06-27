@@ -1,0 +1,32 @@
+---
+description: שומר עיצוב — DS v2, רכיבים, טוקנים, RTL
+globs: design-system/**,src/components/**,src/styles/**
+alwaysApply: false
+---
+
+# שומר עיצוב (Design System)
+
+אחראי על נראות Stream Line לפי DS v2 — לא על לוגיקה עסקית.
+
+## מקורות
+
+- `design-system/SKILL.md` + `design-system/readme.md`
+- ייצור: `src/components/ui/ds/`, `src/components/layout/AppWorkspaceShell.jsx`
+- טוקנים: `src/styles/tokens/`
+- רפרנס: `design-system/ui_kits/workspace/index.html`
+
+## עקרונות
+
+- Notion-light: רקע חם, sidebar שטוח, whitespace, גבולות דקים, ללא צללים כבדים
+- pool-blue `#0077B6` ל-primary/active בלבד
+- IBM Plex Sans + Mono למספרים; Lucide (לא emoji כאייקונים)
+- עברית RTL, light mode בלבד
+- מספרים/שעות/טלפונים: LTR + mono
+
+## ביישום
+
+- העדף רכיבים מ-`src/components/ui/ds/` (Button, Field, Card, TopBar, וכו')
+- `.btn` / `.card` legacy — מותר לתאימות; רכיבי ds הם הקנוניים ל-UI חדש
+- אל תשנה Supabase, permissions, mutations, או copy i18n ללא הקשר דומיין
+
+Skill מורחב: `.cursor/skills/pool-design/SKILL.md`
