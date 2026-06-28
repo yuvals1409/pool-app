@@ -52,6 +52,7 @@ import StudentProfilePanel from "./components/StudentProfilePanel.jsx";
 import AssessmentRegisterPage from "./components/AssessmentRegisterPage.jsx";
 import SummerLandingPage from "./components/SummerLandingPage.jsx";
 import ChildPortalPage from "./components/ChildPortalPage.jsx";
+import PlatformGatePage from "./components/PlatformGatePage.jsx";
 import { parseAssessmentRegisterPath } from "./lib/assessment.js";
 import { parseSummerRegisterPath } from "./lib/summerCourse.js";
 import {
@@ -60,6 +61,7 @@ import {
 import { parseChildPortalToken, redeemLessonQr } from "./lib/childPortal.js";
 import { markLessonScanAttendance } from "./lib/attendance.js";
 import { getOAuthRedirectUrl } from "./lib/authRedirect.js";
+import { DEMO_USERS, DEMO_PASSWORD } from "./lib/demoUsers.js";
 import { useIsDesktop } from "./lib/useBreakpoint.js";
 import {
   getVisibleTabs,
@@ -330,10 +332,14 @@ function EditableDisplayName({ profile, onUpdate, toast }) {
 //  LOGIN PAGE
 // ─────────────────────────────────────────────────────────────
 function LoginPage({ toast }) {
-  const { t } = useLang();
+  const { t, roleLabel } = useLang();
   const [loading, setLoading] = useState(false);
+  const [authMode, setAuthMode] = useState(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const signIn = async () => {
+  const signInGoogle = async () => {
+    setAuthMode("google");
     setLoading(true);
     const redirectTo = getOAuthRedirectUrl();
     const { error } = await supabase.auth.signInWithOAuth({
@@ -343,7 +349,44 @@ function LoginPage({ toast }) {
         queryParams: { prompt: "select_account" },
       },
     });
-    if (error) { toast.show(t("loginError")); setLoading(false); }
+    if (error) { toast.show(t("loginError")); setLoading(false); setAuthMode(null); }
+  };
+
+  const signInWithPassword = async (event) => {
+    event.preventDefault();
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !password) {
+      toast.show(t("loginFieldsRequired"));
+      return;
+    }
+    setAuthMode("password");
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: trimmedEmail,
+      password,
+    });
+    if (error) {
+      const invalid = /invalid login credentials|invalid email or password/i.test(error.message);
+      toast.show(invalid ? t("loginInvalidCredentials") : t("loginError"));
+      setLoading(false);
+      setAuthMode(null);
+    }
+  };
+
+  const quickDemoLogin = async (demoUser) => {
+    setEmail(demoUser.email);
+    setPassword(DEMO_PASSWORD);
+    setAuthMode("password");
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: demoUser.email,
+      password: DEMO_PASSWORD,
+    });
+    if (error) {
+      toast.show(t("loginInvalidCredentials"));
+      setLoading(false);
+      setAuthMode(null);
+    }
   };
 
   return (
@@ -353,18 +396,74 @@ function LoginPage({ toast }) {
       <div className="login-title">{t("loginTitle")}</div>
       <div className="login-sub">{t("loginSub")}<br />{t("loginContinue")}</div>
       <Card style={{ width: "100%", maxWidth: 360 }}>
+        <form className="login-form" onSubmit={signInWithPassword}>
+          <Field label={t("loginEmail")}>
+            <Input
+              type="email"
+              autoComplete="username"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+              dir="ltr"
+            />
+          </Field>
+          <Field label={t("loginPassword")}>
+            <Input
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
+              dir="ltr"
+            />
+          </Field>
+          <Button
+            type="submit"
+            variant="primary"
+            fullWidth
+            disabled={loading}
+            icon={loading && authMode === "password" ? <Spinner color="#fff" /> : null}
+          >
+            {loading && authMode === "password" ? t("signingIn") : t("signInEmail")}
+          </Button>
+        </form>
+
+        <div className="login-divider"><span>{t("loginOrDivider")}</span></div>
+
         <Button
           variant="secondary"
           fullWidth
-          onClick={signIn}
+          onClick={signInGoogle}
           disabled={loading}
-          icon={loading ? <Spinner color="var(--pool)" /> : <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" style={{ width: 18, height: 18 }} />}
+          icon={loading && authMode === "google" ? <Spinner color="var(--pool)" /> : <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" style={{ width: 18, height: 18 }} />}
         >
-          {loading ? t("signingIn") : t("signInGoogle")}
+          {loading && authMode === "google" ? t("signingIn") : t("signInGoogle")}
         </Button>
+
         <div style={{ marginTop: 20, fontSize: 12, color: "var(--ink-soft)", textAlign: "center", lineHeight: 1.6 }}>
           {t("loginNote")}
         </div>
+
+        {import.meta.env.DEV ? (
+          <div className="login-demo">
+            <div className="login-demo-title">{t("loginDemoTitle")}</div>
+            <div className="login-demo-hint">{t("loginDemoHint")}</div>
+            <div className="login-demo-grid">
+              {DEMO_USERS.map((demoUser) => (
+                <Button
+                  key={demoUser.role}
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={loading}
+                  onClick={() => quickDemoLogin(demoUser)}
+                >
+                  {roleLabel(demoUser.role)}
+                </Button>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </Card>
     </div>
   );
@@ -1035,7 +1134,7 @@ function AdminTab({ profile, toast, adminSection, onAdminSectionChange }) {
 
   return (
     <StudentProfileProvider>
-    <div>
+    <div className="admin-tab-root">
       <div className="admin-shell">
         {isDesktop && (
           <AdminGroupNav
@@ -1450,14 +1549,23 @@ export default function App() {
     setProfile(data);
   }, []);
 
-  // Restore session from localStorage on every visit (INITIAL_SESSION fires after init)
+  // Restore session from localStorage on every visit
   useEffect(() => {
+    if (!supabase) {
+      setSession(null);
+      return undefined;
+    }
+
+    let active = true;
+
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      if (!active) return;
+      setSession(initialSession ?? null);
+      if (initialSession?.user) loadProfile(initialSession.user);
+    });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "INITIAL_SESSION") {
-        setSession(session ?? null);
-        if (session?.user) loadProfile(session.user);
-        return;
-      }
+      if (event === "INITIAL_SESSION") return;
       if (event === "SIGNED_OUT") {
         setSession(null);
         setProfile(null);
@@ -1475,7 +1583,11 @@ export default function App() {
         setSession(session);
       }
     });
-    return () => subscription.unsubscribe();
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
   }, [loadProfile]);
 
   useEffect(() => {

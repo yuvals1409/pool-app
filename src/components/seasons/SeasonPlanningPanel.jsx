@@ -4,7 +4,6 @@ import AdminSeasonPlanningAnnualTab from "../AdminSeasonPlanningAnnualTab.jsx";
 import AdminSeasonPlanningSummerTab from "../AdminSeasonPlanningSummerTab.jsx";
 
 export default function SeasonPlanningPanel({ toast, seasonId, planningMode = "annual" }) {
-  const { t } = useLang();
   const [mode, setMode] = useState(planningMode);
   const [seasons, setSeasons] = useState([]);
   const [activeSeasonId, setActiveSeasonId] = useState(seasonId || "");

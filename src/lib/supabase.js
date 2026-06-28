@@ -1,15 +1,17 @@
 import { createClient } from "@supabase/supabase-js";
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
+import { SUPABASE_URL, SUPABASE_ANON_KEY, isSupabaseConfigured } from "./config.js";
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storage: localStorage,
-    storageKey: "pool-app-auth",
-  },
-});
+const authOptions = {
+  persistSession: true,
+  autoRefreshToken: true,
+  detectSessionInUrl: true,
+  storage: localStorage,
+  storageKey: "pool-app-auth",
+};
+
+export const supabase = isSupabaseConfigured()
+  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: authOptions })
+  : null;
 
 function fmt(d) {
   return d.toISOString().slice(0, 10);

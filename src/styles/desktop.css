@@ -160,11 +160,37 @@
     width: 100%;
   }
 
-  /* Admin shell */
+  /* Admin shell — rail stays put; only main column scrolls */
+  .app-workspace-content:has(.admin-tab-root) {
+    overflow: hidden;
+  }
+
+  .app-workspace-content:has(.admin-tab-root) > * {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .app-workspace-content:has(.admin-tab-root) .tab-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .admin-tab-root {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
   .admin-shell {
     display: flex;
     gap: var(--space-5);
+    flex: 1;
     min-height: 0;
+    overflow: hidden;
   }
 
   .admin-rail,
@@ -175,6 +201,8 @@
     flex-direction: column;
     gap: 2px;
     padding: 0;
+    align-self: stretch;
+    overflow-y: auto;
   }
 
   .admin-rail .sidebar-btn,
@@ -185,6 +213,8 @@
   .admin-content {
     flex: 1;
     min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
   }
 
   .admin-nav-mobile {

@@ -200,11 +200,7 @@ export default function OfficeTab({ profile, toast }) {
 
   return (
     <div className="office-layout">
-      <div className="page-header">
-        <h1 className="page-title">{t("tabOffice")}</h1>
-      </div>
-
-      <Card style={{ marginTop: 12, marginBottom: 20 }}>
+      <Card style={{ marginBottom: 20 }}>
         <div className="crm-card-title">{t("officeAlertsTitle")}</div>
         {openAlerts.length === 0 ? (
           <EmptyState title={t("alertsEmpty")} style={{ padding: "16px 16px 24px" }} />

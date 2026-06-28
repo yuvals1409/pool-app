@@ -38,6 +38,36 @@
 
 ---
 
+## שלב 3b — הפעלת כניסה עם אימייל וסיסמה
+
+1. **Supabase Dashboard → Authentication → Providers → Email**
+2. הפעל (Enable)
+3. (מומלץ לפיתוח) כבה **Confirm email** — כדי שמשתמשי דמו יוכלו להתחבר מיד
+4. במסך הכניסה: הזן אימייל + סיסמה, או Google
+
+---
+
+## שלב 3c — משתמשי דמו לבדיקות
+
+לאחר שהגדרת `.env` עם `SUPABASE_SERVICE_ROLE_KEY`:
+
+```bash
+npm run seed:demo
+```
+
+נוצרים 4 חשבונות מאושרים (סיסמה לכולם: `Demo1234!`):
+
+| תפקיד | אימייל |
+|-------|--------|
+| שומר | `demo.guard@demo.streamline` |
+| מדריך | `demo.instructor@demo.streamline` |
+| מנהל | `demo.admin@demo.streamline` |
+| משרד | `demo.office@demo.streamline` |
+
+במצב פיתוח (`npm run dev`) מופיעים כפתורי כניסה מהירה למשתמשי הדמו במסך הכניסה.
+
+---
+
 ## שלב 4 — עדכון הקוד
 
 פתח `App.jsx` ועדכן שלוש שורות בראש הקובץ:

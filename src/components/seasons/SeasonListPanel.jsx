@@ -80,11 +80,18 @@ export default function SeasonListPanel({
         const stats = statsById[s.id] || {};
         const lifecycle = seasonLifecycle(s);
         return (
-          <button
-            type="button"
+          <div
             key={s.id}
+            role="button"
+            tabIndex={0}
             className={`seasons-list-item${selectedSeasonId === s.id ? " seasons-list-item--selected" : ""}`}
             onClick={() => onSelectSeason(s.id, "overview")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onSelectSeason(s.id, "overview");
+              }
+            }}
           >
             <div className="seasons-list-item__header">
               <span className="seasons-list-item__name">{s.name}</span>
@@ -107,7 +114,7 @@ export default function SeasonListPanel({
                 </Button>
               </div>
             )}
-          </button>
+          </div>
         );
       })}
     </div>
