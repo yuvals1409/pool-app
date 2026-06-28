@@ -3,52 +3,217 @@ import { useLang, LanguageSwitcher } from "../i18n.jsx";
 import { fmt_time } from "../lib/lessonDates.js";
 import { listAssessmentSlots, registerForAssessment } from "../lib/assessment.js";
 import { getPublicPassUrl } from "../lib/accessPass.js";
+import { LANDING_VIDEO_URL } from "../lib/config.js";
 import {
   PARTICIPANT_GRADES,
   gradeRequired,
   resolveBirthDate,
   validateParticipantFields,
 } from "../lib/participantFields.js";
-import { getWaitlistOfferToken,
+import {
+  getWaitlistOfferToken,
   getWaitlistOffer,
   joinWaitlist,
   registerFromWaitlistOffer,
 } from "../lib/waitlist.js";
-import { getLandingCoursePrices } from "../lib/pricing.js";
 import "../styles/assessment-landing.css";
 
-const LOGO_SRC = "/stream-line-logo.jpeg";
-const LOGO_FALLBACK = "/logo.png";
+const LOGO_SRC = "/stream-line-logo-mark.png";
+const LOGO_FALLBACK = "/stream-line-logo.jpeg";
+const HERO_LOGO_SRC = "/stream-line-logo-mark.png";
+const DEFAULT_VIDEO_ID = "e5_8GMmtdDQ";
+const WEEKDAY_TIMES = ["16:30", "17:15", "18:00"];
+const FRIDAY_TIMES = ["13:30", "14:15", "15:00"];
+
+const BUBBLES = [
+  { left: "8%", size: 14, delay: 0, duration: 11 },
+  { left: "18%", size: 9, delay: 0.8, duration: 8 },
+  { left: "28%", size: 20, delay: 1.2, duration: 14 },
+  { left: "38%", size: 7, delay: 2, duration: 9 },
+  { left: "48%", size: 12, delay: 0.4, duration: 12 },
+  { left: "58%", size: 16, delay: 1.6, duration: 10 },
+  { left: "66%", size: 8, delay: 0.2, duration: 13 },
+  { left: "74%", size: 11, delay: 1, duration: 9.5 },
+  { left: "82%", size: 18, delay: 2.4, duration: 15 },
+  { left: "90%", size: 10, delay: 0.6, duration: 11.5 },
+  { left: "14%", size: 6, delay: 1.8, duration: 7.5 },
+  { left: "54%", size: 9, delay: 2.8, duration: 10.5 },
+];
 
 function normalizePhone(phone) {
   return phone.replace(/\s/g, "").trim();
 }
 
-function WaveDivider() {
-  return (
-    <div className="landing-wave" aria-hidden="true">
-      <svg viewBox="0 0 1440 48" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-        <path
-          d="M0,24 C240,48 480,0 720,24 C960,48 1200,0 1440,24 L1440,48 L0,48 Z"
-          fill="var(--landing-surface)"
-        />
-      </svg>
-    </div>
-  );
+function parseYoutubeId(url) {
+  if (!url) return DEFAULT_VIDEO_ID;
+  const match = url.match(/(?:embed\/|v=|youtu\.be\/)([\w-]{11})/);
+  return match?.[1] || DEFAULT_VIDEO_ID;
 }
 
 function scrollToForm(formRef) {
   formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+function useLandingEffects(rootRef) {
+  const progressRef = useRef(null);
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return undefined;
+
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const bar = progressRef.current;
+    const bubbles = root.querySelector("#sl-bubbles");
+    const heroPhoto = root.querySelector("#sl-hero-photo");
+
+    const counters = Array.from(root.querySelectorAll("[data-count]"));
+    const reveals = Array.from(root.querySelectorAll("[data-reveal]"));
+    const revealItems = (el) => (el.hasAttribute("data-stagger") ? Array.from(el.children) : [el]);
+
+    if (!reduce) {
+      counters.forEach((el) => { el.textContent = `0${el.dataset.suffix || ""}`; });
+    }
+
+    const runCount = (el) => {
+      const target = Number(el.dataset.count);
+      const suffix = el.dataset.suffix || "";
+      const duration = 1200;
+      const start = performance.now();
+      const step = (now) => {
+        const progress = Math.min(1, (now - start) / duration);
+        const eased = 1 - (1 - progress) ** 3;
+        el.textContent = `${Math.round(target * eased).toLocaleString("en-US")}${suffix}`;
+        if (progress < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    };
+
+    if (!reduce) {
+      reveals.forEach((el) => {
+        revealItems(el).forEach((item, index) => {
+          item.style.opacity = "0";
+          item.style.transform = "translateY(30px)";
+          item.style.transition = "opacity .65s cubic-bezier(.22,.61,.36,1), transform .65s cubic-bezier(.22,.61,.36,1)";
+          item.style.transitionDelay = `${el.hasAttribute("data-stagger") ? index * 90 : 0}ms`;
+        });
+      });
+    }
+
+    const showCounter = (el) => {
+      if (el.dataset.done) return;
+      el.dataset.done = "1";
+      runCount(el);
+    };
+
+    const showReveal = (el) => {
+      if (el.dataset.done) return;
+      el.dataset.done = "1";
+      revealItems(el).forEach((item) => {
+        item.style.opacity = "1";
+        item.style.transform = "none";
+      });
+    };
+
+    const forceReveal = (el) => {
+      if (el.dataset.done) return;
+      el.dataset.done = "1";
+      revealItems(el).forEach((item) => {
+        item.style.transition = "none";
+        item.style.opacity = "1";
+        item.style.transform = "none";
+      });
+    };
+
+    let ticking = false;
+    const applyScroll = () => {
+      ticking = false;
+      const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+      const max = (document.documentElement.scrollHeight - window.innerHeight) || 1;
+      if (bar) bar.style.width = `${Math.max(0, Math.min(100, (scrollTop / max) * 100))}%`;
+      if (!reduce && bubbles) bubbles.style.transform = `translateY(${scrollTop * 0.22}px)`;
+      if (!reduce && heroPhoto) heroPhoto.style.transform = `translateY(${scrollTop * -0.045}px)`;
+    };
+
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(applyScroll);
+      }
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    applyScroll();
+
+    if (reduce || !("IntersectionObserver" in window)) {
+      counters.forEach(showCounter);
+      reveals.forEach(showReveal);
+      return () => {
+        window.removeEventListener("scroll", onScroll);
+        window.removeEventListener("resize", onScroll);
+      };
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const el = entry.target;
+        if (el.dataset.count != null) showCounter(el);
+        else showReveal(el);
+        observer.unobserve(el);
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -6% 0px" });
+
+    counters.forEach((el) => observer.observe(el));
+    reveals.forEach((el) => observer.observe(el));
+
+    const fallback = window.setTimeout(() => {
+      counters.forEach(showCounter);
+      reveals.forEach(forceReveal);
+    }, 1300);
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      observer.disconnect();
+      window.clearTimeout(fallback);
+    };
+  }, [rootRef]);
+
+  return progressRef;
+}
+
+function DayChip({ label, variant = "default" }) {
+  return <span className={`landing-day-chip${variant === "friday" ? " friday" : ""}`}>{label}</span>;
+}
+
+function TimeChips({ times, variant = "default" }) {
+  return (
+    <div className="landing-schedule-times">
+      {times.map((time) => (
+        <span
+          key={time}
+          className={`landing-time-chip${variant === "friday" ? " friday" : ""}`}
+          dir="ltr"
+        >
+          {time}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export default function AssessmentRegisterPage({ toast }) {
   const { t, fmtDateDay, dir } = useLang();
   const offerToken = getWaitlistOfferToken();
+  const rootRef = useRef(null);
   const formRef = useRef(null);
+  const progressRef = useLandingEffects(rootRef);
+  const videoId = parseYoutubeId(LANDING_VIDEO_URL);
+
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSlotId, setSelectedSlotId] = useState("");
-  const [coursePrices, setCoursePrices] = useState({ external: 1600, subscriber: 1400, shareholder: 1250 });
   const [childName, setChildName] = useState("");
   const [childAge, setChildAge] = useState("");
   const [childGender, setChildGender] = useState("");
@@ -61,12 +226,6 @@ export default function AssessmentRegisterPage({ toast }) {
   const [waitlistSuccess, setWaitlistSuccess] = useState(null);
   const [offer, setOffer] = useState(null);
   const [showStickyCta, setShowStickyCta] = useState(false);
-
-  useEffect(() => {
-    getLandingCoursePrices()
-      .then(setCoursePrices)
-      .catch(() => {});
-  }, []);
 
   const loadSlots = async () => {
     setLoading(true);
@@ -242,6 +401,33 @@ export default function AssessmentRegisterPage({ toast }) {
     setSubmitting(false);
   };
 
+  const expectItems = [
+    { icon: "🏅", tone: "blue", text: t("landingExpect1") },
+    { icon: "⭐", tone: "coral", text: t("landingExpect2") },
+    { icon: "👥", tone: "blue", text: t("landingExpect3") },
+    { icon: "🏊", tone: "blue", text: t("landingExpect4") },
+  ];
+
+  const prepItems = [
+    { icon: "🧢", text: t("landingPrepCap") },
+    { icon: "🧺", text: t("landingPrepTowel") },
+    { icon: "👙", text: t("landingPrepSwimsuit") },
+    { icon: "🥽", text: t("landingPrepGoggles") },
+    { icon: "😊", text: t("landingPrepMood") },
+  ];
+
+  const schedulePairs = [
+    { days: [t("landingDaySun"), t("landingDayWed")], times: WEEKDAY_TIMES },
+    { days: [t("landingDayMon"), t("landingDayThu")], times: WEEKDAY_TIMES },
+    {
+      split: true,
+      blocks: [
+        { label: t("landingScheduleWedHours"), days: [t("landingDayTue")], times: WEEKDAY_TIMES },
+        { label: t("landingScheduleFriHours"), days: [t("landingDayFri")], times: FRIDAY_TIMES, friday: true },
+      ],
+    },
+  ];
+
   if (loading) {
     return (
       <div className="assessment-landing" dir={dir}>
@@ -275,7 +461,7 @@ export default function AssessmentRegisterPage({ toast }) {
               <div className="result-card ok" style={{ padding: 12 }}>{t("waitlistOfferUsed")}</div>
             ) : (
               <button
-                className="landing-cta-btn"
+                className="landing-cta-btn landing-cta-btn--hero"
                 type="button"
                 disabled={submitting}
                 onClick={handleOfferRegister}
@@ -291,184 +477,240 @@ export default function AssessmentRegisterPage({ toast }) {
   }
 
   const hasAnySlot = slots.length > 0;
-  const benefits = [
-    t("landingBenefit1"),
-    t("landingBenefit2"),
-    t("landingBenefit3"),
-    t("landingBenefit4"),
-  ];
-  const benefitIcons = ["🏊", "👥", "⭐", "🥇"];
-  const prepItems = [
-    { icon: "🥽", label: t("landingPrepGoggles") },
-    { icon: "👙", label: t("landingPrepSwimsuit") },
-    { icon: "🧺", label: t("landingPrepTowel") },
-    { icon: "🎩", label: t("landingPrepCap") },
-    { icon: "😊", label: t("landingPrepMood") },
-  ];
 
   return (
-    <div className="assessment-landing" dir={dir}>
-      <nav className="landing-nav">
-        <div className="landing-nav-brand">
-          <img src={LOGO_SRC} alt={t("logoAlt")} onError={(e) => { e.currentTarget.src = LOGO_FALLBACK; }} />
-          <span>Stream Line</span>
-        </div>
-        <div className="landing-nav-actions">
-          <LanguageSwitcher compact />
-          <button
-            type="button"
-            className="landing-cta-btn"
-            onClick={() => scrollToForm(formRef)}
-          >
-            <span className="landing-nav-cta-text">{t("landingHeroCta")}</span>
-            <span aria-hidden="true">🏊</span>
-          </button>
-        </div>
-      </nav>
+    <div className="assessment-landing" dir={dir} ref={rootRef}>
+      <div ref={progressRef} id="sl-progress" className="landing-progress" aria-hidden="true" />
+
+      <div className="landing-lang-float">
+        <LanguageSwitcher compact className="landing-lang-switcher" />
+      </div>
 
       <header className="landing-hero">
-        <div className="landing-hero-bubbles" aria-hidden="true">
-          <span className="landing-bubble landing-bubble-1" />
-          <span className="landing-bubble landing-bubble-2" />
-          <span className="landing-bubble landing-bubble-3" />
+        <div id="sl-bubbles" className="landing-hero-bubbles-rise" aria-hidden="true">
+          {BUBBLES.map((bubble) => (
+            <span
+              key={`${bubble.left}-${bubble.delay}`}
+              style={{
+                left: bubble.left,
+                width: bubble.size,
+                height: bubble.size,
+                animationDuration: `${bubble.duration}s`,
+                animationDelay: `${bubble.delay}s`,
+              }}
+            />
+          ))}
         </div>
+
         <div className="landing-hero-inner">
-          <span className="landing-badge">{t("landingHeroBadge")}</span>
+          <div className="landing-hero-logo-wrap">
+            <img
+              className="landing-hero-logo"
+              src={HERO_LOGO_SRC}
+              alt={t("logoAlt")}
+              onError={(e) => { e.currentTarget.src = LOGO_FALLBACK; }}
+            />
+          </div>
+
           <h1>{t("landingHeroTitle")}</h1>
           <p className="landing-hero-sub">{t("landingHeroSub")}</p>
-          <button
-            type="button"
-            className="landing-cta-btn"
-            onClick={() => scrollToForm(formRef)}
-          >
-            {t("landingHeroCta")}
-          </button>
-          <p className="landing-hero-note">{t("landingHeroNote")}</p>
+
+          <div className="landing-hero-actions">
+            <button type="button" className="landing-cta-btn landing-cta-btn--hero" onClick={() => scrollToForm(formRef)}>
+              {t("landingHeroCta")}
+            </button>
+            <span className="landing-hero-note">{t("landingHeroNote")}</span>
+          </div>
+
+          <div id="sl-hero-photo" className="landing-hero-video">
+            <iframe
+              src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&rel=0&playsinline=1`}
+              title={t("landingVideoTitle")}
+              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+              allowFullScreen
+            />
+          </div>
+
+          <div className="landing-hero-trust" data-reveal data-stagger>
+            <div className="landing-trust-item">
+              <div className="landing-trust-emoji">💙</div>
+              <div className="landing-trust-label">{t("landingTrustApproach")}</div>
+            </div>
+            <div className="landing-trust-item">
+              <div className="landing-trust-number" data-count="700" data-suffix="+" dir="ltr">700+</div>
+              <div className="landing-trust-label">{t("landingTrustChildrenCount")}</div>
+            </div>
+            <div className="landing-trust-item">
+              <div className="landing-trust-number" data-count="20" data-suffix="+" dir="ltr">20+</div>
+              <div className="landing-trust-label">{t("landingTrustYearsCount")}</div>
+            </div>
+          </div>
         </div>
-        <WaveDivider />
+
+        <div className="landing-hero-waves" aria-hidden="true">
+          <div className="landing-wave-track landing-wave-track--back">
+            <svg viewBox="0 0 1440 100" preserveAspectRatio="none" className="landing-wave-svg" aria-hidden="true">
+              <path d="M0,52 C360,88 720,16 1080,52 C1260,68 1350,44 1440,52 V100 H0 Z" fill="#90E0EF" />
+            </svg>
+            <svg viewBox="0 0 1440 100" preserveAspectRatio="none" className="landing-wave-svg" aria-hidden="true">
+              <path d="M0,52 C360,88 720,16 1080,52 C1260,68 1350,44 1440,52 V100 H0 Z" fill="#90E0EF" />
+            </svg>
+          </div>
+          <div className="landing-wave-track landing-wave-track--front">
+            <svg viewBox="0 0 1440 100" preserveAspectRatio="none" className="landing-wave-svg" aria-hidden="true">
+              <path d="M0,58 C480,96 960,20 1440,58 V100 H0 Z" fill="#F0F8FF" />
+            </svg>
+            <svg viewBox="0 0 1440 100" preserveAspectRatio="none" className="landing-wave-svg" aria-hidden="true">
+              <path d="M0,58 C480,96 960,20 1440,58 V100 H0 Z" fill="#F0F8FF" />
+            </svg>
+          </div>
+        </div>
       </header>
 
-      <div className="landing-required-banner" role="note">
-        <span className="landing-required-icon" aria-hidden="true">📋</span>
-        <span>{t("landingHeroNote")}</span>
-      </div>
-
-      <div className="landing-stats">
-        <div className="landing-stat">
-          <div className="landing-stat-icon">👥</div>
-          <div className="landing-stat-value">6</div>
-          <div className="landing-stat-label">{t("landingStatGroups")}</div>
+      <section className="landing-section landing-stats-section">
+        <div className="landing-stats" data-reveal>
+          <div className="landing-stat">
+            <div className="landing-stat-icon">⏱️</div>
+            <div className="landing-stat-value landing-stat-value--ltr" data-count="45" dir="ltr">45</div>
+            <div className="landing-stat-label">{t("landingStatMinutes")}</div>
+          </div>
+          <div className="landing-stat">
+            <div className="landing-stat-icon">📅</div>
+            <div className="landing-stat-value landing-stat-value--ltr" data-count="12" dir="ltr">12</div>
+            <div className="landing-stat-label">{t("landingStatSessions")}</div>
+          </div>
+          <div className="landing-stat">
+            <div className="landing-stat-icon">👥</div>
+            <div className="landing-stat-value landing-stat-value--ltr" data-count="6" dir="ltr">6</div>
+            <div className="landing-stat-label">{t("landingStatGroupMax")}</div>
+          </div>
         </div>
-        <div className="landing-stat">
-          <div className="landing-stat-icon">📅</div>
-          <div className="landing-stat-value">12</div>
-          <div className="landing-stat-label">{t("landingStatSessions")}</div>
-        </div>
-        <div className="landing-stat">
-          <div className="landing-stat-icon">⏱️</div>
-          <div className="landing-stat-value">45</div>
-          <div className="landing-stat-label">{t("landingStatDuration")}</div>
-        </div>
-      </div>
+      </section>
 
       <section className="landing-section">
-        <h2 className="landing-section-title">{t("landingBenefitsTitle")}</h2>
-        <p className="landing-section-sub">{t("landingSeasonStart")}</p>
-        <div className="landing-benefits">
-          {benefits.map((text, index) => (
-            <div key={text} className="landing-benefit">
-              <span className="landing-benefit-icon" aria-hidden="true">{benefitIcons[index]}</span>
-              <span className="landing-benefit-text">{text}</span>
+        <div className="landing-section-head">
+          <div className="landing-section-eyebrow">{t("landingSectionEyebrow")}</div>
+          <h2 className="landing-section-title">{t("landingExpectTitle")}</h2>
+        </div>
+        <div className="landing-benefits" data-reveal data-stagger>
+          {expectItems.map((item) => (
+            <div key={item.text} className="landing-benefit-card">
+              <div className={`landing-benefit-icon-box tone-${item.tone}`}>{item.icon}</div>
+              <p>{item.text}</p>
             </div>
           ))}
         </div>
       </section>
 
       <section className="landing-section landing-course-section">
-        <h2 className="landing-section-title">{t("landingSeasonStart")}</h2>
-        <div className="landing-card-block landing-course-card">
-          <h3>📅 {t("landingCourseTitle")}</h3>
-          <p className="landing-course-lead">{t("landingCourseSub")}</p>
-          <div className="landing-course-grid">
-            <div className="landing-course-block">
-              <div className="landing-course-label">{t("landingCourseDays")}</div>
-              <div className="landing-schedule-row">
-                {["landingDayPair1", "landingDayPair2", "landingDayPair3"].map((key) => (
-                  <span key={key} className="landing-schedule-chip">{t(key)}</span>
-                ))}
-              </div>
-              <div className="landing-note">{t("landingCourseNote")}</div>
+        <div className="landing-section-head">
+          <div className="landing-section-eyebrow">{t("landingScheduleEyebrow")}</div>
+          <h2 className="landing-section-title">{t("landingCourseTitle")}</h2>
+        </div>
+
+        <div className="landing-course-panel" data-reveal>
+          <div className="landing-course-panel-head">
+            <div className="landing-course-panel-icon">🏊</div>
+            <div>
+              <div className="landing-course-panel-title">{t("landingCourseTitle")}</div>
+              <div className="landing-course-panel-sub">{t("landingScheduleSubtitle")}</div>
             </div>
-            <div className="landing-course-block">
-              <div className="landing-course-label">{t("landingCourseWeekdayHours")}</div>
-              <div className="landing-schedule-times">
-                {["16:30", "17:15", "18:00"].map((time) => (
-                  <span key={time} className="landing-time-chip">{time}</span>
-                ))}
-              </div>
-            </div>
-            <div className="landing-course-block">
-              <div className="landing-course-label">{t("landingCourseFridayHours")}</div>
-              <div className="landing-schedule-times">
-                {["13:30", "14:15", "15:00"].map((time) => (
-                  <span key={time} className="landing-time-chip">{time}</span>
-                ))}
-              </div>
-            </div>
+          </div>
+
+          <div className="landing-schedule-lock">
+            <span aria-hidden="true">🔒</span>
+            <span>{t("landingScheduleLock")}</span>
+          </div>
+
+          <div className="landing-schedule-rows">
+            {schedulePairs.map((pair) => (
+              pair.split ? (
+                <div key="split" className="landing-schedule-row landing-schedule-row--split">
+                  <div className="landing-schedule-row-days">
+                    <DayChip label={pair.blocks[0].days[0]} />
+                    <span className="landing-schedule-plus">+</span>
+                    <DayChip label={pair.blocks[1].days[0]} variant="friday" />
+                  </div>
+                  <div className="landing-schedule-split-blocks">
+                    {pair.blocks.map((block) => (
+                      <div key={block.label} className="landing-schedule-split-block">
+                        <div className={`landing-schedule-hours-label${block.friday ? " friday" : ""}`}>{block.label}</div>
+                        <TimeChips times={block.times} variant={block.friday ? "friday" : "default"} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div key={pair.days.join("-")} className="landing-schedule-row">
+                  <div className="landing-schedule-row-days">
+                    <DayChip label={pair.days[0]} />
+                    <span className="landing-schedule-plus">+</span>
+                    <DayChip label={pair.days[1]} />
+                  </div>
+                  <div className="landing-schedule-row-times">
+                    <div className="landing-schedule-hours-label">{t("landingScheduleHours")}</div>
+                    <TimeChips times={pair.times} />
+                  </div>
+                </div>
+              )
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="landing-section" style={{ paddingTop: 0 }}>
-        <h2 className="landing-section-title">{t("landingPricingTitle")}</h2>
-        <p className="landing-section-sub">{t("landingPricingSub")}</p>
-        <div className="landing-pricing">
+      <section className="landing-section">
+        <div className="landing-section-head">
+          <div className="landing-section-eyebrow">{t("landingPricingEyebrow")}</div>
+          <h2 className="landing-section-title">{t("landingPricingTitle")}</h2>
+        </div>
+        <div className="landing-pricing" data-reveal>
           <div className="landing-price-card">
-            <div className="landing-price-tier">{t("landingPricingExternal")}</div>
-            <div className="landing-price-amount">{coursePrices.external.toLocaleString("he-IL")} <span>₪</span></div>
+            <div className="landing-price-tier">{t("landingPriceMember")}</div>
+            <div className="landing-price-amount" dir="ltr">₪1,250</div>
           </div>
           <div className="landing-price-card featured">
-            <div className="landing-price-tier">{t("landingPricingMember")}</div>
-            <div className="landing-price-amount">{coursePrices.subscriber.toLocaleString("he-IL")} <span>₪</span></div>
+            <div className="landing-price-badge">{t("landingPriceRecommended")}</div>
+            <div className="landing-price-tier">{t("landingPriceSubscriber")}</div>
+            <div className="landing-price-amount featured" dir="ltr">₪1,400</div>
           </div>
           <div className="landing-price-card">
-            <div className="landing-price-tier">{t("landingPricingShareholder")}</div>
-            <div className="landing-price-amount">{coursePrices.shareholder.toLocaleString("he-IL")} <span>₪</span></div>
+            <div className="landing-price-tier">{t("landingPriceExternal")}</div>
+            <div className="landing-price-amount" dir="ltr">₪1,600</div>
           </div>
         </div>
       </section>
 
       <section className="landing-section landing-assessment-section">
-        <div className="landing-card-block landing-assessment-card">
-          <h3>🎯 {t("landingAssessmentTitle")}</h3>
-          <p className="landing-assessment-lead">{t("landingAssessmentSub")}</p>
-          <div className="landing-assessment-bring">{t("landingAssessmentBring")}</div>
-          <ul className="landing-prep-list">
-            {prepItems.map(({ icon, label }) => (
-              <li key={label}>
-                <span aria-hidden="true">{icon}</span>
-                <span>{label}</span>
-              </li>
-            ))}
-          </ul>
-          <div className="landing-reminder">
-            <span className="landing-reminder-icon" aria-hidden="true">🔔</span>
-            <span>{t("landingAssessmentReminder")}</span>
+        <div className="landing-assessment-card" data-reveal>
+          <div className="landing-assessment-waves" aria-hidden="true" />
+          <div className="landing-assessment-inner">
+            <h2 className="landing-assessment-title">{t("landingAssessmentTitle")}</h2>
+            <p className="landing-assessment-lead">{t("landingAssessmentSub")}</p>
+            <p className="landing-assessment-bring">{t("landingAssessmentBring")}</p>
+            <div className="landing-prep-pills">
+              {prepItems.map((item) => (
+                <span key={item.text} className="landing-prep-pill">
+                  <span aria-hidden="true">{item.icon}</span>
+                  {item.text}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       <section className="landing-section landing-form-section" ref={formRef} id="register">
-        <h2 className="landing-section-title">{t("landingFormTitle")}</h2>
-        <p className="landing-section-sub">{t("landingFormSub")}</p>
+        <div className="landing-section-head">
+          <h2 className="landing-section-title">{t("landingFormTitle")}</h2>
+          <p className="landing-section-sub">{t("assessmentSubtitle")}</p>
+        </div>
 
         {!hasAnySlot ? (
           <div className="empty" style={{ textAlign: "center" }}>
-            <div className="empty-icon">📅</div>
             <div className="empty-text">{t("noSlotsAvailable")}</div>
           </div>
         ) : (
-          <div className="landing-form-card">
+          <div className="landing-form-card" data-reveal>
             <form onSubmit={handleSubmit}>
               <div className="field">
                 <label className="label">{t("selectAssessmentSlot")}</label>
@@ -505,13 +747,12 @@ export default function AssessmentRegisterPage({ toast }) {
               </div>
 
               <div className="field">
-                <label className="label" htmlFor="child-name">{t("child")}</label>
+                <label className="label" htmlFor="child-name">{t("landingChildNameLabel")}</label>
                 <input
                   id="child-name"
                   className="input"
                   value={childName}
                   onChange={(e) => setChildName(e.target.value)}
-                  placeholder={t("child")}
                   autoComplete="name"
                 />
               </div>
@@ -527,25 +768,10 @@ export default function AssessmentRegisterPage({ toast }) {
                     max={120}
                     value={childAge}
                     onChange={(e) => setChildAge(e.target.value)}
-                    placeholder={t("childAgeOptional")}
                     dir="ltr"
                   />
                 </div>
 
-                <div className="field">
-                  <label className="label" htmlFor="birth-date">{t("participantBirthDateLabel")}</label>
-                  <input
-                    id="birth-date"
-                    className="input"
-                    type="date"
-                    value={birthDate}
-                    onChange={(e) => setBirthDate(e.target.value)}
-                    dir="ltr"
-                  />
-                </div>
-              </div>
-
-              <div className="landing-form-fields-row">
                 <div className="field">
                   <label className="label" htmlFor="child-gender">{t("participantGenderLabel")}</label>
                   <select
@@ -558,6 +784,20 @@ export default function AssessmentRegisterPage({ toast }) {
                     <option value="male">{t("participantGender_male")}</option>
                     <option value="female">{t("participantGender_female")}</option>
                   </select>
+                </div>
+              </div>
+
+              <div className="landing-form-fields-row">
+                <div className="field">
+                  <label className="label" htmlFor="birth-date">{t("participantBirthDateLabel")}</label>
+                  <input
+                    id="birth-date"
+                    className="input"
+                    type="date"
+                    value={birthDate}
+                    onChange={(e) => setBirthDate(e.target.value)}
+                    dir="ltr"
+                  />
                 </div>
 
                 <div className="field">
@@ -585,7 +825,7 @@ export default function AssessmentRegisterPage({ toast }) {
               </div>
 
               <div className="field">
-                <label className="label" htmlFor="parent-name">{t("parentNameOptional")}</label>
+                <label className="label" htmlFor="parent-name">{t("landingParentNameLabel")}</label>
                 <input
                   id="parent-name"
                   className="input"
@@ -596,7 +836,7 @@ export default function AssessmentRegisterPage({ toast }) {
               </div>
 
               <div className="field">
-                <label className="label" htmlFor="parent-phone">{t("parentPhone")}</label>
+                <label className="label" htmlFor="parent-phone">{t("landingParentPhoneLabel")}</label>
                 <input
                   id="parent-phone"
                   className="input"
@@ -620,9 +860,9 @@ export default function AssessmentRegisterPage({ toast }) {
                 </div>
               )}
 
-              <button className="landing-cta-btn" type="submit" disabled={submitting} style={{ width: "100%" }}>
+              <button className="landing-cta-btn landing-cta-btn--submit" type="submit" disabled={submitting} style={{ width: "100%" }}>
                 {submitting ? <><div className="spinner" /> {t("saving")}</> : (
-                  isFull ? t("joinWaitlist") : t("registerForAssessment")
+                  isFull ? t("joinWaitlist") : t("landingFormSubmit")
                 )}
               </button>
             </form>
@@ -630,40 +870,20 @@ export default function AssessmentRegisterPage({ toast }) {
         )}
       </section>
 
-      <section className="landing-section" style={{ paddingTop: 0 }}>
-        <div className="landing-trust">
-          <div className="landing-trust-item">
-            <div className="landing-trust-number">20+</div>
-            <div className="landing-trust-label">{t("landingTrustYears")}</div>
-          </div>
-          <div className="landing-trust-item">
-            <div className="landing-trust-number">100+</div>
-            <div className="landing-trust-label">{t("landingTrustChildren")}</div>
-          </div>
-          <div className="landing-trust-item">
-            <div className="landing-trust-number">💙</div>
-            <div className="landing-trust-label">{t("landingTrustApproach")}</div>
-          </div>
-        </div>
-      </section>
-
       <footer className="landing-footer">
-        <div className="landing-slogan">"{t("landingSlogan")}"</div>
-        <div className="landing-footer-waiting">{t("landingFooterWaiting")}</div>
-        <div className="landing-contact">
-          <div className="landing-contact-name">{t("landingContactName")}</div>
-          <a href="tel:0525458965">052-5458965</a>
+        <div className="landing-footer-waves" aria-hidden="true" />
+        <div className="landing-footer-inner">
+          <h2 className="landing-slogan">&ldquo;{t("landingSlogan")}&rdquo;</h2>
+          <p className="landing-footer-waiting">{t("landingFooterWaiting")}</p>
+          <p className="landing-footer-team">{t("landingFooterTeam")}</p>
+          <a href="tel:0525458965" className="landing-footer-phone" dir="ltr">052-5458965</a>
+          <p className="landing-location">{t("landingLocation")}</p>
         </div>
-        <div className="landing-location">{t("landingLocation")}</div>
       </footer>
 
       {showStickyCta && (
         <div className="landing-sticky-cta">
-          <button
-            type="button"
-            className="landing-cta-btn"
-            onClick={() => scrollToForm(formRef)}
-          >
+          <button type="button" className="landing-cta-btn landing-cta-btn--hero" onClick={() => scrollToForm(formRef)}>
             {t("landingHeroCta")}
           </button>
         </div>
