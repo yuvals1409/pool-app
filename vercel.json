@@ -4,6 +4,7 @@
     { "source": "/t/:token", "destination": "/index.html" },
     { "source": "/register/assessment", "destination": "/index.html" },
     { "source": "/assessment", "destination": "/index.html" },
-    { "source": "/register/summer", "destination": "/index.html" }
+    { "source": "/register/summer", "destination": "/index.html" },
+    { "source": "/health-declaration", "destination": "/index.html" }
   ]
 }
