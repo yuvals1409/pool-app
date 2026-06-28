@@ -1,6 +1,12 @@
 export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 export const ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL || "").toLowerCase();
+
+export function isSupabaseConfigured() {
+  return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+}
+export const LANDING_VIDEO_URL = import.meta.env.VITE_LANDING_VIDEO_URL || "";
+
 export const VENUE_MAPS_URL = "https://maps.google.com/?q=רחוב+דגניה+1,+פתח+תקווה";
 export const VENUE_NAME = "קאנטרי נווה עוז";
 export const VENUE_ADDRESS = "רח' דגניה 1, פתח תקווה";
