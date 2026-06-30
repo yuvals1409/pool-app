@@ -14,6 +14,10 @@ npm run test:e2e      # Playwright — E2E (desktop + mobile)
 npm run build         # בניית production
 npm run seed:demo     # משתמשי דמו ב-Supabase
 npm run seed:e2e      # fixtures קבועים לבדיקות E2E (אחרי seed:demo)
+npm run db:advisors   # Supabase advisors מקומי (אחרי supabase start)
+npm run db:advisors:security  # advisors — רק אבטחה
+npm run db:advisors:remote    # advisors על פרויקט מקושר
+npm run tools:verify  # בדיקת supabase CLI + gh
 ```
 
 לפני כל commit רצים אוטומטית `lint-staged` + `npm test` (Husky).
@@ -70,6 +74,18 @@ npm run test:e2e
 | `E2E_LESSON_ID` | `e2e00002-0000-4000-8000-000000000002` |
 | `E2E_PASS_TOKEN` | `e2e00003-0000-4000-8000-000000000003` |
 | `E2E_GROUP_SESSION_ID` | `e2e00005-0000-4000-8000-000000000005` |
+| `SUPABASE_ACCESS_TOKEN` | ל-workflow DB Advisors — Access Token מ-Supabase |
+| `SUPABASE_PROJECT_REF` | ref מתוך `VITE_SUPABASE_URL` (למשל `abcdefghijklmnop`) |
+
+### DB Advisors (workflow נפרד)
+
+קובץ [`.github/workflows/db-advisors.yml`](.github/workflows/db-advisors.yml) רץ על כל PR/push ל-`main` ובודק אבטחת DB בפרויקט המקושר (`supabase db advisors --linked --type security`).
+
+בלי `SUPABASE_ACCESS_TOKEN` ו-`SUPABASE_PROJECT_REF` — ה-workflow ייכשל.
+
+### Dependabot
+
+[`.github/dependabot.yml`](.github/dependabot.yml) פותח PRs שבועיים לעדכוני npm ו-GitHub Actions.
 
 ב-CI רצים `seed:demo` ו-`seed:e2e` לפני `test:e2e` (כש-`SUPABASE_SERVICE_ROLE_KEY` מוגדר).
 

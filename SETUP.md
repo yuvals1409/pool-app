@@ -8,8 +8,32 @@
 
 - **Node.js 22** (או 20+)
 - חשבון [Supabase](https://supabase.com)
-- (אופציונלי) [Supabase CLI](https://supabase.com/docs/guides/cli) — `npx supabase` או `brew install supabase/tap/supabase`
+- **[Supabase CLI](https://supabase.com/docs/guides/cli)** — `brew install supabase/tap/supabase` (או `npx supabase`)
+- **[GitHub CLI](https://cli.github.com)** — `brew install gh`
 - (אופציונלי) חשבון [Sentry](https://sentry.io) לניטור שגיאות בפרודקשן
+
+### התקנת כלי CLI (פעם אחת)
+
+```bash
+brew install supabase/tap/supabase
+brew install gh
+gh auth login
+supabase login
+```
+
+אימות:
+
+```bash
+npm run tools:verify
+supabase --version
+gh --version
+```
+
+חיבור הפרויקט ל-Supabase remote:
+
+```bash
+supabase link --project-ref <ref>   # ref מתוך VITE_SUPABASE_URL
+```
 
 ---
 
@@ -225,7 +249,7 @@ pool-app/
 ת: לא. דף הכרטיס (`?ticket=UUID`) פתוח. רק צוות (מדריך/שומר/מנהל/משרד) מתחבר.
 
 **ש: איך מוסיפים שינוי לסכמת DB?**  
-ת: `supabase migration new <name>` → עריכה → `supabase db reset` (מקומי) → `supabase db push` (פרודקשן). ראה [`supabase/README.md`](supabase/README.md).
+ת: `supabase migration new <name>` → עריכה → `supabase db reset` (מקומי) → `npm run db:advisors` → [`docs/rls-tester.md`](docs/rls-tester.md) → `npm run db:advisors:remote` → `supabase db push` (פרודקשן). ראה [`supabase/README.md`](supabase/README.md).
 
 **ש: מה עם הקבצים הישנים `supabase_migration_*.sql`?**  
 ת: הועברו ל-`supabase/migrations/archive/` לתיעוד. ה-baseline כולל את כולם.
@@ -238,12 +262,73 @@ pool-app/
 ## פקודות שימושיות
 
 ```bash
-npm run dev           # שרת פיתוח
-npm run build         # בניית production
-npm run lint          # ESLint
-npm test              # Vitest
-npm run test:e2e      # Playwright
-npm run seed:demo     # משתמשי דמו
+npm run dev              # שרת פיתוח
+npm run build            # בניית production
+npm run lint             # ESLint
+npm test                 # Vitest
+npm run test:e2e         # Playwright
+npm run seed:demo        # משתמשי דמו
+npm run db:advisors      # בדיקת אבטחה/ביצועים מקומית (אחרי supabase start)
+npm run db:advisors:remote  # advisors על פרויקט מקושר
+npm run tools:verify     # בדיקה ש-supabase ו-gh מותקנים
 ```
 
 פרטים נוספים: [`README.md`](README.md)
+
+---
+
+## Supabase Advisors
+
+אחרי `supabase start` ו-`supabase db reset`:
+
+```bash
+npm run db:advisors           # כל הבדיקות (מקומי)
+npm run db:advisors:security  # רק אבטחה
+npm run db:advisors:remote    # פרויקט מקושר (דורש supabase login)
+```
+
+ב-CI רץ workflow נפרד: [`.github/workflows/db-advisors.yml`](.github/workflows/db-advisors.yml).
+
+Secrets נדרשים ב-GitHub → Settings → Secrets → Actions:
+
+| Secret | ערך |
+|--------|-----|
+| `SUPABASE_ACCESS_TOKEN` | Supabase Dashboard → Account → Access Tokens |
+| `SUPABASE_PROJECT_REF` | ה-ref מתוך `VITE_SUPABASE_URL` |
+
+---
+
+## RLS Tester
+
+כלי Dashboard לבדיקת מי רואה מה. מדריך מלא: [`docs/rls-tester.md`](docs/rls-tester.md).
+
+הפעלה חד-פעמית: Supabase Dashboard → תמונת פרופיל → **Feature Previews** → **RLS Tester**.
+
+---
+
+## עבודה עם GitHub CLI
+
+| פקודה | שימוש |
+|-------|-------|
+| `gh pr create` | פתיחת PR |
+| `gh pr checks` | סטטוס CI על PR נוכחי |
+| `gh run list` | רשימת ריצות Actions |
+| `gh run watch` | מעקב אחרי ריצה פעילה |
+| `gh pr view --comments` | תגובות review |
+| `gh secret set NAME` | הגדרת secret ב-repo |
+
+סקריפט עזר:
+
+```bash
+./scripts/gh-pr-status.sh
+```
+
+---
+
+## Dependabot
+
+קובץ [`.github/dependabot.yml`](.github/dependabot.yml) מגדיר עדכוני תלויות שבועיים ל-npm ו-GitHub Actions.
+
+ודא שב-GitHub → **Settings → Code security** מופעלים:
+- Dependabot alerts
+- Dependabot security updates

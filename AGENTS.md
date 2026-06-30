@@ -66,6 +66,7 @@
 - **Prefer, לא forbid** — פיצ'רים חדשים מותרים; שמור על DS v2, RTL, light-only, Supabase ו-permissions קיימים.
 - **משימות מעורבות:** דומיין/נתונים → עיצוב → ביצוע.
 - **משימות גדולות:** פיצול ל-subagents עם תיאור תחום מפורש.
+- **שינויי DB:** אחרי migration — `npm run db:advisors` (מקומי) + RLS Tester ([`docs/rls-tester.md`](docs/rls-tester.md)) לפני push לפרודקשן.
 
 ## דוגמאות לבדיקה
 

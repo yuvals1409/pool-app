@@ -41,6 +41,9 @@ supabase link --project-ref <ref>   # ref מ-VITE_SUPABASE_URL
 supabase migration new my_feature_name
 # ערוך את הקובץ ב-supabase/migrations/
 supabase db reset          # בדיקה מקומית
+npm run db:advisors        # advisors מקומי
+# RLS Tester ב-Dashboard — ראה docs/rls-tester.md
+npm run db:advisors:remote # advisors על פרויקט מקושר
 supabase db push           # פריסה לפרודקשן (אחרי review)
 ```
 
@@ -52,6 +55,14 @@ supabase db push           # פריסה לפרודקשן (אחרי review)
 | `supabase db diff` | הבדל בין מקומי ל-remote |
 | `supabase db pull` | משיכת סכמה מ-remote (לעדכון baseline) |
 | `supabase migration repair --status applied <ver>` | סימון migration כהוחל בלי הרצה |
+| `npm run db:advisors` | בדיקת advisors מקומית (Splinter lints) |
+| `npm run db:advisors:remote` | advisors על פרויקט מקושר |
+
+## RLS Tester
+
+מדריך בדיקת policies לפי תפקיד: [`docs/rls-tester.md`](../docs/rls-tester.md)
+
+הפעלה: Supabase Dashboard → Feature Previews → **RLS Tester**.
 
 ## בנייה מחדש של baseline
 
