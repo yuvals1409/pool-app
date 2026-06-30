@@ -51,6 +51,7 @@ jobs:
             echo "::error::SUPABASE_SERVICE_ROLE_KEY secret is missing or empty"
             exit 1
           fi
+          node scripts/verify-supabase-ci.mjs
           npm run seed:demo
           npm run seed:e2e
 

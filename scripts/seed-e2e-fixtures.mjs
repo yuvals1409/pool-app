@@ -13,8 +13,12 @@ import { randomUUID } from "node:crypto";
 
 loadEnv();
 
-const supabaseUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").trim();
-const serviceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+const supabaseUrl = cleanEnv(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL);
+const serviceKey = cleanEnv(process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+function cleanEnv(value) {
+  return String(value || "").trim().replace(/^["']|["']$/g, "");
+}
 
 const E2E_SEARCH_PHONE = process.env.E2E_SEARCH_PHONE || "0501111999";
 const E2E_QR_TOKEN = process.env.E2E_QR_TOKEN || "e2e00001-0000-4000-8000-000000000001";
