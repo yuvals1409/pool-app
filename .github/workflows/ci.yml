@@ -41,22 +41,16 @@ jobs:
 
       - run: npx playwright install --with-deps chromium
 
-      - name: Verify E2E secrets
-        if: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY != '' }}
+      - name: Prepare E2E database
         run: |
           if [ -z "$VITE_SUPABASE_URL" ]; then
-            echo "::error::VITE_SUPABASE_URL secret is empty — required for seed:demo"
+            echo "::error::VITE_SUPABASE_URL secret is missing or empty"
             exit 1
           fi
           if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
-            echo "::error::SUPABASE_SERVICE_ROLE_KEY secret is empty"
+            echo "::error::SUPABASE_SERVICE_ROLE_KEY secret is missing or empty"
             exit 1
           fi
-          echo "E2E secrets present (values not printed)."
-
-      - name: Prepare E2E database
-        if: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY != '' }}
-        run: |
           npm run seed:demo
           npm run seed:e2e
 
