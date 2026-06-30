@@ -81,7 +81,7 @@ function shiftDateByWeeks(baseDateStr, targetDateStr, lessonDateStr) {
   const base = parseDateStr(baseDateStr);
   const target = parseDateStr(targetDateStr);
   const lesson = parseDateStr(lessonDateStr);
-  const weekDiff = Math.round((lesson - base) / (7 * 24 * 60 * 60 * 1000));
+  const weekDiff = Math.round((lesson.getTime() - base.getTime()) / (7 * 24 * 60 * 60 * 1000));
   const result = new Date(target);
   result.setDate(result.getDate() + weekDiff * 7);
   return toLocalDateStr(result);

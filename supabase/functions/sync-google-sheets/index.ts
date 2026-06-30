@@ -137,7 +137,7 @@ async function syncTabPull(supabase: ReturnType<typeof createClient>, tab: strin
   const clientIdx = header.findIndex((h) => h.includes("לקוח") || h.includes("client"));
   const genderIdx = header.findIndex((h) => h.includes("מין") || h.includes("gender"));
   const paidIdx = header.findIndex((h) => h.includes("שולם") || h.includes("paid"));
-  const attendIdx = header.findIndex((h) => h.includes("נוכחות") || h.includes("attendance"));
+  const _attendIdx = header.findIndex((h) => h.includes("נוכחות") || h.includes("attendance"));
   const assessIdx = header.findIndex((h) => h.includes("מבדק") || h.includes("assessment"));
   let rowsIn = 0;
   const errors: string[] = [];
@@ -226,7 +226,7 @@ async function syncTabPull(supabase: ReturnType<typeof createClient>, tab: strin
   return { rows_in: rowsIn, rows_out: 0, errors };
 }
 
-async function syncTabPush(supabase: ReturnType<typeof createClient>, tab: string) {
+async function syncTabPush(supabase: ReturnType<typeof createClient>, _tab: string) {
   const { data: enrollments } = await supabase
     .from("enrollments")
     .select(`

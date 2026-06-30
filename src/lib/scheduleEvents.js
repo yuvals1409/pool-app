@@ -167,10 +167,17 @@ export async function loadScheduleEvents({
   const privateEvents = (lessons || []).map(normalizePrivateLesson);
 
   const groupEvents = (sessions || [])
-    .filter((s) => s.products?.product_templates?.code !== "swim_assessment")
-    .filter((s) => s.products && (
-      canViewAllInstructors || filterGroupSessionForInstructor(s, profile.id)
-    ))
+    .filter((s) => {
+      const product = Array.isArray(s.products) ? s.products[0] : s.products;
+      const template = Array.isArray(product?.product_templates)
+        ? product.product_templates[0]
+        : product?.product_templates;
+      return template?.code !== "swim_assessment";
+    })
+    .filter((s) => {
+      const product = Array.isArray(s.products) ? s.products[0] : s.products;
+      return product && (canViewAllInstructors || filterGroupSessionForInstructor(s, profile.id));
+    })
     .map(normalizeGroupSession);
 
   const assessmentEvents = (slots || [])

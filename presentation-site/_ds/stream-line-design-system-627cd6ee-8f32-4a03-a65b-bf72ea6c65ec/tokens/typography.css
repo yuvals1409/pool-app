@@ -1,0 +1,91 @@
+/* ─────────────────────────────────────────────────────────────
+   Stream Line — Typography Tokens
+   System-native stack. IBM Plex Sans Hebrew for Hebrew text.
+   IBM Plex Mono for numbers, times, codes, monospaced data.
+   ───────────────────────────────────────────────────────────── */
+
+/* ─────────────────────────────────────────────────────────────
+   FONTS — Self-hosting (preferred for offline PWA)
+
+   1. Download the woff2 files into ./fonts/ (see fonts/README.md).
+   2. UNCOMMENT the @font-face block below.
+   3. REMOVE the @import line — it becomes the CDN fallback only.
+
+   Until the files are added, the @import line keeps the brand
+   fonts working via Google Fonts CDN.
+   ───────────────────────────────────────────────────────────── */
+
+/* ── CDN fallback (active until self-hosted files are added) ── */
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+
+/* ── Self-hosted @font-face — uncomment after adding ./fonts/*.woff2 ──
+@font-face {
+  font-family: "IBM Plex Sans Hebrew";
+  font-style: normal; font-weight: 400; font-display: swap;
+  src: local("IBM Plex Sans Hebrew"), url("../fonts/IBMPlexSansHebrew-Regular.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Sans Hebrew";
+  font-style: normal; font-weight: 500; font-display: swap;
+  src: local("IBM Plex Sans Hebrew Medium"), url("../fonts/IBMPlexSansHebrew-Medium.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Sans Hebrew";
+  font-style: normal; font-weight: 600; font-display: swap;
+  src: local("IBM Plex Sans Hebrew SemiBold"), url("../fonts/IBMPlexSansHebrew-SemiBold.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Sans Hebrew";
+  font-style: normal; font-weight: 700; font-display: swap;
+  src: local("IBM Plex Sans Hebrew Bold"), url("../fonts/IBMPlexSansHebrew-Bold.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal; font-weight: 400; font-display: swap;
+  src: local("IBM Plex Mono"), url("../fonts/IBMPlexMono-Regular.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal; font-weight: 600; font-display: swap;
+  src: local("IBM Plex Mono SemiBold"), url("../fonts/IBMPlexMono-SemiBold.woff2") format("woff2");
+}
+──────────────────────────────────────────────────────────────── */
+
+:root {
+  /* ── Font Families ── */
+  --font-body:    -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
+                  "IBM Plex Sans Hebrew", Heebo, sans-serif;
+  --font-hebrew:  "IBM Plex Sans Hebrew", Heebo, -apple-system, sans-serif;
+  --font-mono:    ui-monospace, "IBM Plex Mono", "SF Mono", "Menlo", monospace;
+
+  /* ── iOS Type Scale (rem @ 16px base) ── */
+  --text-large-title: 2.125rem;  /* 34px — hero headlines */
+  --text-title1:      1.75rem;   /* 28px — page titles */
+  --text-title2:      1.375rem;  /* 22px — section headers */
+  --text-headline:    1.0625rem; /* 17px — emphasized body, semibold */
+  --text-body:        1.0625rem; /* 17px — primary body copy */
+  --text-subhead:     0.9375rem; /* 15px — secondary body, table rows */
+  --text-footnote:    0.8125rem; /* 13px — meta, labels, captions */
+  --text-caption:     0.75rem;   /* 12px — timestamps, eyebrows, badges */
+  --text-micro:       0.6875rem; /* 11px — nav labels, schedule ticks */
+
+  /* ── Font Weights ── */
+  --weight-light:     300;
+  --weight-regular:   400;
+  --weight-medium:    500;
+  --weight-semibold:  600;
+  --weight-bold:      700;
+
+  /* ── Tracking (letter-spacing) ── */
+  --tracking-body:    -0.022em; /* applied to body text globally */
+  --tracking-tight:   -0.03em;
+  --tracking-display: -0.04em; /* large display titles */
+  --tracking-caps:    0.06em;  /* UPPERCASE labels */
+
+  /* ── Line Heights ── */
+  --leading-tight:    1.2;
+  --leading-snug:     1.33;
+  --leading-normal:   1.45;
+  --leading-relaxed:  1.6;
+  --leading-loose:    1.75;
+}

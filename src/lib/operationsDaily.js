@@ -36,7 +36,8 @@ export async function listScheduledMakeups(from, to, limit = 30) {
     .limit(limit);
   if (error) throw error;
   return (data || []).filter((row) => {
-    const d = row.target_session?.session_date;
+    const session = Array.isArray(row.target_session) ? row.target_session[0] : row.target_session;
+    const d = session?.session_date;
     if (!d) return false;
     return d >= from && d <= to;
   });

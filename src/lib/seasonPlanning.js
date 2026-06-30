@@ -84,6 +84,9 @@ export async function suggestNextSeason() {
   return data;
 }
 
+/**
+ * @param {{ name?: string, startDate?: string, endDate?: string, kind?: string }} [params]
+ */
 export async function createPlanningSeason({ name, startDate, endDate, kind } = {}) {
   const { data, error } = await supabase.rpc("create_planning_season", {
     p_name: name || null,

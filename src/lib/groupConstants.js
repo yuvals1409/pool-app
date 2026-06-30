@@ -43,7 +43,7 @@ export const ACTIVITY_TYPE_LABELS = {
   summer: "קורס קיץ",
 };
 
-export const AGE_AUDIENCE_RE = /^גילאי?\s*\d+(?:\.\d+)?\s*[\-–]\s*\d+/;
+export const AGE_AUDIENCE_RE = /^גילאי?\s*\d+(?:\.\d+)?\s*[-–]\s*\d+/;
 export const GRADE_AUDIENCE_RE = /^כיתות/;
 
 export function isAgeAudience(label) {

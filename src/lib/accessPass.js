@@ -16,13 +16,19 @@ export async function copyEnrollmentTicketLink(enrollmentId, { toast, t }) {
     return;
   }
   const upcoming = (passes || [])
-    .filter((p) => p.scheduled_sessions?.session_date >= today)
-    .sort((a, b) => a.scheduled_sessions.session_date.localeCompare(b.scheduled_sessions.session_date))[0];
-  if (!upcoming?.public_token) {
+    .map((p) => {
+      const session = Array.isArray(p.scheduled_sessions)
+        ? p.scheduled_sessions[0]
+        : p.scheduled_sessions;
+      return { token: p.public_token, sessionDate: session?.session_date };
+    })
+    .filter((p) => p.sessionDate && p.sessionDate >= today)
+    .sort((a, b) => a.sessionDate.localeCompare(b.sessionDate))[0];
+  if (!upcoming?.token) {
     toast.show(t("ticketNotFound"));
     return;
   }
-  const url = getPublicPassUrl(upcoming.public_token);
+  const url = getPublicPassUrl(upcoming.token);
   try {
     await navigator.clipboard.writeText(url);
     toast.show(t("linkCopied"));

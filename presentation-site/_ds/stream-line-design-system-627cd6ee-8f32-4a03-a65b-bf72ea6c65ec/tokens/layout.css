@@ -1,0 +1,29 @@
+/* ─────────────────────────────────────────────────────────────
+   Stream Line — Layout Tokens
+   ───────────────────────────────────────────────────────────── */
+:root {
+  /* ── App Shell ── */
+  --app-max-w:          440px;  /* @kind spacing */
+  --app-max-w-desktop:  1280px; /* @kind spacing */
+  --sidebar-w:          240px;  /* @kind spacing */
+  --tab-bar-h:          49px;   /* @kind spacing */
+  --tap-target-min:     44px;   /* @kind spacing */
+  --header-h:           auto;   /* @kind other */
+
+  /* ── Breakpoints (reference — use in @media) ── */
+  /* tablet:   768px  — sidebar shows, tab bar hides */
+  /* desktop: 1024px  — full admin layout            */
+  /* wide:    1280px  — max content width             */
+
+  /* ── Z-index Scale ── */
+  --z-base:     0;   /* @kind other */
+  --z-raised:   10;  /* @kind other */
+  --z-sticky:   50;  /* @kind other */
+  --z-overlay:  100; /* @kind other */
+  --z-toast:    200; /* @kind other */
+  --z-flash:    300; /* @kind other */
+
+  /* ── Misc ── */
+  --content-padding: var(--space-4); /* @kind spacing */
+  --section-gap:     var(--space-5); /* @kind spacing */
+}

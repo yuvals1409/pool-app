@@ -1,0 +1,42 @@
+/* ─────────────────────────────────────────────────────────────
+   FUP Galil — Hebrew brand font for Neve Oz site.
+   Overrides the Stream Line design-system font variables.
+   Load AFTER the design-system token stylesheets.
+   ───────────────────────────────────────────────────────────── */
+
+@font-face {
+  font-family: "Galil";
+  font-style: normal; font-weight: 300; font-display: swap;
+  src: url("galil-light.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Galil";
+  font-style: normal; font-weight: 400; font-display: swap;
+  src: url("galil-regular.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Galil";
+  font-style: normal; font-weight: 500; font-display: swap;
+  src: url("galil-medium.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Galil";
+  font-style: normal; font-weight: 600; font-display: swap;
+  src: url("galil-semibold.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Galil";
+  font-style: normal; font-weight: 700; font-display: swap;
+  src: url("galil-bold.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Galil";
+  font-style: normal; font-weight: 800; font-display: swap;
+  src: url("galil-extrabold.woff2") format("woff2");
+}
+
+/* Re-point design-system font variables to Galil */
+:root {
+  --font-body:   "Galil", -apple-system, BlinkMacSystemFont, system-ui, Heebo, sans-serif;
+  --font-hebrew: "Galil", -apple-system, system-ui, Heebo, sans-serif;
+}

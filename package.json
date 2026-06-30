@@ -7,7 +7,17 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "seed:demo": "node scripts/seed-demo-users.mjs"
+    "seed:demo": "node scripts/seed-demo-users.mjs",
+    "lint": "eslint src supabase/functions",
+    "lint:fix": "eslint src supabase/functions --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "typecheck": "tsc -p jsconfig.json --noEmit",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,jsx}": "eslint --fix"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.2.7",
@@ -23,9 +33,21 @@
     "recharts": "^3.8.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@playwright/test": "^1.55.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
-    "vite": "^5.3.1"
+    "eslint": "^9.39.4",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.3",
+    "globals": "^17.7.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.8",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.62.1",
+    "vite": "^5.3.1",
+    "vitest": "^3.2.4"
   }
 }

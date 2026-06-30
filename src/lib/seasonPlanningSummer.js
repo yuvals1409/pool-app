@@ -25,5 +25,8 @@ export async function listSummerProducts(seasonId) {
     .eq("season_id", seasonId)
     .order("start_time");
   if (error) throw error;
-  return (data || []).filter((p) => p.product_templates?.code === "summer_course");
+  return (data || []).filter((p) => {
+    const template = Array.isArray(p.product_templates) ? p.product_templates[0] : p.product_templates;
+    return template?.code === "summer_course";
+  });
 }

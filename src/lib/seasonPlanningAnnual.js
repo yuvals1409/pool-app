@@ -72,5 +72,8 @@ export async function listAnnualProducts(seasonId) {
     .order("day_of_week")
     .order("start_time");
   if (error) throw error;
-  return (data || []).filter((p) => p.product_templates?.code === "annual_section");
+  return (data || []).filter((p) => {
+    const template = Array.isArray(p.product_templates) ? p.product_templates[0] : p.product_templates;
+    return template?.code === "annual_section";
+  });
 }

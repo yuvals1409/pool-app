@@ -8,9 +8,9 @@ export function productSearchBlob(product) {
 
 const GRADE_RE = /כיתות[^)\n]*/g;
 const AGE_PATTERNS = [
-  /גילאי?\s*\d+\s*[\-–]\s*\d+/g,
-  /\(\s*\d+\s*[\-–]\s*\d+\s*(?:שנים?|לט)?\s*\)/g,
-  /גיל\s*\d+\s*[\-–]\s*\d+/g,
+  /גילאי?\s*\d+\s*[-–]\s*\d+/g,
+  /\(\s*\d+\s*[-–]\s*\d+\s*(?:שנים?|לט)?\s*\)/g,
+  /גיל\s*\d+\s*[-–]\s*\d+/g,
 ];
 
 function normalizeAgeTag(raw) {
@@ -90,11 +90,11 @@ export function filterProducts(products, filters) {
     if (filters.instructorId && p.instructor_id !== filters.instructorId) return false;
     if (!productMatchesDay(p, filters.day)) return false;
     if (filters.grade) {
-      const gradeHay = product.target_audience || productSearchBlob(p);
+      const gradeHay = p.target_audience || productSearchBlob(p);
       if (!gradeHay.includes(filters.grade)) return false;
     }
     if (filters.age) {
-      const ageHay = product.target_audience || productSearchBlob(p);
+      const ageHay = p.target_audience || productSearchBlob(p);
       if (!ageHay.includes(filters.age)) return false;
     }
     if (filters.templateCode) {

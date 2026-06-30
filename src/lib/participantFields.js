@@ -43,17 +43,27 @@ export function birthDateFromAge(childAge) {
   return d.toISOString().slice(0, 10);
 }
 
+/**
+ * @param {{ birthDate?: string, childAge?: string|number }} [params]
+ */
 export function gradeRequired({ birthDate, childAge } = {}) {
   const age = birthDate ? calcAge(birthDate) : calcAgeFromYears(childAge);
   if (age == null) return true;
   return age < ADULT_AGE_THRESHOLD;
 }
 
+/**
+ * @param {{ birthDate?: string, childAge?: string|number }} [params]
+ */
 export function resolveBirthDate({ birthDate, childAge } = {}) {
   if (birthDate) return birthDate;
   return birthDateFromAge(childAge);
 }
 
+/**
+ * @param {{ gender?: string, grade?: string, birthDate?: string, childAge?: string|number }} fields
+ * @param {{ t?: (key: string) => string }} [options]
+ */
 export function validateParticipantFields({ gender, grade, birthDate, childAge }, { t } = {}) {
   const err = (key) => (t ? t(key) : key);
   if (!gender || !PARTICIPANT_GENDERS.includes(gender)) {

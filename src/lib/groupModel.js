@@ -106,7 +106,7 @@ function timeToMinutes(time) {
 /**
  * @param {ReturnType<typeof createEmptyFormState>} form
  * @param {{ days?: string[] }} [opts]
- * @returns {{ ok: true, payload: object, name: string } | { ok: false, errorKey: string }}
+ * @returns {{ ok: true, payload: object, name: string, templateCode: string } | { ok: false, errorKey: string }}
  */
 export function formStateToProductPayload(form, opts = {}) {
   const schedule = normalizeScheduleSlots(form.schedule);
@@ -150,9 +150,9 @@ export function formStateToProductPayload(form, opts = {}) {
   const level = form.type === GROUP_TYPE_ANNUAL ? Number(form.level) : null;
 
   const name = buildGroupName({
-    type: form.type,
+    type: /** @type {'annual'|'summer'} */ (form.type),
     level,
-    gender: form.gender,
+    gender: /** @type {'male'|'female'|'mixed'} */ (form.gender),
     targetAudience: form.targetAudience,
     schedule,
     days: opts.days,

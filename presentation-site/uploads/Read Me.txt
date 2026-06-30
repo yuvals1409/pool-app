@@ -1,0 +1,5 @@
+Font Name: FUP Galil
+Version: 3.1
+Publisher: Fontup.co.il
+License: Free - Commercial Use
+EULA (License): https://fontup.co.il/eula/

@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/stream-line-design-system-627cd6ee-8f32-4a03-a65b-bf72ea6c65ec/tokens/colors.css">
+<link rel="stylesheet" href="_ds/stream-line-design-system-627cd6ee-8f32-4a03-a65b-bf72ea6c65ec/tokens/typography.css">
+<link rel="stylesheet" href="fonts/galil.css">
+<link rel="stylesheet" href="_ds/stream-line-design-system-627cd6ee-8f32-4a03-a65b-bf72ea6c65ec/tokens/radius.css">
+<link rel="stylesheet" href="_ds/stream-line-design-system-627cd6ee-8f32-4a03-a65b-bf72ea6c65ec/tokens/shadow.css">
+<script src="_ds/stream-line-design-system-627cd6ee-8f32-4a03-a65b-bf72ea6c65ec/_ds_bundle.js"></script>
+<style>
+  html { scroll-behavior: smooth; }
+  body { margin: 0; }
+  [data-reveal] { opacity: 0; transform: translateY(30px); transition: opacity .8s cubic-bezier(.16,1,.3,1), transform .8s cubic-bezier(.16,1,.3,1); }
+  [data-reveal].in { opacity: 1; transform: none; }
+  @keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+  @keyframes drift { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+  @keyframes pulse-ring { 0% { transform: scale(.9); opacity:.6; } 70% { transform: scale(1.6); opacity:0; } 100% { opacity:0; } }
+</style>
+</helmet>
+
+<div ref="{{ rootRef }}" dir="rtl" style="font-family: 'Galil', Heebo, system-ui, sans-serif; letter-spacing:-0.022em; color:#141414; background:#FFFFFF; overflow-x:hidden;">
+
+  <!-- ───────── TOP CONTACT STRIP ───────── -->
+  <div style="background:#141414; color:#DEDED9; font-size:13px;">
+    <div style="max-width:1240px; margin:0 auto; padding:9px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+      <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+        <span style="display:flex; align-items:center; gap:7px;"><span style="opacity:.6;">מיקום</span> רח׳ דגניה 1, פינת דרך רבין · פתח־תקווה</span>
+        <span dir="ltr" style="display:flex; align-items:center; gap:7px; font-family:var(--font-mono); white-space:nowrap;"><span style="opacity:.6; font-family:'Galil';">טל׳</span> 03-9245111</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:14px;">
+        <a href="https://www.instagram.com/neveoz.sport.pt/" target="_blank" style="color:#DEDED9; text-decoration:none; opacity:.85;">אינסטגרם</a>
+        <span style="opacity:.3;">·</span>
+        <a href="https://www.facebook.com/share/163w7SM5r2/" target="_blank" style="color:#DEDED9; text-decoration:none; opacity:.85;">פייסבוק</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────── STICKY NAV ───────── -->
+  <header style="position:sticky; top:0; z-index:50; background:rgba(255,255,255,0.82); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border-bottom:1px solid rgba(60,60,67,0.10);">
+    <div style="max-width:1240px; margin:0 auto; padding:14px 24px; display:flex; align-items:center; justify-content:space-between; gap:24px;">
+      <a href="Neve-Oz.dc.html" style="display:flex; align-items:center; gap:14px; text-decoration:none; color:#141414;">
+        <img src="assets/logo-neveoz.png" alt="מרכז ספורט נווה עוז" style="height:50px; width:auto; display:block;">
+        <span style="font-size:12px; font-weight:600; color:#2C7A27; letter-spacing:.01em; border-inline-start:2px solid #E8E8E6; padding-inline-start:14px;">האנשים זה<br>כל הסיפור</span>
+      </a>
+      <nav style="display:flex; align-items:center; gap:2px; flex-wrap:wrap; justify-content:flex-end;">
+        <a href="Neve-Oz-About.dc.html" style="padding:8px 11px; border-radius:999px; text-decoration:none; color:#141414; font-size:14.5px; font-weight:500;" style-hover="background:#F5F5F3;">מי אנחנו</a>
+        <a href="Neve-Oz-Facilities.dc.html" style="padding:8px 11px; border-radius:999px; text-decoration:none; color:#141414; font-size:14.5px; font-weight:500;" style-hover="background:#F5F5F3;">מתקנים</a>
+        <a href="Neve-Oz-Classes.dc.html" style="padding:8px 11px; border-radius:999px; text-decoration:none; color:#141414; font-size:14.5px; font-weight:500;" style-hover="background:#F5F5F3;">חוגים</a>
+        <a href="Neve-Oz-Programs.dc.html" style="padding:8px 11px; border-radius:999px; text-decoration:none; color:#141414; font-size:14.5px; font-weight:500;" style-hover="background:#F5F5F3;">תוכניות</a>
+        <a href="Neve-Oz-Pricing.dc.html" style="padding:8px 11px; border-radius:999px; text-decoration:none; color:#141414; font-size:14.5px; font-weight:500;" style-hover="background:#F5F5F3;">מחירון</a>
+        <a href="Neve-Oz-Info.dc.html" style="padding:8px 11px; border-radius:999px; text-decoration:none; color:#141414; font-size:14.5px; font-weight:500;" style-hover="background:#F5F5F3;">מידע</a>
+        <a href="Neve-Oz-News.dc.html" style="padding:8px 11px; border-radius:999px; text-decoration:none; color:#141414; font-size:14.5px; font-weight:500;" style-hover="background:#F5F5F3;">חדשות</a>
+        <a href="Neve-Oz-Contact.dc.html" style="padding:8px 11px; border-radius:999px; text-decoration:none; color:#141414; font-size:14.5px; font-weight:500;" style-hover="background:#F5F5F3;">צור קשר</a>
+        <a href="Neve-Oz-Pricing.dc.html" style="margin-inline-start:6px; padding:10px 17px; border-radius:999px; text-decoration:none; color:#141414; font-size:14.5px; font-weight:600; background:linear-gradient(135deg,#F4C400,#E0B000); box-shadow:0 4px 16px rgba(244,196,0,.30);" style-hover="transform:translateY(-1px);">קנו מנוי</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ───────── HERO ───────── -->
+  <section style="position:relative; background:linear-gradient(160deg,#141414 0%,#0E4D1A 52%,#009AB5 100%); color:#fff; overflow:hidden; padding:84px 24px 150px;">
+    <div style="position:absolute; top:-120px; inset-inline-start:-100px; width:420px; height:420px; border-radius:50%; background:radial-gradient(circle,rgba(126,206,202,.28),transparent 70%); filter:blur(8px);"></div>
+    <div style="position:absolute; bottom:40px; inset-inline-end:-80px; width:340px; height:340px; border-radius:50%; background:radial-gradient(circle,rgba(225,112,85,.22),transparent 70%);"></div>
+
+    <div style="position:relative; max-width:1240px; margin:0 auto; display:flex; align-items:center; gap:56px; flex-wrap:wrap;">
+      <div style="flex:1 1 440px; min-width:320px;">
+        
+        <span style="display:inline-flex; align-items:center; gap:8px; padding:7px 15px; border-radius:999px; background:rgba(220,220,215,.14); border:1px solid rgba(126,206,202,.3); font-size:13px; font-weight:600; color:#DEDED9; margin-bottom:26px;">
+          <span style="width:7px; height:7px; border-radius:50%; background:#00B894; box-shadow:0 0 0 0 rgba(0,184,148,.6); animation:pulse-ring 2s infinite;"></span>
+          הקאנטרי המוביל בפתח־תקווה
+        </span>
+        <h1 style="font-size:clamp(40px,6vw,72px); line-height:1.02; font-weight:700; letter-spacing:-0.04em; margin:0 0 14px;">
+          ספורט, מים<br>וחיים טובים<br><span style="background:linear-gradient(110deg,#F0C800,#2C7A27 52%,#06C2EC); -webkit-background-clip:text; background-clip:text; color:transparent;">תחת קורת גג אחת.</span>
+        </h1>
+        <p style="font-size:clamp(17px,2vw,21px); line-height:1.55; color:rgba(220,220,215,.9); max-width:480px; margin:0 0 34px; font-weight:400;">
+          בריכות, ספא, חדר כושר, טניס ועשרות חוגים — מקום אחד שבו כל המשפחה מתאמנת, נרגעת ונפגשת. כי האנשים זה כל הסיפור.
+        </p>
+        <div style="display:flex; gap:14px; flex-wrap:wrap;">
+          <x-import component-from-global-scope="StreamLineDesignSystem_627cd6.Button" variant="primary" size="lg" full-width="{{ falseVal }}" on-click="{{ goPricing }}" hint-size="auto,52px" style="background:linear-gradient(135deg,#009AB5,#9EC8C8); color:#141414; box-shadow:0 8px 30px rgba(126,206,202,.4);">הצטרפו אלינו היום</x-import>
+          <x-import component-from-global-scope="StreamLineDesignSystem_627cd6.Button" variant="whatsapp" size="lg" full-width="{{ falseVal }}" on-click="{{ openWhatsapp }}" hint-size="auto,52px">דברו איתנו בוואטסאפ</x-import>
+        </div>
+        <div style="display:flex; gap:34px; margin-top:48px; flex-wrap:wrap;">
+          <sc-for list="{{ stats }}" as="s" hint-placeholder-count="4">
+            <div>
+              <div style="font-family:var(--font-mono); font-size:34px; font-weight:600; letter-spacing:-0.03em; color:#fff;"><span data-count="{{ s.n }}" data-suffix="{{ s.suffix }}">{{ s.n }}{{ s.suffix }}</span></div>
+              <div style="font-size:13.5px; color:rgba(220,220,215,.75); margin-top:2px;">{{ s.l }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="flex:1 1 360px; min-width:300px; position:relative;">
+        <div style="position:relative; border-radius:28px; overflow:hidden; box-shadow:0 30px 80px rgba(20,20,20,.55); border:6px solid rgba(255,255,255,.12); aspect-ratio:4/5; animation:floaty 7s ease-in-out infinite;">
+          <img src="hero-image.jpeg" alt="אימון בנווה עוז" style="width:100%; height:100%; object-fit:cover; display:block;">
+        </div>
+        
+      </div>
+    </div>
+
+    <!-- wave divider -->
+    <svg viewBox="0 0 1440 120" preserveAspectRatio="none" style="position:absolute; bottom:-1px; inset-inline:0; width:100%; height:110px; display:block;"><path d="M0,64 C240,110 480,20 720,48 C960,76 1200,118 1440,72 L1440,120 L0,120 Z" fill="#F5F5F3"></path></svg>
+  </section>
+
+  <!-- ───────── FACILITIES ───────── -->
+  <section id="facilities" style="background:#F5F5F3; padding:30px 24px 100px; scroll-margin-top:80px;">
+    <div style="max-width:1240px; margin:0 auto;">
+      <div data-reveal="" style="text-align:center; max-width:640px; margin:0 auto 54px;">
+        <span style="font-size:14px; font-weight:700; color:#009AB5; letter-spacing:.04em;">מתקני המועדון</span><svg width="58" height="8" viewBox="0 0 58 8" style="margin:11px auto 0; display:block;" aria-hidden="true"><path d="M2 5 C6 1 10 1 14 5" stroke="#F0C800" stroke-width="2.6" stroke-linecap="round" fill="none"></path><path d="M16 5 C20 9 24 9 28 5 C32 1 36 1 40 5" stroke="#2C7A27" stroke-width="2.6" stroke-linecap="round" fill="none"></path><path d="M42 5 C46 1 50 1 54 5" stroke="#06C2EC" stroke-width="2.6" stroke-linecap="round" fill="none"></path></svg>
+        <h2 style="font-size:clamp(30px,4vw,46px); font-weight:700; letter-spacing:-0.035em; margin:10px 0 14px;">כל מה שצריך כדי להרגיש בבית</h2>
+        <p style="font-size:18px; color:#2E6E3E; line-height:1.55; margin:0;">שישה עולמות של ספורט, מים ופנאי — שמורים, מתוחזקים ומחכים לכם.</p>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:22px;">
+        <sc-for list="{{ facilities }}" as="f" hint-placeholder-count="6">
+          <div data-reveal="" style="background:#fff; border-radius:20px; overflow:hidden; border:1px solid #E8E8E6; box-shadow:0 4px 24px rgba(0,154,181,.06); transition:transform .35s cubic-bezier(.16,1,.3,1), box-shadow .35s;" style-hover="transform:translateY(-8px); box-shadow:0 20px 50px rgba(0,154,181,.16);">
+            <div style="position:relative; height:200px; background:linear-gradient(135deg,#DEDED9,#9EC8C8);">
+              <sc-if value="{{ f.img }}" hint-placeholder-val="false">
+                <img src="{{ f.img }}" alt="{{ f.t }}" style="width:100%; height:100%; object-fit:cover; display:block;">
+              </sc-if>
+              <sc-if value="{{ !f.img }}" hint-placeholder-val="false">
+                <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="{{ f.slot }}" shape="rect" placeholder="{{ f.t }}" style="width:100%; height:100%;" hint-size="100%,100%"></x-import>
+              </sc-if>
+              <span style="position:absolute; top:13px; inset-inline-end:13px; background:rgba(20,20,20,.78); color:#fff; font-size:12px; font-weight:600; padding:5px 11px; border-radius:999px; backdrop-filter:blur(6px); pointer-events:none;">{{ f.tag }}</span>
+            </div>
+            <div style="padding:22px 22px 26px;">
+              <h3 style="font-size:21px; font-weight:700; letter-spacing:-0.02em; margin:0 0 8px;">{{ f.t }}</h3>
+              <p style="font-size:15px; color:#2E6E3E; line-height:1.55; margin:0;">{{ f.d }}</p>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── SPECIAL PROGRAMS ───────── -->
+  <section id="programs" style="position:relative; background:linear-gradient(155deg,#0E4D1A,#141414); color:#fff; padding:90px 24px; scroll-margin-top:80px; overflow:hidden;">
+    <div style="position:absolute; top:-60px; inset-inline-end:10%; width:300px; height:300px; border-radius:50%; background:radial-gradient(circle,rgba(0,144,212,.3),transparent 70%);"></div>
+    <div style="position:relative; max-width:1240px; margin:0 auto;">
+      <div data-reveal="" style="margin-bottom:46px; display:flex; align-items:flex-start; gap:36px; flex-wrap:wrap;">
+        <div style="flex:1 1 360px;">
+          <span style="font-size:14px; font-weight:700; color:#9EC8C8; letter-spacing:.04em;">תוכניות מיוחדות</span><svg width="58" height="8" viewBox="0 0 58 8" style="margin:11px 0 0; display:block;" aria-hidden="true"><path d="M2 5 C6 1 10 1 14 5" stroke="#F0C800" stroke-width="2.6" stroke-linecap="round" fill="none"></path><path d="M16 5 C20 9 24 9 28 5 C32 1 36 1 40 5" stroke="#2C7A27" stroke-width="2.6" stroke-linecap="round" fill="none"></path><path d="M42 5 C46 1 50 1 54 5" stroke="#06C2EC" stroke-width="2.6" stroke-linecap="round" fill="none"></path></svg>
+          <h2 style="font-size:clamp(30px,4vw,46px); font-weight:700; letter-spacing:-0.035em; margin:10px 0 14px;">מקצוענות במים, אחת לאחת</h2>
+          <p style="font-size:18px; color:rgba(220,220,215,.85); line-height:1.55; margin:0;">תוכניות ייעודיות בליווי אישי של המדריכים הטובים בישראל.</p>
+        </div>
+        <div style="flex:0 0 auto; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.95); border-radius:20px; padding:16px 22px; box-shadow:0 8px 30px rgba(0,0,0,.2);">
+          <img src="images/streamline-logo.jpeg" alt="StreamLine בית ספר לשחייה" style="height:100px; width:auto; display:block;">
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px;">
+        <sc-for list="{{ programs }}" as="p" hint-placeholder-count="3">
+          <div data-reveal="" style="background:rgba(255,255,255,.07); border:1px solid rgba(126,206,202,.18); border-radius:22px; padding:30px 26px; transition:background .3s, transform .35s;" style-hover="background:rgba(255,255,255,.12); transform:translateY(-6px);">
+            <span style="display:inline-flex; width:54px; height:54px; border-radius:15px; background:linear-gradient(135deg,#009AB5,#9EC8C8); align-items:center; justify-content:center; margin-bottom:20px;">
+              <span style="font-family:var(--font-mono); font-size:22px; font-weight:600; color:#141414;">{{ p.num }}</span>
+            </span>
+            <h3 style="font-size:22px; font-weight:700; letter-spacing:-0.02em; margin:0 0 10px;">{{ p.t }}</h3>
+            <p style="font-size:15px; color:rgba(220,220,215,.82); line-height:1.6; margin:0 0 18px;">{{ p.d }}</p>
+            <a href="Neve-Oz-Contact.dc.html" style="display:inline-flex; align-items:center; gap:6px; color:#9EC8C8; font-weight:600; font-size:15px; text-decoration:none;">{{ p.cta }} <span style="font-size:18px;">←</span></a>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── CLASSES (filterable) ───────── -->
+  <section id="classes" style="background:#fff; padding:90px 24px; scroll-margin-top:80px;">
+    <div style="max-width:1240px; margin:0 auto;">
+      <div data-reveal="" style="display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap; margin-bottom:34px;">
+        <div style="max-width:620px;">
+          <span style="font-size:14px; font-weight:700; color:#009AB5; letter-spacing:.04em;">חוגי מבוגרים</span><svg width="58" height="8" viewBox="0 0 58 8" style="margin:11px 0 0; display:block;" aria-hidden="true"><path d="M2 5 C6 1 10 1 14 5" stroke="#F0C800" stroke-width="2.6" stroke-linecap="round" fill="none"></path><path d="M16 5 C20 9 24 9 28 5 C32 1 36 1 40 5" stroke="#2C7A27" stroke-width="2.6" stroke-linecap="round" fill="none"></path><path d="M42 5 C46 1 50 1 54 5" stroke="#06C2EC" stroke-width="2.6" stroke-linecap="round" fill="none"></path></svg>
+          <h2 style="font-size:clamp(30px,4vw,46px); font-weight:700; letter-spacing:-0.035em; margin:10px 0 14px;">מעל 40 חוגים בשבוע</h2>
+          <p style="font-size:18px; color:#2E6E3E; line-height:1.55; margin:0;">מהמים ועד הסטודיו — בחרו את הקצב שלכם וסננו לפי סוג.</p>
+        </div>
+        <a href="Neve-Oz-Classes.dc.html" style="display:inline-flex; align-items:center; gap:7px; padding:12px 20px; border-radius:999px; background:#F5F5F3; color:#009AB5; font-weight:600; font-size:15px; text-decoration:none; border:1px solid #DEDED9;" style-hover="background:#DEDED9;">למערכת המלאה והרשמה <span>←</span></a>
+      </div>
+
+      <div data-reveal="" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:30px;">
+        <sc-for list="{{ categories }}" as="c" hint-placeholder-count="5">
+          <button onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button>
+        </sc-for>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px;">
+        <sc-for list="{{ filteredClasses }}" as="cl" hint-placeholder-count="12">
+          <div style="background:#fff; border:1px solid #E8E8E6; border-radius:16px; padding:20px; transition:transform .3s, box-shadow .3s, border-color .3s;" style-hover="transform:translateY(-5px); box-shadow:0 14px 36px rgba(0,154,181,.13); border-color:#DEDED9;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+              <span style="width:38px; height:38px; border-radius:11px; display:inline-flex; align-items:center; justify-content:center; background:{{ cl.bg }};">
+                <span style="width:12px; height:12px; border-radius:50%; background:{{ cl.color }};"></span>
+              </span>
+              <span style="font-size:11.5px; font-weight:600; color:{{ cl.color }}; background:{{ cl.bg }}; padding:4px 10px; border-radius:999px;">{{ cl.cat }}</span>
+            </div>
+            <h3 style="font-size:18px; font-weight:700; letter-spacing:-0.02em; margin:0 0 5px;">{{ cl.name }}</h3>
+            <p style="font-size:13px; color:#6BA3BE; margin:0;">{{ cl.when }}</p>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── KIDS ───────── -->
+  <section id="kids" style="position:relative; background:#FFF7ED; padding:90px 24px; scroll-margin-top:80px; overflow:hidden;">
+    <div style="max-width:1240px; margin:0 auto;">
+      <div data-reveal="" style="text-align:center; max-width:640px; margin:0 auto 50px;">
+        <span style="font-size:14px; font-weight:700; color:#E17055; letter-spacing:.04em;">חוגי ילדים</span><svg width="58" height="8" viewBox="0 0 58 8" style="margin:11px auto 0; display:block;" aria-hidden="true"><path d="M2 5 C6 1 10 1 14 5" stroke="#F0C800" stroke-width="2.6" stroke-linecap="round" fill="none"></path><path d="M16 5 C20 9 24 9 28 5 C32 1 36 1 40 5" stroke="#2C7A27" stroke-width="2.6" stroke-linecap="round" fill="none"></path><path d="M42 5 C46 1 50 1 54 5" stroke="#06C2EC" stroke-width="2.6" stroke-linecap="round" fill="none"></path></svg>
+        <h2 style="font-size:clamp(30px,4vw,46px); font-weight:700; letter-spacing:-0.035em; margin:10px 0 14px;">צאו מהמסכים, קפצו למים</h2>
+        <p style="font-size:18px; color:#9a6a52; line-height:1.55; margin:0;">פעילויות שמפתחות ביטחון, חברים והמון חיוכים.</p>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px;">
+        <sc-for list="{{ kids }}" as="k" hint-placeholder-count="6">
+          <div data-reveal="" style="background:#fff; border-radius:20px; overflow:hidden; box-shadow:0 4px 24px rgba(225,112,85,.08); transition:transform .35s, box-shadow .35s;" style-hover="transform:translateY(-8px); box-shadow:0 20px 50px rgba(225,112,85,.18);">
+            <div style="height:180px; background:linear-gradient(135deg,#FFE3D3,#FDCB6E); overflow:hidden;">
+              <sc-if value="{{ k.img }}" hint-placeholder-val="true">
+                <img src="{{ k.img }}" alt="{{ k.t }}" style="width:100%; height:100%; object-fit:cover; display:block;">
+              </sc-if>
+              <sc-if value="{{ !k.img }}" hint-placeholder-val="false">
+                <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="{{ k.slot }}" shape="rect" placeholder="{{ k.t }}" style="width:100%; height:100%;" hint-size="100%,100%"></x-import>
+              </sc-if>
+            </div>
+            <div style="padding:20px 22px 24px;">
+              <h3 style="font-size:20px; font-weight:700; letter-spacing:-0.02em; margin:0 0 7px;">{{ k.t }}</h3>
+              <p style="font-size:14.5px; color:#9a6a52; line-height:1.5; margin:0;">{{ k.d }}</p>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── PRICING ───────── -->
+  <section id="pricing" style="background:#F5F5F3; padding:90px 24px; scroll-margin-top:80px;">
+    <div style="max-width:1180px; margin:0 auto;">
+      <div data-reveal="" style="text-align:center; max-width:640px; margin:0 auto 50px;">
+        <span style="font-size:14px; font-weight:700; color:#009AB5; letter-spacing:.04em;">מחירון וכרטיסיות</span><svg width="58" height="8" viewBox="0 0 58 8" style="margin:11px auto 0; display:block;" aria-hidden="true"><path d="M2 5 C6 1 10 1 14 5" stroke="#F0C800" stroke-width="2.6" stroke-linecap="round" fill="none"></path><path d="M16 5 C20 9 24 9 28 5 C32 1 36 1 40 5" stroke="#2C7A27" stroke-width="2.6" stroke-linecap="round" fill="none"></path><path d="M42 5 C46 1 50 1 54 5" stroke="#06C2EC" stroke-width="2.6" stroke-linecap="round" fill="none"></path></svg>
+        <h2 style="font-size:clamp(30px,4vw,46px); font-weight:700; letter-spacing:-0.035em; margin:10px 0 14px;">בחרו את הכניסה שמתאימה לכם</h2>
+        <p style="font-size:18px; color:#2E6E3E; line-height:1.55; margin:0;">כניסה בודדת, כרטיסייה משתלמת או מנוי מלא — אתם בוחרים.</p>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:22px; align-items:stretch;">
+        <sc-for list="{{ pricing }}" as="pr" hint-placeholder-count="3">
+          <div data-reveal="" style="{{ pr.cardStyle }}">
+            <span style="{{ pr.tagStyle }}">{{ pr.badge }}</span>
+            <h3 style="font-size:20px; font-weight:700; margin:0 0 6px; color:{{ pr.ink }};">{{ pr.name }}</h3>
+            <p style="font-size:13.5px; margin:0 0 18px; color:{{ pr.sub }};">{{ pr.note }}</p>
+            <div style="display:flex; align-items:baseline; gap:6px; margin-bottom:22px;">
+              <span style="font-family:var(--font-mono); font-size:46px; font-weight:600; letter-spacing:-0.03em; color:{{ pr.ink }};">{{ pr.price }}</span>
+              <span style="font-size:20px; font-weight:600; color:{{ pr.sub }};">{{ pr.unit }}</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:11px; margin-bottom:26px;">
+              <sc-for list="{{ pr.feats }}" as="ft" hint-placeholder-count="3">
+                <div style="display:flex; align-items:center; gap:9px; font-size:14.5px; color:{{ pr.sub }};">
+                  <span style="display:inline-flex; width:20px; height:20px; border-radius:50%; background:{{ pr.checkBg }}; align-items:center; justify-content:center; flex-shrink:0;">
+                    <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2L4.8 8.5L9.5 3.5" stroke="{{ pr.checkFg }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  </span>{{ ft }}
+                </div>
+              </sc-for>
+            </div>
+            <a href="Neve-Oz-Contact.dc.html" style="{{ pr.btnStyle }}">{{ pr.cta }}</a>
+          </div>
+        </sc-for>
+      </div>
+      <p data-reveal="" style="text-align:center; font-size:14px; color:#6BA3BE; margin:26px 0 0;">חיילים בשירות חובה (כולל שנת קבע ראשונה) זכאים ל־25% הנחה למנוי יחיד.</p>
+    </div>
+  </section>
+
+  <!-- ───────── HOURS ───────── -->
+  <section id="hours" style="background:#fff; padding:90px 24px; scroll-margin-top:80px;">
+    <div style="max-width:1180px; margin:0 auto;">
+      <div data-reveal="" style="text-align:center; max-width:600px; margin:0 auto 46px;">
+        <span style="font-size:14px; font-weight:700; color:#009AB5; letter-spacing:.04em;">שעות פעילות</span><svg width="58" height="8" viewBox="0 0 58 8" style="margin:11px auto 0; display:block;" aria-hidden="true"><path d="M2 5 C6 1 10 1 14 5" stroke="#F0C800" stroke-width="2.6" stroke-linecap="round" fill="none"></path><path d="M16 5 C20 9 24 9 28 5 C32 1 36 1 40 5" stroke="#2C7A27" stroke-width="2.6" stroke-linecap="round" fill="none"></path><path d="M42 5 C46 1 50 1 54 5" stroke="#06C2EC" stroke-width="2.6" stroke-linecap="round" fill="none"></path></svg>
+        <h2 style="font-size:clamp(30px,4vw,46px); font-weight:700; letter-spacing:-0.035em; margin:10px 0 0;">פתוחים בשבילכם כמעט כל היום</h2>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px;">
+        <sc-for list="{{ hours }}" as="h" hint-placeholder-count="3">
+          <div data-reveal="" style="background:#F5F5F3; border:1px solid #E8E8E6; border-radius:20px; padding:26px;">
+            <div style="display:flex; align-items:center; gap:11px; margin-bottom:18px;">
+              <span style="width:42px; height:42px; border-radius:12px; background:#DEDED9; display:inline-flex; align-items:center; justify-content:center;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#009AB5" stroke-width="2"></circle><path d="M12 7v5l3 2" stroke="#009AB5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              </span>
+              <h3 style="font-size:20px; font-weight:700; margin:0;">{{ h.place }}</h3>
+            </div>
+            <div style="display:flex; flex-direction:column;">
+              <sc-for list="{{ h.rows }}" as="r" hint-placeholder-count="4">
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-top:1px solid #E8E8E6;">
+                  <span style="font-size:15px; color:#2E6E3E; font-weight:500;">{{ r.d }}</span>
+                  <span dir="ltr" style="font-family:var(--font-mono); font-size:15px; font-weight:500; color:#141414;">{{ r.t }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── NEWS / EVENTS ───────── -->
+  <section id="news" style="background:#F5F5F3; padding:90px 24px; scroll-margin-top:80px;">
+    <div style="max-width:1240px; margin:0 auto;">
+      <div data-reveal="" style="text-align:center; max-width:620px; margin:0 auto 50px;">
+        <span style="font-size:14px; font-weight:700; color:#009AB5; letter-spacing:.04em;">חדשות וארועים</span><svg width="58" height="8" viewBox="0 0 58 8" style="margin:11px auto 0; display:block;" aria-hidden="true"><path d="M2 5 C6 1 10 1 14 5" stroke="#F0C800" stroke-width="2.6" stroke-linecap="round" fill="none"></path><path d="M16 5 C20 9 24 9 28 5 C32 1 36 1 40 5" stroke="#2C7A27" stroke-width="2.6" stroke-linecap="round" fill="none"></path><path d="M42 5 C46 1 50 1 54 5" stroke="#06C2EC" stroke-width="2.6" stroke-linecap="round" fill="none"></path></svg>
+        <h2 style="font-size:clamp(30px,4vw,46px); font-weight:700; letter-spacing:-0.035em; margin:10px 0 14px;">מה חדש בנווה עוז</h2>
+        <p style="font-size:18px; color:#2E6E3E; line-height:1.55; margin:0;">הרשמות, קבוצות חדשות ותוכניות עונתיות.</p>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:22px;">
+        <sc-for list="{{ events }}" as="e" hint-placeholder-count="3">
+          <div data-reveal="" style="background:#fff; border-radius:20px; overflow:hidden; border:1px solid #E8E8E6; transition:transform .35s, box-shadow .35s;" style-hover="transform:translateY(-7px); box-shadow:0 20px 50px rgba(0,154,181,.15);">
+            <div style="position:relative; height:190px; background:linear-gradient(135deg,#DEDED9,#9EC8C8);">
+              <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="{{ e.slot }}" shape="rect" placeholder="תמונת ארוע" style="width:100%; height:100%;" hint-size="100%,100%"></x-import>
+              <div style="position:absolute; top:13px; inset-inline-start:13px; background:#fff; border-radius:13px; padding:8px 12px; text-align:center; box-shadow:0 6px 18px rgba(20,20,20,.18); line-height:1; pointer-events:none;">
+                <div style="font-family:var(--font-mono); font-size:22px; font-weight:600; color:#009AB5;">{{ e.day }}</div>
+                <div style="font-size:11px; color:#2E6E3E; margin-top:3px;">{{ e.date }}</div>
+              </div>
+            </div>
+            <div style="padding:22px 22px 26px;">
+              <span style="font-size:12px; font-weight:600; color:#E17055;">{{ e.tag }}</span>
+              <h3 style="font-size:20px; font-weight:700; letter-spacing:-0.02em; margin:8px 0 9px;">{{ e.t }}</h3>
+              <p style="font-size:14.5px; color:#2E6E3E; line-height:1.55; margin:0;">{{ e.d }}</p>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── APP SECTION ───────── -->
+  <section style="background:#0D0D0D; padding:100px 24px; overflow:hidden; position:relative; direction:rtl;">
+    <!-- Ambient glows -->
+    <div style="position:absolute; right:-120px; top:50%; transform:translateY(-50%); width:560px; height:560px; border-radius:50%; background:radial-gradient(circle,rgba(44,122,39,.18) 0%,transparent 68%); pointer-events:none;"></div>
+    <div style="position:absolute; left:-80px; bottom:-80px; width:380px; height:380px; border-radius:50%; background:radial-gradient(circle,rgba(0,154,181,.13) 0%,transparent 68%); pointer-events:none;"></div>
+
+    <div style="max-width:1240px; margin:0 auto; display:flex; align-items:center; gap:80px; flex-wrap:wrap;">
+
+      <!-- ── Text (right in RTL) ── -->
+      <div style="flex:1; min-width:300px;">
+        <div style="display:inline-flex; align-items:center; gap:8px; background:rgba(44,122,39,.14); border:1px solid rgba(44,122,39,.28); border-radius:999px; padding:7px 18px; margin-bottom:28px;">
+          <div style="width:8px; height:8px; border-radius:50%; background:#2C7A27; box-shadow:0 0 0 3px rgba(44,122,39,.3);"></div>
+          <span style="color:#5CBF6A; font-size:13px; font-weight:600; letter-spacing:.4px;">האפליקציה הרשמית</span>
+        </div>
+
+        <h2 style="color:#fff; font-size:clamp(28px,3.5vw,46px); font-weight:700; letter-spacing:-0.03em; line-height:1.2; margin:0 0 18px;">ניהול מנוי, חוגים<br>ועדכונים — בכף היד</h2>
+
+        <p style="color:rgba(255,255,255,.55); font-size:17px; line-height:1.68; margin:0 0 34px; max-width:460px;">כל מה שצריך ממרכז הספורט נווה עוז — זמין 24/7 מהסמארטפון. הרשמה לחוגים, לוח פעילויות, עדכונים ותזכורות.</p>
+
+        <!-- Features -->
+        <div style="display:flex; flex-direction:column; gap:14px; margin-bottom:36px;">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:30px; height:30px; border-radius:9px; background:rgba(44,122,39,.18); flex:none; display:flex; align-items:center; justify-content:center;">
+              <svg width="14" height="14" fill="none" stroke="#5CBF6A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,7 6,11 12,3"></polyline></svg>
+            </div>
+            <span style="color:rgba(255,255,255,.82); font-size:15.5px;">הרשמה לחוגים בקליק</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:30px; height:30px; border-radius:9px; background:rgba(44,122,39,.18); flex:none; display:flex; align-items:center; justify-content:center;">
+              <svg width="14" height="14" fill="none" stroke="#5CBF6A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,7 6,11 12,3"></polyline></svg>
+            </div>
+            <span style="color:rgba(255,255,255,.82); font-size:15.5px;">לוח פעילויות עדכני ומלא</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:30px; height:30px; border-radius:9px; background:rgba(44,122,39,.18); flex:none; display:flex; align-items:center; justify-content:center;">
+              <svg width="14" height="14" fill="none" stroke="#5CBF6A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,7 6,11 12,3"></polyline></svg>
+            </div>
+            <span style="color:rgba(255,255,255,.82); font-size:15.5px;">התראות ועדכונים בזמן אמת</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:30px; height:30px; border-radius:9px; background:rgba(44,122,39,.18); flex:none; display:flex; align-items:center; justify-content:center;">
+              <svg width="14" height="14" fill="none" stroke="#5CBF6A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,7 6,11 12,3"></polyline></svg>
+            </div>
+            <span style="color:rgba(255,255,255,.82); font-size:15.5px;">מידע על שעות פתיחה ומחירים</span>
+          </div>
+        </div>
+
+        <!-- Rating -->
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:36px;">
+          <div style="display:flex; gap:3px;">
+            <svg width="18" height="18" fill="#F4C400" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"></path></svg>
+            <svg width="18" height="18" fill="#F4C400" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"></path></svg>
+            <svg width="18" height="18" fill="#F4C400" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"></path></svg>
+            <svg width="18" height="18" fill="#F4C400" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"></path></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24"><defs><linearGradient id="sg1" x1="0" x2="1"><stop offset="60%" stop-color="#F4C400"></stop><stop offset="60%" stop-color="rgba(255,255,255,.15)"></stop></linearGradient></defs><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z" fill="url(#sg1)"></path></svg>
+          </div>
+          <span style="color:#F4C400; font-weight:700; font-size:16px;">4.3</span>
+          <span style="color:rgba(255,255,255,.35); font-size:14px;">· +1,000 הורדות בגוגל פליי</span>
+        </div>
+
+        <!-- App Store Badges -->
+        <div style="display:flex; gap:14px; flex-wrap:wrap;">
+          <!-- Google Play Badge -->
+          <a href="https://play.google.com/store/apps/details?id=il.co.offline.neveoz&amp;hl=he" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:14px; background:#fff; border-radius:16px; padding:13px 24px; text-decoration:none; box-shadow:0 10px 30px rgba(0,0,0,.35);" style-hover="transform:translateY(-2px); box-shadow:0 14px 36px rgba(0,0,0,.4);">
+            <svg width="26" height="26" viewBox="0 0 24 24">
+              <path d="M3.18 1.51A2 2 0 0 0 2 3.33v17.34a2 2 0 0 0 1.18 1.82l9.8-9.8z" fill="#4285F4"></path>
+              <path d="M16.13 15.65l-3.23-3.24-9.71 9.71c.36.38.96.43 1.62.07l11.32-6.54z" fill="#34A853"></path>
+              <path d="M16.2 8.41L4.8 1.77C4.14 1.4 3.54 1.45 3.18 1.83L12.97 11.6z" fill="#EA4335"></path>
+              <path d="M16.13 8.35l3.83 2.18c1.09.62 1.09 1.63 0 2.25l-3.83 2.17-3.24-3.3z" fill="#FBBC05"></path>
+            </svg>
+            <div style="text-align:start;">
+              <div style="font-size:10px; color:#888; line-height:1; margin-bottom:3px; letter-spacing:.3px;">הורד מ-</div>
+              <div style="font-size:16px; font-weight:700; color:#111; letter-spacing:-.02em;">Google Play</div>
+            </div>
+          </a>
+          <!-- App Store Badge -->
+          <a href="#" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:14px; background:#fff; border-radius:16px; padding:13px 24px; text-decoration:none; box-shadow:0 10px 30px rgba(0,0,0,.35);" style-hover="transform:translateY(-2px); box-shadow:0 14px 36px rgba(0,0,0,.4);">
+            <svg width="24" height="28" viewBox="0 0 384 512" fill="#000">
+              <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"></path>
+            </svg>
+            <div style="text-align:start;">
+              <div style="font-size:10px; color:#888; line-height:1; margin-bottom:3px; letter-spacing:.3px;">הורד מ-</div>
+              <div style="font-size:16px; font-weight:700; color:#111; letter-spacing:-.02em;">App Store</div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- ── Phone mockups (left in RTL) ── -->
+      <div style="flex:none; position:relative; width:300px; height:500px; margin:0 auto;">
+
+        <!-- Main phone — Home screenshot -->
+        <div style="position:absolute; left:50%; top:28px; transform:translateX(-50%); width:222px; height:466px; background:#000; border-radius:36px; border:7px solid #1b1b1b; box-shadow:0 40px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.06); overflow:hidden; z-index:2;">
+          <!-- Notch -->
+          <div style="position:absolute; top:0; left:50%; transform:translateX(-50%); width:100px; height:23px; background:#000; border-radius:0 0 15px 15px; z-index:10;"></div>
+          <img src="https://play-lh.googleusercontent.com/0zpSNPXTN5Xf9_WrOdBtynUTHclfv3d566906F_8gldGRx72TYAqzJFBvsy7Hh0k7pQxnSouWyyL3OIsJHbSSX0=w480-h1040" alt="מסך הבית של אפליקציית נווה עוז" style="width:100%; height:100%; object-fit:cover; display:block;">
+        </div>
+
+        <!-- App icon badge -->
+        <div style="position:absolute; bottom:-10px; right:-14px; width:68px; height:68px; border-radius:16px; background:linear-gradient(145deg,#0E4D1A,#2C7A27); box-shadow:0 14px 36px rgba(0,0,0,.5); overflow:hidden; z-index:4; border:3px solid #fff; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:3px;">
+          <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+            <circle cx="16" cy="11" r="5" fill="rgba(255,255,255,.9)"></circle>
+            <path d="M6 22c0-4 4.5-7 10-7s10 3 10 7" stroke="rgba(255,255,255,.9)" stroke-width="2.5" stroke-linecap="round" fill="none"></path>
+            <path d="M4 27c4-3 8 1 12-1s8-4 12-1" stroke="#F4C400" stroke-width="2" stroke-linecap="round" fill="none"></path>
+          </svg>
+          <span style="color:#fff; font-size:7px; font-weight:700; letter-spacing:.3px; line-height:1;">נווה עוז</span>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ───────── CTA BAND ───────── -->
+  <section style="position:relative; background:linear-gradient(135deg,#009AB5,#0E4D1A); color:#fff; padding:84px 24px; overflow:hidden;">
+    <div style="position:absolute; bottom:-90px; inset-inline-start:8%; width:340px; height:340px; border-radius:50%; background:radial-gradient(circle,rgba(126,206,202,.25),transparent 70%);"></div>
+    <div style="position:relative; max-width:880px; margin:0 auto; text-align:center;">
+      <h2 style="font-size:clamp(30px,4.5vw,52px); font-weight:700; letter-spacing:-0.035em; margin:0 0 16px;">מוכנים לקפוץ למים?</h2>
+      <p style="font-size:19px; color:rgba(220,220,215,.9); line-height:1.55; margin:0 auto 34px; max-width:560px;">הצטרפו היום למשפחת נווה עוז ותיהנו מגישה מלאה לכל המתקנים והחוגים.</p>
+      <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
+        <x-import component-from-global-scope="StreamLineDesignSystem_627cd6.Button" variant="primary" size="lg" full-width="{{ falseVal }}" on-click="{{ openWhatsapp }}" hint-size="auto,52px" style="background:#fff; color:#009AB5; box-shadow:0 8px 30px rgba(0,0,0,.2);">קנו מנוי בוואטסאפ</x-import>
+        <x-import component-from-global-scope="StreamLineDesignSystem_627cd6.Button" variant="whatsapp" size="lg" full-width="{{ falseVal }}" on-click="{{ openPhone }}" hint-size="auto,52px" style="background:rgba(255,255,255,.14); color:#fff; border:1px solid rgba(255,255,255,.3);">התקשרו · 03-9245111</x-import>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── FOOTER ───────── -->
+  <footer style="background:#141414; color:#DEDED9; padding:64px 24px 30px;">
+    <div style="max-width:1240px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:40px;">
+      <div>
+        <img src="assets/logo-neveoz.png" alt="מרכז ספורט נווה עוז" style="height:56px; width:auto; display:block; margin-bottom:18px;">
+
+        <p style="font-size:14.5px; line-height:1.6; color:rgba(220,220,215,.75); margin:0;">הקאנטרי המוביל בפתח־תקווה. ספורט, מים ובריאות לכל המשפחה — כי האנשים זה כל הסיפור.</p>
+      </div>
+      <div>
+        <h4 style="font-size:13px; font-weight:700; color:#9EC8C8; letter-spacing:.06em; margin:0 0 16px;">פעילויות עיקריות</h4>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <a href="#facilities" style="color:rgba(220,220,215,.82); text-decoration:none; font-size:14.5px;">חדר כושר</a>
+          <a href="#facilities" style="color:rgba(220,220,215,.82); text-decoration:none; font-size:14.5px;">בריכות שחייה</a>
+          <a href="Neve-Oz-Classes.dc.html" style="color:rgba(220,220,215,.82); text-decoration:none; font-size:14.5px;">פילאטיס וספינינג</a>
+          <a href="#programs" style="color:rgba(220,220,215,.82); text-decoration:none; font-size:14.5px;">שחייה STREAMLINE</a>
+        </div>
+      </div>
+      <div>
+        <h4 style="font-size:13px; font-weight:700; color:#9EC8C8; letter-spacing:.06em; margin:0 0 16px;">מיקום ושעות</h4>
+        <p style="font-size:14.5px; line-height:1.6; color:rgba(220,220,215,.82); margin:0 0 12px;">רח׳ דגניה 1, פינת דרך רבין<br>פתח־תקווה</p>
+        <p style="font-size:13.5px; line-height:1.6; color:rgba(220,220,215,.6); margin:0;">משרד: א׳–ה׳ 09:00–20:00<br>ו׳ 09:00–14:00</p>
+      </div>
+      <div>
+        <h4 style="font-size:13px; font-weight:700; color:#9EC8C8; letter-spacing:.06em; margin:0 0 16px;">צרו קשר</h4>
+        <div style="display:flex; flex-direction:column; gap:11px;">
+          <a href="tel:039245111" dir="ltr" style="color:rgba(220,220,215,.82); text-decoration:none; font-size:14.5px; font-family:var(--font-mono); text-align:right;">03-9245111 / 123</a>
+          <a href="https://api.whatsapp.com/send?phone=972548283712" target="_blank" dir="ltr" style="color:rgba(220,220,215,.82); text-decoration:none; font-size:14.5px; font-family:var(--font-mono); text-align:right;">WhatsApp 054-8283712</a>
+          <a href="mailto:office@cno.co.il" dir="ltr" style="color:rgba(220,220,215,.82); text-decoration:none; font-size:14.5px; font-family:var(--font-mono); text-align:right;">office@cno.co.il</a>
+        </div>
+      </div>
+    </div>
+    <div style="max-width:1240px; margin:40px auto 0; padding-top:22px; border-top:1px solid rgba(126,206,202,.15); display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; font-size:13px; color:rgba(220,220,215,.55);">
+      <span>© 2026 מרכז ספורט נווה עוז · כל הזכויות שמורות</span>
+      <span>עוצב מחדש בהשראת הזרימה של המים</span>
+    </div>
+  </footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { filter: 'all' };
+
+  _catMeta = {
+    'מים':     { color: '#009AB5', bg: '#F5F5F3' },
+    'סטודיו':  { color: '#6C5CE7', bg: '#EFECFE' },
+    'כוח':     { color: '#E17055', bg: '#FFEFE8' },
+    'גוף־נפש': { color: '#00B894', bg: '#E5F8F3' },
+  };
+
+  _classes = [
+    { name: 'פילאטיס', cat: 'גוף־נפש', when: 'א׳–ו׳ · בוקר וערב' },
+    { name: 'יוגה', cat: 'גוף־נפש', when: 'א׳ · ב׳ · ד׳' },
+    { name: 'אשטנגה יוגה', cat: 'גוף־נפש', when: 'שבועי' },
+    { name: 'פלדנקרייז', cat: 'גוף־נפש', when: 'שבועי' },
+    { name: 'ספינינג', cat: 'כוח', when: 'ברישום מראש' },
+    { name: 'TRX רצועות', cat: 'כוח', when: 'שבועי' },
+    { name: 'אימון פונקציונלי', cat: 'כוח', when: 'שבועי' },
+    { name: 'מטקון', cat: 'כוח', when: 'שבועי' },
+    { name: 'עיצוב וחיטוב', cat: 'כוח', when: 'שבועי' },
+    { name: 'בטן · גב', cat: 'כוח', when: 'שבועי' },
+    { name: 'זומבה', cat: 'סטודיו', when: 'שבועי' },
+    { name: 'פיטבול', cat: 'סטודיו', when: 'שבועי' },
+    { name: 'ריקודי עם', cat: 'סטודיו', when: 'שבועי' },
+    { name: 'התעמלות במים', cat: 'מים', when: 'שבועי' },
+    { name: 'אקווה אירובי', cat: 'מים', when: 'שבועי' },
+    { name: 'שחייה · שיפור סגנון', cat: 'מים', when: 'שבועי' },
+  ];
+
+  componentDidMount() {
+    this._io = new IntersectionObserver((entries) => {
+      entries.forEach((en) => {
+        if (en.isIntersecting) {
+          en.target.classList.add('in');
+          this._io.unobserve(en.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    requestAnimationFrame(() => {
+      if (!this._root) return;
+      this._root.querySelectorAll('[data-reveal]').forEach((el) => this._io.observe(el));
+      this._initCounters();
+    });
+  }
+
+  _initCounters() {
+    const els = this._root.querySelectorAll('[data-count]');
+    const co = new IntersectionObserver((entries) => {
+      entries.forEach((en) => {
+        if (!en.isIntersecting) return;
+        const el = en.target;
+        co.unobserve(el);
+        const target = parseInt(el.getAttribute('data-count'), 10);
+        const suffix = el.getAttribute('data-suffix') || '';
+        if (isNaN(target)) return;
+        const dur = 1100, t0 = performance.now();
+        const tick = (now) => {
+          const p = Math.min((now - t0) / dur, 1);
+          const eased = 1 - Math.pow(1 - p, 3);
+          el.textContent = Math.round(target * eased) + suffix;
+          if (p < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      });
+    }, { threshold: 0.5 });
+    els.forEach((el) => co.observe(el));
+  }
+
+  componentWillUnmount() {
+    if (this._io) this._io.disconnect();
+  }
+
+  renderVals() {
+    const filter = this.state.filter;
+    const cats = ['all', 'מים', 'סטודיו', 'כוח', 'גוף־נפש'];
+    const labels = { all: 'הכל' };
+
+    const categories = cats.map((c) => {
+      const active = filter === c;
+      const meta = this._catMeta[c];
+      const accent = c === 'all' ? '#009AB5' : (meta ? meta.color : '#009AB5');
+      return {
+        key: c,
+        label: c === 'all' ? 'הכל' : c,
+        onClick: () => this.setState({ filter: c }),
+        style: [
+          'font-family:inherit', 'font-size:14.5px', 'font-weight:600',
+          'padding:9px 18px', 'border-radius:999px', 'cursor:pointer',
+          'transition:all .2s', 'letter-spacing:-0.01em',
+          active ? 'background:' + accent : 'background:#F5F5F3',
+          active ? 'color:#fff' : 'color:#2E6E3E',
+          active ? 'border:1px solid ' + accent : 'border:1px solid #E8E8E6',
+          active ? 'box-shadow:0 6px 16px rgba(0,154,181,.22)' : 'box-shadow:none',
+        ].join(';'),
+      };
+    });
+
+    const filteredClasses = this._classes
+      .filter((c) => filter === 'all' || c.cat === filter)
+      .map((c) => {
+        const meta = this._catMeta[c.cat] || { color: '#009AB5', bg: '#F5F5F3' };
+        return { ...c, color: meta.color, bg: meta.bg };
+      });
+
+    const stats = [
+      { n: 40, suffix: '+', l: 'חוגים שבועיים' },
+      { n: 6, suffix: '', l: 'מתקנים מובילים' },
+      { n: 7, suffix: '', l: 'ימים בשבוע' },
+      { n: 1, suffix: '', l: 'בית לכל המשפחה' },
+    ];
+
+    const facilities = [
+      { t: 'בריכות שחייה', d: 'בריכה מקורה מחוממת לכל השנה ובריכה קייצית פתוחה ומרווחת.', tag: 'מקורה + קייצית', slot: 'fac-pool', img: 'images/pool.jpeg' },
+      { t: 'ספא ורוגע', d: 'סאונה יבשה, סאונה רטובה וג׳קוזי — בריאות אמיתית באמצעות מים.', tag: 'סאונות + ג׳קוזי', slot: 'fac-spa', img: 'images/sauna.jpeg' },
+      { t: 'חדר כושר', d: 'ציוד מתקדם, אזור משקולות חופשיות ומשטחי אירובי מוארים.', tag: 'פתוח 7 ימים', slot: 'fac-gym', img: 'images/fitness.jpeg' },
+      { t: 'מגרשי טניס ופאדל', d: 'מגרשים מתוחזקים לאימונים אישיים וקבוצתיים בכל הרמות.', tag: 'טניס + פאדל', slot: 'fac-tennis', img: 'images/tennis.jpeg' },
+      { t: 'אולמות חוגים', d: 'סטודיו ממוזג ומאובזר המאכלס עשרות חוגי גוף ותנועה.', tag: 'סטודיו', slot: 'fac-studio', img: 'images/yoga.jpeg' },
+      { t: 'גן שעשועים ומזנון', d: 'פינת ילדים ומזנון נעים — חוויה שלמה לכל המשפחה.', tag: 'למשפחה', slot: 'fac-fun', img: 'images/toddlers.jpeg' },
+    ];
+
+    const programs = [
+      { num: '01', t: 'חוגים שנתיים', d: 'חוגים שנתיים לילדים ומבוגרים, לימוד ושיפור כל הסגנונות.', cta: 'לפרטים והרשמה' },
+      { num: '02', t: 'שיעורים פרטיים', d: 'שיעורים פרטיים לילדים ומבוגרים, ליווי אישי ומקצועי כל הדרך להצלחה במים.', cta: 'לפרטים והרשמה' },
+      { num: '03', t: 'קורס קיץ', d: 'קורס 12 מפגשים בעונת הקיץ לילדים החל מגיל 4. שתוכלו לשלוח את ילדיכם למים מבלי לחשוש יותר.', cta: 'לפרטים והרשמה' },
+    ];
+
+    const kids = [
+      { t: 'בית ספר לשחייה', d: 'הרגלי מים ושחייה בטוחה — מהפעוטות ועד הנוער.', slot: 'kid-swim', img: 'images/kid-swim.jpeg' },
+      { t: 'טניס לילדים', d: 'מהצעדים הראשונים על המגרש ועד טורנירים.', slot: 'kid-tennis', img: 'images/kid-tennis.jpeg' },
+      { t: 'קפוארה', d: 'תנועה, מקצב, גמישות והמון ביטחון עצמי.', slot: 'kid-capo', img: 'images/kid-capo.jpeg' },
+      { t: 'אמנות ויצירה', d: 'מרחב לדמיון, צבע ויצירתיות — בלי מסכים.', slot: 'kid-art', img: 'images/kid-art.jpeg' },
+      { t: 'זומבה לילדים', d: 'אנרגיה, ריקוד וכיף שלא נגמר.', slot: 'kid-zumba', img: 'images/kid-zumba.jpeg' },
+      { t: 'חדר כושר נוער 10–14', d: 'אימון מותאם ובטוח לבני ובנות נוער.', slot: 'kid-gym', img: 'images/kid-gym.jpeg' },
+    ];
+
+    const pricing = [
+      {
+        name: 'כניסה בודדת', price: '80', unit: '₪', note: 'יום חול · בשבת 110₪', badge: 'גמיש',
+        feats: ['בריכות · ג׳קוזי · סאונות', 'מגרשי טניס וכדורסל', 'על בסיס מקום פנוי'],
+        cta: 'לפרטים', featured: false,
+      },
+      {
+        name: 'כרטיסייה', price: '700', unit: '₪', note: '10 כניסות · לא כולל שבת', badge: 'הכי משתלם',
+        feats: ['חיסכון של עד 100₪', 'גמישות מלאה לאורך זמן', 'למנויי המרכז'],
+        cta: 'רכשו כרטיסייה', featured: true,
+      },
+      {
+        name: 'מנוי קאנטרי', price: 'מנוי', unit: '', note: 'גישה מלאה לכל המתקנים', badge: 'הכי שווה',
+        feats: ['כל המתקנים ללא הגבלה', 'הטבות בחוגים', '25% הנחה לחיילים'],
+        cta: 'דברו איתנו', featured: false,
+      },
+    ].map((p) => {
+      const f = p.featured;
+      return {
+        ...p,
+        ink: f ? '#fff' : '#141414',
+        sub: f ? 'rgba(220,220,215,.85)' : '#2E6E3E',
+        checkBg: f ? 'rgba(255,255,255,.18)' : '#DEDED9',
+        checkFg: f ? '#fff' : '#009AB5',
+        cardStyle: [
+          'position:relative', 'border-radius:24px', 'padding:34px 28px 30px',
+          'display:flex', 'flex-direction:column', 'overflow:hidden',
+          f ? 'background:linear-gradient(160deg,#009AB5,#0E4D1A)' : 'background:#fff',
+          f ? 'box-shadow:0 24px 60px rgba(0,154,181,.35)' : 'border:1px solid #E8E8E6',
+          f ? 'transform:translateY(-6px)' : '',
+        ].join(';'),
+        tagStyle: [
+          'align-self:flex-start', 'font-size:12px', 'font-weight:700',
+          'padding:5px 13px', 'border-radius:999px', 'margin-bottom:18px',
+          f ? 'background:rgba(255,255,255,.18); color:#fff' : 'background:#FFEFE8; color:#E17055',
+        ].join(';'),
+        btnStyle: [
+          'display:block', 'text-align:center', 'text-decoration:none',
+          'padding:13px', 'border-radius:12px', 'font-weight:600', 'font-size:15.5px',
+          'transition:transform .2s, box-shadow .2s', 'margin-top:auto',
+          f ? 'background:#fff; color:#009AB5' : 'background:linear-gradient(135deg,#009AB5,#0E4D1A); color:#fff',
+        ].join(';'),
+      };
+    });
+
+    const hours = [
+      { place: 'משרד', rows: [
+        { d: 'א׳–ה׳', t: '09:00–20:00' }, { d: 'ו׳', t: '09:00–14:00' }, { d: 'שבת (קיץ)', t: '09:00–14:00' },
+      ] },
+      { place: 'חדר כושר', rows: [
+        { d: 'א׳ בוקר', t: '06:00–09:00' }, { d: 'א׳ אחה״צ', t: '16:00–23:00' }, { d: 'ב׳–ד׳', t: '06:00–22:00' },
+        { d: 'ה׳', t: '06:00–23:00' }, { d: 'ו׳', t: '06:00–19:00' }, { d: 'שבת', t: '07:00–19:00' },
+      ] },
+      { place: 'בריכה', rows: [
+        { d: 'א׳ בוקר', t: '05:30–09:00' }, { d: 'א׳ אחה״צ', t: '16:00–22:00' }, { d: 'ב׳–ד׳', t: '05:30–22:00' },
+        { d: 'ה׳', t: '05:30–22:00' }, { d: 'ו׳', t: '05:30–19:00' }, { d: 'שבת', t: '07:00–19:00' },
+      ] },
+    ];
+
+    const events = [
+      { tag: 'הרשמה', date: 'יוני', day: '05', t: 'נפתחה ההרשמה לחוגי שחייה', d: 'שריינו מקום לילדים בבית הספר לשחייה לעונה החדשה.', slot: 'ev-1' },
+      { tag: 'מבוגרים', date: 'יוני', day: '10', t: 'אקווה אירובי לבוגרים', d: 'קבוצות חדשות נפתחות — אימון אפקטיבי ועדין על המפרקים.', slot: 'ev-2' },
+      { tag: 'תוכנית', date: 'יולי', day: '15', t: 'שיפור שחייה ב־20 שיעורים', d: 'תוכנית ממוקדת לשדרוג הטכניקה והסיבולת שלכם במים.', slot: 'ev-3' },
+    ];
+
+    return {
+      rootRef: (el) => { this._root = el; },
+      falseVal: false,
+      stats, facilities, programs, kids, pricing, hours, events,
+      categories, filteredClasses,
+      goPricing: () => {
+        const el = document.getElementById('pricing');
+        if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: 'smooth' });
+      },
+      openWhatsapp: () => window.open('https://api.whatsapp.com/send?phone=972548283712', '_blank'),
+      openPhone: () => { window.location.href = 'tel:039245111'; },
+      openEmail: () => { window.location.href = 'mailto:office@cno.co.il'; },
+    };
+  }
+}
+</script>
+</body>
+</html>
