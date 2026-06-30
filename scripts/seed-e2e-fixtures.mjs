@@ -9,7 +9,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { randomUUID } from "node:crypto";
 
 loadEnv();
 
@@ -25,6 +24,8 @@ const E2E_QR_TOKEN = process.env.E2E_QR_TOKEN || "e2e00001-0000-4000-8000-000000
 const E2E_LESSON_ID = process.env.E2E_LESSON_ID || "e2e00002-0000-4000-8000-000000000002";
 const E2E_PASS_TOKEN = process.env.E2E_PASS_TOKEN || "e2e00003-0000-4000-8000-000000000003";
 const E2E_PASS_QR_TOKEN = process.env.E2E_PASS_QR_TOKEN || "e2e00004-0000-4000-8000-000000000004";
+const E2E_GROUP_SESSION_ID = process.env.E2E_GROUP_SESSION_ID || "e2e00005-0000-4000-8000-000000000005";
+const E2E_PRODUCT_NAME = "E2E חוג";
 
 if (!supabaseUrl || !serviceKey) {
   console.error("Missing SUPABASE_URL (or VITE_SUPABASE_URL) and SUPABASE_SERVICE_ROLE_KEY");
@@ -54,7 +55,6 @@ function todayLocal() {
 
 function currentStartTime() {
   const d = new Date();
-  // Postgres combines lesson_date::timestamptz + start_time in UTC — align with NOW().
   return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}:00`;
 }
 
@@ -67,6 +67,17 @@ async function getInstructorProfile() {
   if (error) throw error;
   if (!data) throw new Error("demo.instructor@demo.streamline not found — run npm run seed:demo first");
   return data;
+}
+
+async function getAnnualTemplateId() {
+  const { data, error } = await supabase
+    .from("product_templates")
+    .select("id")
+    .eq("code", "annual_section")
+    .maybeSingle();
+  if (error) throw error;
+  if (!data?.id) throw new Error("product_templates annual_section not found");
+  return data.id;
 }
 
 async function upsertFamilyAndParticipant() {
@@ -137,29 +148,50 @@ async function upsertLesson(instructor, participantId) {
     participant_id: participantId,
     price: 0,
     lesson_format: "single",
+    attendance_status: "pending",
   };
 
   const { error } = await supabase.from("lessons").upsert(payload, { onConflict: "id" });
   if (error) throw error;
 }
 
-async function ensureEnrollment(participantId) {
-  const { data: existing } = await supabase
-    .from("enrollments")
-    .select("id, product_id")
-    .eq("participant_id", participantId)
-    .eq("active", true)
-    .limit(1)
+async function ensureE2eProduct(instructor, seasonId, templateId) {
+  const productPayload = {
+    season_id: seasonId,
+    name: E2E_PRODUCT_NAME,
+    instructor_id: instructor.id,
+    instructor_name: instructor.full_name,
+    template_id: templateId,
+    day_of_week: new Date().getUTCDay(),
+    start_time: "16:00:00",
+    end_time: "16:30:00",
+    target_audience: "גילאי 6-8",
+    gender: "mixed",
+  };
+
+  const { data: byName } = await supabase
+    .from("products")
+    .select("id")
+    .eq("season_id", seasonId)
+    .eq("name", E2E_PRODUCT_NAME)
     .maybeSingle();
 
-  if (existing?.id) {
-    await supabase
-      .from("enrollments")
-      .update({ payment_status: "paid", valid_until: "2099-12-31" })
-      .eq("id", existing.id);
-    return existing;
+  if (byName?.id) {
+    const { error } = await supabase.from("products").update(productPayload).eq("id", byName.id);
+    if (error) throw error;
+    return byName.id;
   }
 
+  const { data: created, error } = await supabase
+    .from("products")
+    .insert(productPayload)
+    .select("id")
+    .single();
+  if (error) throw error;
+  return created.id;
+}
+
+async function ensureEnrollment(instructor, participantId, templateId) {
   const { data: season } = await supabase
     .from("seasons")
     .select("id")
@@ -172,33 +204,23 @@ async function ensureEnrollment(participantId) {
     return null;
   }
 
-  let productId;
-  const { data: product } = await supabase
-    .from("products")
-    .select("id")
-    .eq("season_id", season.id)
+  const productId = await ensureE2eProduct(instructor, season.id, templateId);
+
+  const { data: existing } = await supabase
+    .from("enrollments")
+    .select("id, product_id")
+    .eq("participant_id", participantId)
+    .eq("product_id", productId)
+    .eq("active", true)
     .limit(1)
     .maybeSingle();
 
-  if (product?.id) {
-    productId = product.id;
-  } else {
-    const { data: created, error } = await supabase
-      .from("products")
-      .insert({
-        season_id: season.id,
-        name: "E2E חוג",
-        instructor_name: "מדריך E2E",
-        day_of_week: new Date().getDay(),
-        start_time: "16:00:00",
-        end_time: "16:30:00",
-        target_audience: "גילאי 6-8",
-        gender: "mixed",
-      })
-      .select("id")
-      .single();
-    if (error) throw error;
-    productId = created.id;
+  if (existing?.id) {
+    await supabase
+      .from("enrollments")
+      .update({ payment_status: "paid", valid_until: "2099-12-31" })
+      .eq("id", existing.id);
+    return { ...existing, product_id: productId };
   }
 
   const { data: enrollment, error } = await supabase
@@ -217,56 +239,62 @@ async function ensureEnrollment(participantId) {
   return enrollment;
 }
 
+async function ensureSessionAttendee(sessionId, enrollment, participantId) {
+  const { data: existing } = await supabase
+    .from("session_attendees")
+    .select("id")
+    .eq("session_id", sessionId)
+    .eq("enrollment_id", enrollment.id)
+    .maybeSingle();
+
+  const payload = {
+    session_id: sessionId,
+    enrollment_id: enrollment.id,
+    participant_id: participantId,
+    attendance_status: "pending",
+  };
+
+  if (existing?.id) {
+    const { error } = await supabase
+      .from("session_attendees")
+      .update({ attendance_status: "pending" })
+      .eq("id", existing.id);
+    if (error) throw error;
+    return;
+  }
+
+  const { error } = await supabase.from("session_attendees").insert(payload);
+  if (error) throw error;
+}
+
 async function upsertAccessPass(enrollment, participantId) {
-  if (!enrollment) return;
+  if (!enrollment) return null;
 
   const sessionDate = todayLocal();
   const startTime = currentStartTime();
   const endTime = "23:59:00";
 
-  let sessionId;
-  const { data: existingSession } = await supabase
-    .from("scheduled_sessions")
-    .select("id")
-    .eq("product_id", enrollment.product_id)
-    .eq("session_date", sessionDate)
-    .limit(1)
-    .maybeSingle();
+  const sessionPayload = {
+    id: E2E_GROUP_SESSION_ID,
+    product_id: enrollment.product_id,
+    session_date: sessionDate,
+    start_time: startTime,
+    end_time: endTime,
+    status: "scheduled",
+  };
 
-  if (existingSession?.id) {
-    sessionId = existingSession.id;
-    await supabase
-      .from("scheduled_sessions")
-      .update({ start_time: startTime, end_time: endTime, status: "scheduled" })
-      .eq("id", sessionId);
-  } else {
-    const { data, error } = await supabase
-      .from("scheduled_sessions")
-      .insert({
-        product_id: enrollment.product_id,
-        session_date: sessionDate,
-        start_time: startTime,
-        end_time: endTime,
-        status: "scheduled",
-      })
-      .select("id")
-      .single();
-    if (error) throw error;
-    sessionId = data.id;
-  }
+  const { error: sessionError } = await supabase
+    .from("scheduled_sessions")
+    .upsert(sessionPayload, { onConflict: "id" });
+  if (sessionError) throw sessionError;
+
+  await ensureSessionAttendee(E2E_GROUP_SESSION_ID, enrollment, participantId);
 
   const validFrom = new Date(`${sessionDate}T${startTime}`).toISOString();
   const validUntil = new Date(`${sessionDate}T${endTime}`).toISOString();
 
-  const { data: existingPass } = await supabase
-    .from("access_passes")
-    .select("id")
-    .eq("enrollment_id", enrollment.id)
-    .eq("session_id", sessionId)
-    .maybeSingle();
-
   const passPayload = {
-    session_id: sessionId,
+    session_id: E2E_GROUP_SESSION_ID,
     enrollment_id: enrollment.id,
     participant_id: participantId,
     public_token: E2E_PASS_TOKEN,
@@ -277,21 +305,39 @@ async function upsertAccessPass(enrollment, participantId) {
     used_at: null,
   };
 
-  if (existingPass?.id) {
-    const { error } = await supabase.from("access_passes").update(passPayload).eq("id", existingPass.id);
+  const { data: byQr } = await supabase
+    .from("access_passes")
+    .select("id")
+    .eq("qr_token", E2E_PASS_QR_TOKEN)
+    .maybeSingle();
+
+  const { data: bySession } = await supabase
+    .from("access_passes")
+    .select("id")
+    .eq("enrollment_id", enrollment.id)
+    .eq("session_id", E2E_GROUP_SESSION_ID)
+    .maybeSingle();
+
+  const passId = byQr?.id || bySession?.id;
+
+  if (passId) {
+    const { error } = await supabase.from("access_passes").update(passPayload).eq("id", passId);
     if (error) throw error;
   } else {
     const { error } = await supabase.from("access_passes").insert(passPayload);
     if (error) throw error;
   }
+
+  return E2E_GROUP_SESSION_ID;
 }
 
 async function main() {
   console.log("Seeding E2E fixtures...\n");
   const instructor = await getInstructorProfile();
+  const templateId = await getAnnualTemplateId();
   const { participantId } = await upsertFamilyAndParticipant();
   await upsertLesson(instructor, participantId);
-  const enrollment = await ensureEnrollment(participantId);
+  const enrollment = await ensureEnrollment(instructor, participantId, templateId);
   await upsertAccessPass(enrollment, participantId);
 
   console.log("Done. Add to .env / GitHub Secrets:\n");
@@ -300,6 +346,7 @@ async function main() {
   console.log(`E2E_LESSON_ID=${E2E_LESSON_ID}`);
   console.log(`E2E_PASS_TOKEN=${E2E_PASS_TOKEN}`);
   console.log(`E2E_PASS_QR_TOKEN=${E2E_PASS_QR_TOKEN}`);
+  console.log(`E2E_GROUP_SESSION_ID=${E2E_GROUP_SESSION_ID}`);
 }
 
 main().catch((err) => {

@@ -29,12 +29,12 @@ export default defineConfig({
     {
       name: "desktop",
       use: { ...devices["Desktop Chrome"] },
-      testIgnore: /instructor-mobile\.spec\.js/,
+      testIgnore: /instructor-(mobile|attendance)\.spec\.js/,
     },
     {
       name: "mobile",
       use: { ...devices["iPhone 13"], browserName: "chromium" },
-      testMatch: /instructor-mobile\.spec\.js/,
+      testMatch: /instructor-(mobile|attendance)\.spec\.js/,
     },
   ],
   webServer: {

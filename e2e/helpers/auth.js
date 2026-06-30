@@ -28,3 +28,12 @@ export async function expectWorkspace(page) {
     timeout: 20_000,
   });
 }
+
+export async function openInstructorAttendance(page) {
+  await loginAsDemo(page, "instructor");
+  await expectWorkspace(page);
+  await page.getByRole("tab", { name: /נוכחות|Attendance/i }).click();
+  await expect(page.locator(".content.tab-stage")).toContainText(/נוכחות|Attendance/i, {
+    timeout: 20_000,
+  });
+}

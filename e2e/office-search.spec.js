@@ -15,6 +15,6 @@ test.describe("office enrollment search", () => {
     await expect(page.locator(".data-table tbody tr, .grouped-list .log-item").first()).toBeVisible({
       timeout: 20_000,
     });
-    await expect(page.getByText("ילד E2E")).toBeVisible();
+    await expect(page.getByText("ילד E2E").first()).toBeVisible();
   });
 });

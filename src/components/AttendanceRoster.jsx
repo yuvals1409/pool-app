@@ -176,7 +176,14 @@ export default function AttendanceRoster({ session, roster, onSaved, onBack, toa
         })}
       </Card>
 
-      <Button fullWidth onClick={save} disabled={saving} style={{ marginTop: "var(--space-2)" }} icon={saving ? <Spinner color="#fff" /> : null}>
+      <Button
+        fullWidth
+        data-testid="attendance-save"
+        onClick={save}
+        disabled={saving}
+        style={{ marginTop: "var(--space-2)" }}
+        icon={saving ? <Spinner color="#fff" /> : null}
+      >
         {saving ? t("saving") : t("saveAttendance")}
       </Button>
     </div>

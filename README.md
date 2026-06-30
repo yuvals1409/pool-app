@@ -35,7 +35,7 @@ npm run test:e2e
 | פרויקט | מכשיר | specs |
 |--------|--------|-------|
 | `desktop` | Desktop Chrome | רוב הבדיקות |
-| `mobile` | iPhone 13 | `instructor-mobile.spec.js` |
+| `mobile` | iPhone 13 | `instructor-mobile.spec.js`, `instructor-attendance.spec.js` |
 
 ### משתני סביבה
 
@@ -46,6 +46,7 @@ npm run test:e2e
 | `E2E_SEARCH_PHONE` | חיפוש משרד |
 | `E2E_LESSON_ID` | כרטיס הורה `?ticket=` |
 | `E2E_PASS_TOKEN` | כרטיס מנוי `/t/` |
+| `E2E_GROUP_SESSION_ID` | חוג קבוצתי לנוכחות מדריך (ברירת מחדל מה-seed) |
 | `VITE_E2E_HOOKS` | `true` ב-webServer של Playwright — hook לסריקת QR |
 
 ## GitHub Actions (CI)
@@ -66,7 +67,22 @@ npm run test:e2e
 | `E2E_SEARCH_PHONE` | `0501111999` |
 | `E2E_LESSON_ID` | `e2e00002-0000-4000-8000-000000000002` |
 | `E2E_PASS_TOKEN` | `e2e00003-0000-4000-8000-000000000003` |
+| `E2E_GROUP_SESSION_ID` | `e2e00005-0000-4000-8000-000000000005` |
 
 ב-CI רצים `seed:demo` ו-`seed:e2e` לפני `test:e2e` (כש-`SUPABASE_SERVICE_ROLE_KEY` מוגדר).
 
 בלי Supabase אמיתי — smoke ו-health-declaration עדיין רצים; בדיקות DB מדולגות.
+
+## שלב 3 — Vitest + E2E נוכחות
+
+```bash
+npm test                              # ~114 בדיקות unit (waitlist + attendance)
+npm run seed:demo && npm run seed:e2e # fixtures לשיעור פרטי + חוג קבוצתי
+npm run test:e2e                      # ~17 בדיקות (כולל נוכחות מדריך במובייל)
+```
+
+רק בדיקות mobile (מדריך):
+
+```bash
+npx playwright test --project=mobile
+```

@@ -138,6 +138,7 @@ export default function InstructorAttendanceTab({ toast, initialFocus, onFocusHa
             <button
               type="button"
               key={s.session_id}
+              data-testid={`attendance-session-${s.session_id}`}
               className="user-row session-list-btn"
               onClick={() => openSession(s)}
             >
