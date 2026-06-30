@@ -15,11 +15,13 @@ import { DEMO_PASSWORD, DEMO_USERS } from "../src/lib/demoUsers.js";
 
 loadEnv();
 
-const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").trim();
+const serviceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
 
 if (!supabaseUrl || !serviceKey) {
   console.error("Missing SUPABASE_URL (or VITE_SUPABASE_URL) and SUPABASE_SERVICE_ROLE_KEY");
+  console.error(`  SUPABASE_URL/VITE_SUPABASE_URL: ${supabaseUrl ? "set" : "MISSING"}`);
+  console.error(`  SUPABASE_SERVICE_ROLE_KEY: ${serviceKey ? "set" : "MISSING"}`);
   process.exit(1);
 }
 
@@ -95,6 +97,13 @@ async function upsertDemoUser(demoUser) {
 }
 
 async function main() {
+  const { error: pingError } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1 });
+  if (pingError) {
+    console.error("Supabase service role check failed:", pingError.message);
+    console.error("Verify SUPABASE_SERVICE_ROLE_KEY matches the project in VITE_SUPABASE_URL.");
+    process.exit(1);
+  }
+
   console.log("Seeding demo users...");
   console.log(`Password for all accounts: ${DEMO_PASSWORD}\n`);
 

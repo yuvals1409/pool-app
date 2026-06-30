@@ -13,8 +13,8 @@ import { randomUUID } from "node:crypto";
 
 loadEnv();
 
-const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").trim();
+const serviceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
 
 const E2E_SEARCH_PHONE = process.env.E2E_SEARCH_PHONE || "0501111999";
 const E2E_QR_TOKEN = process.env.E2E_QR_TOKEN || "e2e00001-0000-4000-8000-000000000001";
@@ -24,6 +24,8 @@ const E2E_PASS_QR_TOKEN = process.env.E2E_PASS_QR_TOKEN || "e2e00004-0000-4000-8
 
 if (!supabaseUrl || !serviceKey) {
   console.error("Missing SUPABASE_URL (or VITE_SUPABASE_URL) and SUPABASE_SERVICE_ROLE_KEY");
+  console.error(`  SUPABASE_URL/VITE_SUPABASE_URL: ${supabaseUrl ? "set" : "MISSING"}`);
+  console.error(`  SUPABASE_SERVICE_ROLE_KEY: ${serviceKey ? "set" : "MISSING"}`);
   process.exit(1);
 }
 
