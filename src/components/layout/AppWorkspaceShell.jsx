@@ -63,6 +63,7 @@ export default function AppWorkspaceShell({
         {tabs.map((tabItem) => (
           <NavItem
             key={tabItem.id}
+            data-testid={`nav-tab-${tabItem.id}`}
             icon={<TabIcon id={tabItem.id} active={activeTab === tabItem.id} />}
             label={tabItem.label}
             active={activeTab === tabItem.id}

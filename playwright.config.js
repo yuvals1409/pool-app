@@ -22,24 +22,31 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI ? "github" : "list",
   use: {
-    baseURL: "http://127.0.0.1:5173",
+    baseURL: "http://127.0.0.1:5174",
     trace: "on-first-retry",
   },
   projects: [
     {
-      name: "chromium",
+      name: "desktop",
       use: { ...devices["Desktop Chrome"] },
+      testIgnore: /instructor-mobile\.spec\.js/,
+    },
+    {
+      name: "mobile",
+      use: { ...devices["iPhone 13"], browserName: "chromium" },
+      testMatch: /instructor-mobile\.spec\.js/,
     },
   ],
   webServer: {
-    command: "npm run dev -- --host 127.0.0.1 --port 5173",
-    url: "http://127.0.0.1:5173",
+    command: "npm run dev -- --host 127.0.0.1 --port 5174",
+    url: "http://127.0.0.1:5174",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     env: {
       VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL || "https://placeholder.supabase.co",
       VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY || "placeholder-anon-key",
       VITE_ADMIN_EMAIL: process.env.VITE_ADMIN_EMAIL || "ci@example.com",
+      VITE_E2E_HOOKS: "true",
     },
   },
 });

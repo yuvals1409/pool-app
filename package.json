@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "seed:demo": "node scripts/seed-demo-users.mjs",
+    "seed:e2e": "node scripts/seed-e2e-fixtures.mjs",
     "lint": "eslint src supabase/functions",
     "lint:fix": "eslint src supabase/functions --fix",
     "test": "vitest run",

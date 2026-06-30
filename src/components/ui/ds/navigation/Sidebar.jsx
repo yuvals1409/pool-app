@@ -4,7 +4,7 @@ import React from "react";
  * Stream Line — NavItem (sidebar row)
  * Flat Notion-style: quiet by default, warm hover, pool-wash when active.
  */
-export function NavItem({ icon = null, label, active = false, badge = null, onClick, style = {} }) {
+export function NavItem({ icon = null, label, active = false, badge = null, onClick, style = {}, ...rest }) {
   const [h, setH] = React.useState(false);
   return (
     <button
@@ -12,6 +12,7 @@ export function NavItem({ icon = null, label, active = false, badge = null, onCl
       onClick={onClick}
       onMouseEnter={() => setH(true)}
       onMouseLeave={() => setH(false)}
+      {...rest}
       style={{
         display: "flex",
         alignItems: "center",

@@ -894,6 +894,15 @@ function GuardTab({ toast }) {
     setLoading(false);
   };
 
+  useEffect(() => {
+    if (import.meta.env.VITE_E2E_HOOKS !== "true") return;
+    window.__e2eProcessQr = (v) => {
+      const value = String(v || "").trim();
+      if (value) processQR(value);
+    };
+    return () => { delete window.__e2eProcessQr; };
+  });
+
   return (
     <div>
       <AnimatePresence>
@@ -906,8 +915,23 @@ function GuardTab({ toast }) {
       {loading && <div style={{ textAlign: "center", padding: 40, color: "var(--ink-mid)", fontWeight: 600 }}>⏳ {t("verifying")}</div>}
 
       {!scanning && !loading && !result && (
-        <Button size="lg" fullWidth onClick={startScan}>{t("scanBarcode")}</Button>
+        <Button size="lg" fullWidth onClick={startScan} data-testid="guard-scan-start">{t("scanBarcode")}</Button>
       )}
+
+      {import.meta.env.VITE_E2E_HOOKS === "true" ? (
+        <input
+          type="text"
+          data-testid="e2e-qr-input"
+          aria-hidden
+          tabIndex={-1}
+          style={{ position: "absolute", left: "-9999px", width: 1, height: 1 }}
+          onChange={(e) => {
+            const value = e.target.value.trim();
+            if (value) processQR(value);
+            e.target.value = "";
+          }}
+        />
+      ) : null}
 
       {scanning && (
         <>

@@ -271,6 +271,7 @@ export default function OfficeTab({ profile, toast }) {
 
       <div className="search-bar">
         <Input
+          data-testid="office-search-phone"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t("searchByPhoneOrChild")}

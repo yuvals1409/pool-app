@@ -15,6 +15,12 @@ jobs:
       VITE_ADMIN_EMAIL: ${{ secrets.VITE_ADMIN_EMAIL }}
       E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
       E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+      SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      E2E_QR_TOKEN: ${{ secrets.E2E_QR_TOKEN }}
+      E2E_SEARCH_PHONE: ${{ secrets.E2E_SEARCH_PHONE }}
+      E2E_LESSON_ID: ${{ secrets.E2E_LESSON_ID }}
+      E2E_PASS_TOKEN: ${{ secrets.E2E_PASS_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -34,5 +40,11 @@ jobs:
       - run: npm run build
 
       - run: npx playwright install --with-deps chromium
+
+      - run: npm run seed:demo
+        if: env.SUPABASE_SERVICE_ROLE_KEY != ''
+
+      - run: npm run seed:e2e
+        if: env.SUPABASE_SERVICE_ROLE_KEY != ''
 
       - run: npm run test:e2e
