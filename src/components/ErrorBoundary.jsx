@@ -1,5 +1,6 @@
 import React from "react";
 import BootError from "./BootError.jsx";
+import { captureException } from "../lib/sentry.js";
 
 export default class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -13,6 +14,7 @@ export default class ErrorBoundary extends React.Component {
 
   componentDidCatch(error) {
     console.error("App render error:", error);
+    captureException(error);
   }
 
   render() {

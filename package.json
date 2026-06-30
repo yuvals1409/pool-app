@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "seed:demo": "node scripts/seed-demo-users.mjs",
     "seed:e2e": "node scripts/seed-e2e-fixtures.mjs",
+    "db:baseline": "node scripts/build-baseline-migration.mjs",
     "lint": "eslint src supabase/functions",
     "lint:fix": "eslint src supabase/functions --fix",
     "test": "vitest run",
@@ -23,6 +24,7 @@
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.2.7",
     "@fontsource/ibm-plex-sans-hebrew": "^5.2.8",
+    "@sentry/react": "^10.62.0",
     "@supabase/supabase-js": "^2.43.0",
     "@vercel/analytics": "^2.0.1",
     "framer-motion": "^12.40.0",
@@ -36,6 +38,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.4",
     "@playwright/test": "^1.55.0",
+    "@sentry/vite-plugin": "^5.3.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",

@@ -1,5 +1,7 @@
 # Pool App (Stream Line)
 
+מדריך התקנה מלא: [`SETUP.md`](SETUP.md)
+
 ## פקודות איכות קוד
 
 ```bash
@@ -72,6 +74,19 @@ npm run test:e2e
 ב-CI רצים `seed:demo` ו-`seed:e2e` לפני `test:e2e` (כש-`SUPABASE_SERVICE_ROLE_KEY` מוגדר).
 
 בלי Supabase אמיתי — smoke ו-health-declaration עדיין רצים; בדיקות DB מדולגות.
+
+## Vercel (פרודקשן)
+
+בנוסף ל-secrets של CI, הגדר ב-Vercel → **Settings → Environment Variables**:
+
+| משתנה | חובה | שימוש |
+|--------|------|--------|
+| `VITE_SENTRY_DSN` | מומלץ | ניטור שגיאות בפרודקשן |
+| `SENTRY_AUTH_TOKEN` | אופציונלי | source maps ב-build |
+| `SENTRY_ORG` | עם token | שם הארגון ב-Sentry |
+| `SENTRY_PROJECT` | עם token | שם הפרויקט ב-Sentry |
+
+אחרי deploy — בדוק ב-Sentry dashboard שהשגיאות מגיעות (אפשר לזרוק שגיאה מכוונת פעם אחת).
 
 ## שלב 3 — Vitest + E2E נוכחות
 

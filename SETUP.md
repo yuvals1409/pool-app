@@ -1,142 +1,220 @@
-# 🏊 Pool App — מדריך הפעלה
+# Pool App (Stream Line) — מדריך התקנה
 
-## מה שבנינו
-- **כניסה עם Google** — מדריכים ושומרים נרשמים
-- **אישור מנהל** — אתה רואה רשימה, לוחץ "מדריך" או "שומר" → המשתמש מאושר ומקבל גישה
-- **ברקוד חד-פעמי** — נוצר ב-QR, נשלח ב-WhatsApp, נסרק בכניסה ומבוטל מיידית
-- **לוג מלא** — כל כניסה מתועדת
+מדריך להקמת סביבת פיתוח מקומית ופריסה לפרודקשן.
 
 ---
 
-## שלב 1 — יצירת פרויקט Supabase
+## דרישות מקדימות
 
-1. כנס ל-[supabase.com](https://supabase.com) → **New Project**
-2. תן שם: `pool-app`, בחר סיסמה חזקה, אזור: `eu-central-1` (פרנקפורט, הכי קרוב)
-3. המתן ~2 דקות עד שהפרויקט מוכן
-
----
-
-## שלב 2 — הרצת SQL
-
-1. לך ל-**SQL Editor** (סרגל צד שמאל)
-2. פתח את הקובץ `supabase_setup.sql` ממדריך זה
-3. **הרץ** (Run) — תראה `Setup complete ✓`
+- **Node.js 22** (או 20+)
+- חשבון [Supabase](https://supabase.com)
+- (אופציונלי) [Supabase CLI](https://supabase.com/docs/guides/cli) — `npx supabase` או `brew install supabase/tap/supabase`
+- (אופציונלי) חשבון [Sentry](https://sentry.io) לניטור שגיאות בפרודקשן
 
 ---
 
-## שלב 3 — הפעלת Google Auth
+## שלב 1 — Clone והתקנה
 
-1. **Supabase Dashboard → Authentication → Providers → Google**
-2. הפעל (Enable)
-3. לך ל-[console.cloud.google.com](https://console.cloud.google.com)
-4. צור פרויקט חדש → **APIs & Services → Credentials → Create OAuth 2.0 Client**
-5. סוג: **Web Application**
-6. Authorized redirect URIs: `https://YOUR_PROJECT.supabase.co/auth/v1/callback`
-   (מצא את ה-URL ב-Supabase → Settings → API → Project URL)
-7. העתק **Client ID** ו-**Client Secret** → הדבק ב-Supabase Google Provider
-8. שמור
+```bash
+git clone <repo-url> pool-app
+cd pool-app
+npm install
+cp .env.example .env
+```
 
 ---
 
-## שלב 3b — הפעלת כניסה עם אימייל וסיסמה
+## שלב 2 — משתני סביבה
 
-1. **Supabase Dashboard → Authentication → Providers → Email**
-2. הפעל (Enable)
-3. (מומלץ לפיתוח) כבה **Confirm email** — כדי שמשתמשי דמו יוכלו להתחבר מיד
-4. במסך הכניסה: הזן אימייל + סיסמה, או Google
+ערוך את `.env` בשורש הפרויקט. הערכים נטענים דרך Vite (`import.meta.env.VITE_*`) — **אין לערוך מפתחות ב-`App.jsx`**.
+
+### חובה (אפליקציה)
+
+| משתנה | תיאור |
+|--------|--------|
+| `VITE_SUPABASE_URL` | כתובת הפרויקט — Supabase → Settings → API |
+| `VITE_SUPABASE_ANON_KEY` | מפתח anon (public) |
+| `VITE_ADMIN_EMAIL` | אימייל המנהל/בעל המערכת |
+
+### סקריפטים ו-CLI (לא ב-client)
+
+| משתנה | תיאור |
+|--------|--------|
+| `SUPABASE_SERVICE_ROLE_KEY` | service role — ל-`seed:demo`, import scripts |
+| `SUPABASE_URL` | אותה כתובת כמו `VITE_SUPABASE_URL` |
+| `DATABASE_URL` | connection string ל-Postgres — ל-Supabase CLI ו-`scripts/apply-sql-files.mjs` |
+
+### אופציונלי
+
+| משתנה | תיאור |
+|--------|--------|
+| `VITE_SENTRY_DSN` | ניטור שגיאות בפרודקשן |
+| `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | העלאת source maps ב-build (Vercel) |
+| `VITE_AUTH_REDIRECT_URL` | כתובת חזרה מפורשת אחרי Google (פיתוח) |
+| `VITE_LANDING_VIDEO_URL` | סרטון לדף הרשמה למבדק |
+
+רשימה מלאה: [`.env.example`](.env.example)
 
 ---
 
-## שלב 3c — משתמשי דמו לבדיקות
+## שלב 3 — Supabase: פרויקט ומסד נתונים
 
-לאחר שהגדרת `.env` עם `SUPABASE_SERVICE_ROLE_KEY`:
+### פרויקט חדש
+
+1. [supabase.com](https://supabase.com) → **New Project** — אזור מומלץ: `eu-central-1`
+2. העתק URL ו-anon key ל-`.env`
+3. חבר את הפרויקט:
+   ```bash
+   supabase link --project-ref <ref>   # ref מתוך ה-URL
+   ```
+4. הרץ migrations:
+   ```bash
+   supabase db push
+   ```
+   או מקומית:
+   ```bash
+   supabase start
+   supabase db reset
+   ```
+
+ה-baseline המלא נמצא ב-[`supabase/migrations/20260630120000_baseline.sql`](supabase/migrations/20260630120000_baseline.sql). פרטים: [`supabase/README.md`](supabase/README.md).
+
+### פרויקט קיים (כבר מעודכן)
+
+אם ה-DB כבר מכיל את כל הטבלאות — **אל תריץ SQL ידנית**. חבר בלבד:
+
+```bash
+supabase link --project-ref <ref>
+supabase migration list    # וידוא סנכרון
+```
+
+---
+
+## שלב 4 — Google Auth
+
+1. **Supabase Dashboard → Authentication → Providers → Google** — הפעל
+2. [console.cloud.google.com](https://console.cloud.google.com) → OAuth 2.0 Client (Web)
+3. **Authorized redirect URI:** `https://<ref>.supabase.co/auth/v1/callback`
+4. העתק Client ID + Secret ל-Supabase Google Provider
+
+### כניסה עם אימייל וסיסמה
+
+1. **Authentication → Providers → Email** — הפעל
+2. (פיתוח) כבה **Confirm email** למשתמשי דמו
+
+---
+
+## שלב 5 — משתמשי דמו
+
+לאחר הגדרת `SUPABASE_SERVICE_ROLE_KEY` ב-`.env`:
 
 ```bash
 npm run seed:demo
 ```
 
-נוצרים 4 חשבונות מאושרים (סיסמה לכולם: `Demo1234!`):
+| תפקיד | אימייל | סיסמה |
+|-------|--------|-------|
+| שומר | `demo.guard@demo.streamline` | `Demo1234!` |
+| מדריך | `demo.instructor@demo.streamline` | `Demo1234!` |
+| מנהל | `demo.admin@demo.streamline` | `Demo1234!` |
+| משרד | `demo.office@demo.streamline` | `Demo1234!` |
 
-| תפקיד | אימייל |
-|-------|--------|
-| שומר | `demo.guard@demo.streamline` |
-| מדריך | `demo.instructor@demo.streamline` |
-| מנהל | `demo.admin@demo.streamline` |
-| משרד | `demo.office@demo.streamline` |
-
-במצב פיתוח (`npm run dev`) מופיעים כפתורי כניסה מהירה למשתמשי הדמו במסך הכניסה.
+במצב פיתוח (`npm run dev`) מופיעים כפתורי כניסה מהירה במסך הכניסה.
 
 ---
 
-## שלב 4 — עדכון הקוד
+## שלב 6 — פיתוח מקומי
 
-פתח `App.jsx` ועדכן שלוש שורות בראש הקובץ:
-
-```js
-const SUPABASE_URL    = "https://xxxxxxxxxxxx.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
-const ADMIN_EMAIL     = "your@gmail.com";  // המייל שלך
-```
-
-מצא את הערכים ב-Supabase → **Settings → API**
-
----
-
-## שלב 5 — פריסה ב-Vercel (חינם)
-
-### אפשרות א׳ — Vite (מומלץ)
 ```bash
-npm create vite@latest pool-app -- --template react
-cd pool-app
-# החלף את src/App.jsx בקובץ שלנו
-npm install @supabase/supabase-js qrcode jsqr
-npm run build
+npm run dev
 ```
-העלה ל-GitHub → חבר ל-[vercel.com](https://vercel.com) → Deploy אוטומטי.
 
-### אפשרות ב׳ — StackBlitz
-גרור את `App.jsx` ל-[stackblitz.com/fork/vite-react](https://stackblitz.com/fork/vite-react) ← מיידי.
+האפליקציה ב-[http://localhost:5173](http://localhost:5173).
+
+אם חסרים משתני Supabase — יוצג מסך שגיאה עם הוראות (לא קריסה שקטה).
+
+קונפיגורציה: [`src/lib/config.js`](src/lib/config.js)
 
 ---
 
-## שלב 6 — הגדרת Redirect URL ב-Supabase
+## שלב 7 — Redirect URLs ב-Supabase
 
-1. **Supabase → Authentication → URL Configuration**
-2. **Site URL** (פרודקשן): `https://your-app.vercel.app`
-3. **Redirect URLs** — הוסף את **כל** הכתובות הבאות (שורה לכל אחת):
-   ```
-   https://your-app.vercel.app/**
-   http://localhost:5173/**
-   http://127.0.0.1:5173/**
-   ```
+**Authentication → URL Configuration:**
 
-> **חשוב:** בלי `localhost` ברשימה, התחברות מקומית תחזיר אותך אוטומטית ל-Vercel אחרי Google.
+- **Site URL:** `https://your-app.vercel.app`
+- **Redirect URLs:**
+  ```
+  https://your-app.vercel.app/**
+  http://localhost:5173/**
+  http://127.0.0.1:5173/**
+  ```
+
+> בלי `localhost` ברשימה, התחברות מקומית עם Google עלולה להחזיר ל-Vercel.
+
+---
+
+## שלב 8 — פריסה ב-Vercel
+
+1. דחוף ל-GitHub וחבר ל-[vercel.com](https://vercel.com)
+2. הגדר **Environment Variables** (Production + Preview):
+
+| משתנה | חובה |
+|--------|------|
+| `VITE_SUPABASE_URL` | כן |
+| `VITE_SUPABASE_ANON_KEY` | כן |
+| `VITE_ADMIN_EMAIL` | כן |
+| `VITE_SENTRY_DSN` | מומלץ |
+| `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | ל-source maps |
+
+3. Deploy אוטומטי בכל push ל-`main`
+
+Rewrites ל-SPA: [`vercel.json`](vercel.json) (`/k/:token`, `/t/:token`, דפי הרשמה).
+
+---
+
+## שלב 9 — Sentry (ניטור שגיאות)
+
+1. צור פרויקט ב-[sentry.io](https://sentry.io) — פלטפורמה: **React**
+2. העתק DSN ל-`VITE_SENTRY_DSN` ב-Vercel
+3. (אופציונלי) הגדר Auth Token + Org + Project ל-source maps
+4. הגדר **Alert** לשגיאות חדשות בפרודקשן
+
+Sentry פעיל **רק בפרודקשן** (`import.meta.env.PROD`) ורק כשיש DSN.
+
+---
+
+## מבנה הפרויקט
+
+```
+pool-app/
+├── src/
+│   ├── App.jsx              # אפליקציה ראשית
+│   ├── main.jsx             # כניסה + Sentry + ErrorBoundary
+│   ├── components/          # קומפוננטות UI
+│   └── lib/                 # לוגיקה, config, Supabase client
+├── supabase/
+│   ├── migrations/          # migrations רשמיים (baseline + חדשים)
+│   ├── functions/           # Edge Functions (WhatsApp, Sheets)
+│   └── README.md            # מדריך DB
+├── scripts/                 # seed, import, sync
+├── e2e/                     # בדיקות Playwright
+├── .env.example
+├── SETUP.md                 # המסמך הזה
+└── README.md                # פקודות פיתוח ו-CI
+```
 
 ---
 
 ## זרימת אישור משתמש
 
 ```
-מדריך/שומר → כניסה עם Google
+מדריך/שומר → כניסה עם Google או אימייל
       ↓
 מסך "ממתין לאישור"
       ↓
-אתה (מנהל) → לשונית "ניהול" → לוחץ "מדריך" או "שומר"
+מנהל → לשונית ניהול → "מדריך" / "שומר" / "משרד"
       ↓
-המשתמש מרענן את הדף → נכנס למערכת עם התפקיד שלו
-```
-
-> **טיפ:** כדי לשלוח מייל אוטומטי לאחר אישור, בעתיד אפשר להוסיף Supabase Edge Function קטנה.
-
----
-
-## מבנה הקובץ
-
-```
-pool-app/
-├── App.jsx              ← כל האפליקציה (קומפוננטה אחת)
-├── supabase_setup.sql   ← הרץ פעם אחת ב-Supabase
-└── SETUP.md             ← המסמך הזה
+המשתמש מרענן → נכנס עם התפקיד
 ```
 
 ---
@@ -144,10 +222,28 @@ pool-app/
 ## שאלות נפוצות
 
 **ש: ההורה צריך להתחבר?**  
-ת: לא. דף הכרטיס (`?ticket=UUID`) פתוח לכולם. רק מדריכים/שומרים מתחברים.
+ת: לא. דף הכרטיס (`?ticket=UUID`) פתוח. רק צוות (מדריך/שומר/מנהל/משרד) מתחבר.
 
-**ש: מה קורה אם הסורק לא עובד?**  
-ת: הדפדפן ב-iPhone/Android מבקש הרשאת מצלמה בפעם הראשונה. יש לאשר.
+**ש: איך מוסיפים שינוי לסכמת DB?**  
+ת: `supabase migration new <name>` → עריכה → `supabase db reset` (מקומי) → `supabase db push` (פרודקשן). ראה [`supabase/README.md`](supabase/README.md).
 
-**ש: אפשר להוסיף מדריכים נוספים?**  
-ת: כן — כל מי שנכנס עם Google מופיע בלשונית "ניהול" שלך לאישור.
+**ש: מה עם הקבצים הישנים `supabase_migration_*.sql`?**  
+ת: הועברו ל-`supabase/migrations/archive/` לתיעוד. ה-baseline כולל את כולם.
+
+**ש: הסורק לא עובד בנייד?**  
+ת: יש לאשר הרשאת מצלמה בפעם הראשונה.
+
+---
+
+## פקודות שימושיות
+
+```bash
+npm run dev           # שרת פיתוח
+npm run build         # בניית production
+npm run lint          # ESLint
+npm test              # Vitest
+npm run test:e2e      # Playwright
+npm run seed:demo     # משתמשי דמו
+```
+
+פרטים נוספים: [`README.md`](README.md)

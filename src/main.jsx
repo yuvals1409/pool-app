@@ -12,6 +12,9 @@ import { LanguageProvider } from './i18n.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import BootError from './components/BootError.jsx'
 import { isSupabaseConfigured } from './lib/config.js'
+import { initSentry } from './lib/sentry.js'
+
+initSentry()
 
 const root = ReactDOM.createRoot(document.getElementById('root'))
 

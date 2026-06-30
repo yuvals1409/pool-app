@@ -115,7 +115,7 @@
 ### שלב 12 — ליטוש וביצועים (2026-06-20)
 
 - תיקון לולאות טעינה: הסרת `toast`/`t` מ-deps ב-`useCallback` בטאבי Admin
-- אינדקסים: `supabase_migration_command_center_perf_indexes.sql` (הורץ ב-Supabase)
+- אינדקסים: `supabase/migrations/archive/supabase_migration_command_center_perf_indexes.sql` (הורץ ב-Supabase)
 - ביקורת i18n: 119 מפתחות command center — he/en/ru מלאים
 - UAT: [`docs/command-center-uat.md`](command-center-uat.md)
 
