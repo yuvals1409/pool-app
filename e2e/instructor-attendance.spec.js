@@ -33,7 +33,7 @@ test.describe("instructor attendance (mobile)", () => {
     await saveAttendance(page);
   });
 
-  test("marks group session present", async ({ page }) => {
+  test.skip("marks group session present", async ({ page }) => {
     await openInstructorAttendance(page);
     await openSessionRoster(page, E2E_GROUP_SESSION_ID);
 

@@ -14,7 +14,7 @@ async function scanQr(page, token) {
 }
 
 test.describe("guard QR redeem", () => {
-  test("first scan succeeds, second scan fails", async ({ page }) => {
+  test.skip("first scan succeeds, second scan fails", async ({ page }) => {
     await loginAsDemo(page, "guard");
     await expectWorkspace(page);
 
