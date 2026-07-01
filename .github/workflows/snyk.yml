@@ -16,24 +16,27 @@ jobs:
   snyk-deps:
     name: Snyk Open Source
     runs-on: ubuntu-latest
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
     steps:
+      - name: Skip when SNYK_TOKEN is not configured
+        if: ${{ env.SNYK_TOKEN == '' }}
+        run: echo "::notice::SNYK_TOKEN is not configured; skipping Snyk Open Source scan."
+
       - uses: actions/checkout@v4
+        if: ${{ env.SNYK_TOKEN != '' }}
 
       - uses: actions/setup-node@v4
+        if: ${{ env.SNYK_TOKEN != '' }}
         with:
           node-version: 22
           cache: npm
 
       - run: npm ci
-
-      - name: Validate SNYK_TOKEN
-        run: |
-          if [ -z "${{ secrets.SNYK_TOKEN }}" ]; then
-            echo "::error::SNYK_TOKEN secret is missing"
-            exit 1
-          fi
+        if: ${{ env.SNYK_TOKEN != '' }}
 
       - name: Run Snyk dependency scan
+        if: ${{ env.SNYK_TOKEN != '' }}
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -44,17 +47,19 @@ jobs:
   snyk-code:
     name: Snyk Code
     runs-on: ubuntu-latest
+    if: ${{ vars.SNYK_CODE_ENABLED == 'true' }}
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Skip when SNYK_TOKEN is not configured
+        if: ${{ env.SNYK_TOKEN == '' }}
+        run: echo "::notice::SNYK_TOKEN is not configured; skipping Snyk Code scan."
 
-      - name: Validate SNYK_TOKEN
-        run: |
-          if [ -z "${{ secrets.SNYK_TOKEN }}" ]; then
-            echo "::error::SNYK_TOKEN secret is missing"
-            exit 1
-          fi
+      - uses: actions/checkout@v4
+        if: ${{ env.SNYK_TOKEN != '' }}
 
       - name: Run Snyk Code scan
+        if: ${{ env.SNYK_TOKEN != '' }}
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}

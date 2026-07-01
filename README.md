@@ -86,7 +86,13 @@ npm run test:e2e
 gh secret set SNYK_TOKEN --body "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 ```
 
-בלי `SNYK_TOKEN` — ה-workflow ייכשל.
+בלי `SNYK_TOKEN` — הסריקה מדולגת (notice, לא כשל).
+
+**Snyk Code** (סריקת קוד סטטית) כבוי כברירת מחדל. להפעלה: ב-[snyk.io](https://snyk.io) הפעל **Snyk Code** לארגון, ואז הגדר repository variable:
+
+```bash
+gh variable set SNYK_CODE_ENABLED --body true
+```
 
 ### DB Advisors (workflow נפרד)
 
