@@ -17,6 +17,8 @@ npm run seed:e2e      # fixtures קבועים לבדיקות E2E (אחרי seed:
 npm run db:advisors   # Supabase advisors מקומי (אחרי supabase start)
 npm run db:advisors:security  # advisors — רק אבטחה
 npm run db:advisors:remote    # advisors על פרויקט מקושר
+npm run db:rls        # בדיקות RLS אוטומטיות (SupaShield, מקומי/staging)
+npm run db:rls:audit  # סריקת RLS כללית
 npm run tools:verify  # בדיקת supabase CLI + gh
 ```
 

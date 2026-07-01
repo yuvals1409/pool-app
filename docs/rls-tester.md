@@ -21,7 +21,40 @@
 ```bash
 npm run db:advisors
 npm run db:advisors:remote
+npm run db:rls          # בדיקות RLS אוטומטיות (SupaShield)
+npm run db:rls:audit    # סריקת בעיות RLS נפוצות
 ```
+
+## בדיקות אוטומטיות (SupaShield)
+
+תרחישי גישה לפי תפקיד מוגדרים ב-[`supabase/rls-scenarios.json`](../supabase/rls-scenarios.json) ונבדקים אוטומטית עם [SupaShield](https://github.com/Rodrigotari1/supashield).
+
+**דוגמה מרכזית:** מדריך (`demo.instructor@demo.streamline`) **לא** אמור לראות `families` — Advisors לא בודק את זה.
+
+### הרצה מקומית
+
+```bash
+supabase start
+supabase db reset
+eval "$(supabase status -o env)"
+export DATABASE_URL="$POSTGRES_URL"
+export SUPABASE_URL="$API_URL"
+export SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
+npm run seed:demo
+npm run db:rls
+```
+
+### פקודות
+
+| פקודה | תיאור |
+|--------|--------|
+| `npm run db:rls` | תרחישי דומיין לפי תפקיד (מדריך/שומר/משרד/מנהל/anon) |
+| `npm run db:rls:audit` | סריקה כללית לבעיות RLS |
+| `npm run db:rls:coverage` | דוח כיסוי policies |
+
+**חשוב:** הרץ מול DB מקומי או staging בלבד — **לא** פרודקשן.
+
+CI: workflow [`.github/workflows/rls-tests.yml`](../.github/workflows/rls-tests.yml) רץ על שינויי `supabase/`.
 
 ## תרחישים לפי תפקיד
 
@@ -77,7 +110,8 @@ SELECT id FROM families LIMIT 1;
 migration חדש
     → supabase db reset (מקומי)
     → npm run db:advisors
-    → RLS Tester (תרחישים לפי טבלה למעלה)
+    → npm run db:rls
+    → RLS Tester (תרחישים ידניים נוספים)
     → npm run db:advisors:remote
     → supabase db push
 ```

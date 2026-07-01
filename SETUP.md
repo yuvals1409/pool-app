@@ -283,7 +283,7 @@ pool-app/
 ת: לא. דף הכרטיס (`?ticket=UUID`) פתוח. רק צוות (מדריך/שומר/מנהל/משרד) מתחבר.
 
 **ש: איך מוסיפים שינוי לסכמת DB?**  
-ת: `supabase migration new <name>` → עריכה → `supabase db reset` (מקומי) → `npm run db:advisors` → [`docs/rls-tester.md`](docs/rls-tester.md) → `npm run db:advisors:remote` → `supabase db push` (פרודקשן). ראה [`supabase/README.md`](supabase/README.md).
+ת: `supabase migration new <name>` → עריכה → `supabase db reset` (מקומי) → `npm run db:advisors` → `npm run db:rls` → [`docs/rls-tester.md`](docs/rls-tester.md) → `npm run db:advisors:remote` → `supabase db push` (פרודקשן). ראה [`supabase/README.md`](supabase/README.md).
 
 **ש: מה עם הקבצים הישנים `supabase_migration_*.sql`?**  
 ת: הועברו ל-`supabase/migrations/archive/` לתיעוד. ה-baseline כולל את כולם.
@@ -304,6 +304,8 @@ npm run test:e2e         # Playwright
 npm run seed:demo        # משתמשי דמו
 npm run db:advisors      # בדיקת אבטחה/ביצועים מקומית (אחרי supabase start)
 npm run db:advisors:remote  # advisors על פרויקט מקושר
+npm run db:rls           # בדיקות RLS אוטומטיות (SupaShield)
+npm run db:rls:audit      # סריקת RLS כללית
 npm run tools:verify     # בדיקה ש-supabase ו-gh מותקנים
 ```
 
@@ -336,7 +338,8 @@ Secrets נדרשים ב-GitHub → Settings → Secrets → Actions:
 
 כלי Dashboard לבדיקת מי רואה מה. מדריך מלא: [`docs/rls-tester.md`](docs/rls-tester.md).
 
-הפעלה חד-פעמית: Supabase Dashboard → תמונת פרופיל → **Feature Previews** → **RLS Tester**.
+- **ידני:** Supabase Dashboard → תמונת פרופיל → **Feature Previews** → **RLS Tester**
+- **אוטומטי:** `npm run db:rls` (SupaShield) — תרחישים ב-[`supabase/rls-scenarios.json`](supabase/rls-scenarios.json)
 
 ---
 

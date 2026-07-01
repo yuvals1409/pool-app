@@ -1,0 +1,138 @@
+{
+  "critical_tables": [
+    "profiles",
+    "families",
+    "participants",
+    "enrollments",
+    "lessons",
+    "scheduled_sessions",
+    "access_passes",
+    "access_logs",
+    "billing_records"
+  ],
+  "scenarios": [
+    {
+      "id": "instructor_denied_families",
+      "role": "instructor",
+      "email": "demo.instructor@demo.streamline",
+      "table": "families",
+      "expected": { "SELECT": "DENY", "INSERT": "DENY", "UPDATE": "DENY", "DELETE": "DENY" }
+    },
+    {
+      "id": "instructor_denied_enrollments",
+      "role": "instructor",
+      "email": "demo.instructor@demo.streamline",
+      "table": "enrollments",
+      "expected": { "SELECT": "DENY", "INSERT": "DENY", "UPDATE": "DENY", "DELETE": "DENY" }
+    },
+    {
+      "id": "instructor_denied_participants",
+      "role": "instructor",
+      "email": "demo.instructor@demo.streamline",
+      "table": "participants",
+      "expected": { "SELECT": "DENY", "INSERT": "DENY", "UPDATE": "DENY", "DELETE": "DENY" }
+    },
+    {
+      "id": "instructor_denied_billing",
+      "role": "instructor",
+      "email": "demo.instructor@demo.streamline",
+      "table": "billing_records",
+      "expected": { "SELECT": "DENY", "INSERT": "DENY", "UPDATE": "DENY", "DELETE": "DENY" }
+    },
+    {
+      "id": "instructor_read_scheduled_sessions",
+      "role": "instructor",
+      "email": "demo.instructor@demo.streamline",
+      "table": "scheduled_sessions",
+      "expected": { "SELECT": "ALLOW", "INSERT": "DENY", "UPDATE": "DENY", "DELETE": "DENY" }
+    },
+    {
+      "id": "instructor_read_access_logs",
+      "role": "instructor",
+      "email": "demo.instructor@demo.streamline",
+      "table": "access_logs",
+      "expected": { "SELECT": "ALLOW", "INSERT": "DENY", "UPDATE": "DENY", "DELETE": "DENY" }
+    },
+    {
+      "id": "guard_denied_families",
+      "role": "guard",
+      "email": "demo.guard@demo.streamline",
+      "table": "families",
+      "expected": { "SELECT": "DENY", "INSERT": "DENY", "UPDATE": "DENY", "DELETE": "DENY" }
+    },
+    {
+      "id": "guard_denied_enrollments",
+      "role": "guard",
+      "email": "demo.guard@demo.streamline",
+      "table": "enrollments",
+      "expected": { "SELECT": "DENY", "INSERT": "DENY", "UPDATE": "DENY", "DELETE": "DENY" }
+    },
+    {
+      "id": "guard_read_access_logs",
+      "role": "guard",
+      "email": "demo.guard@demo.streamline",
+      "table": "access_logs",
+      "expected": { "SELECT": "ALLOW", "INSERT": "ALLOW", "UPDATE": "DENY", "DELETE": "DENY" }
+    },
+    {
+      "id": "guard_read_scheduled_sessions",
+      "role": "guard",
+      "email": "demo.guard@demo.streamline",
+      "table": "scheduled_sessions",
+      "expected": { "SELECT": "ALLOW", "INSERT": "DENY", "UPDATE": "DENY", "DELETE": "DENY" }
+    },
+    {
+      "id": "office_read_families",
+      "role": "office",
+      "email": "demo.office@demo.streamline",
+      "table": "families",
+      "expected": { "SELECT": "ALLOW", "INSERT": "ALLOW", "UPDATE": "ALLOW", "DELETE": "ALLOW" }
+    },
+    {
+      "id": "office_read_enrollments",
+      "role": "office",
+      "email": "demo.office@demo.streamline",
+      "table": "enrollments",
+      "expected": { "SELECT": "ALLOW", "INSERT": "ALLOW", "UPDATE": "ALLOW", "DELETE": "ALLOW" }
+    },
+    {
+      "id": "office_read_billing",
+      "role": "office",
+      "email": "demo.office@demo.streamline",
+      "table": "billing_records",
+      "expected": { "SELECT": "ALLOW", "INSERT": "ALLOW", "UPDATE": "ALLOW", "DELETE": "ALLOW" }
+    },
+    {
+      "id": "admin_read_families",
+      "role": "admin",
+      "email": "demo.admin@demo.streamline",
+      "table": "families",
+      "expected": { "SELECT": "ALLOW", "INSERT": "ALLOW", "UPDATE": "ALLOW", "DELETE": "ALLOW" }
+    },
+    {
+      "id": "admin_read_enrollments",
+      "role": "admin",
+      "email": "demo.admin@demo.streamline",
+      "table": "enrollments",
+      "expected": { "SELECT": "ALLOW", "INSERT": "ALLOW", "UPDATE": "ALLOW", "DELETE": "ALLOW" }
+    },
+    {
+      "id": "anon_denied_families",
+      "role": "anon",
+      "table": "families",
+      "expected": { "SELECT": "DENY", "INSERT": "DENY", "UPDATE": "DENY", "DELETE": "DENY" }
+    },
+    {
+      "id": "anon_denied_enrollments",
+      "role": "anon",
+      "table": "enrollments",
+      "expected": { "SELECT": "DENY", "INSERT": "DENY", "UPDATE": "DENY", "DELETE": "DENY" }
+    },
+    {
+      "id": "anon_denied_profiles",
+      "role": "anon",
+      "table": "profiles",
+      "expected": { "SELECT": "DENY", "INSERT": "DENY", "UPDATE": "DENY", "DELETE": "DENY" }
+    }
+  ]
+}

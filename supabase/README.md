@@ -42,6 +42,7 @@ supabase migration new my_feature_name
 # ערוך את הקובץ ב-supabase/migrations/
 supabase db reset          # בדיקה מקומית
 npm run db:advisors        # advisors מקומי
+npm run db:rls             # בדיקות RLS אוטומטיות (SupaShield)
 # RLS Tester ב-Dashboard — ראה docs/rls-tester.md
 npm run db:advisors:remote # advisors על פרויקט מקושר
 supabase db push           # פריסה לפרודקשן (אחרי review)
@@ -57,12 +58,15 @@ supabase db push           # פריסה לפרודקשן (אחרי review)
 | `supabase migration repair --status applied <ver>` | סימון migration כהוחל בלי הרצה |
 | `npm run db:advisors` | בדיקת advisors מקומית (Splinter lints) |
 | `npm run db:advisors:remote` | advisors על פרויקט מקושר |
+| `npm run db:rls` | בדיקות RLS אוטומטיות לפי תפקיד (SupaShield) |
+| `npm run db:rls:audit` | סריקת RLS כללית |
 
 ## RLS Tester
 
 מדריך בדיקת policies לפי תפקיד: [`docs/rls-tester.md`](../docs/rls-tester.md)
 
-הפעלה: Supabase Dashboard → Feature Previews → **RLS Tester**.
+- **ידני:** Supabase Dashboard → Feature Previews → **RLS Tester**
+- **אוטומטי:** `npm run db:rls` — תרחישים ב-[`rls-scenarios.json`](rls-scenarios.json)
 
 ## בנייה מחדש של baseline
 

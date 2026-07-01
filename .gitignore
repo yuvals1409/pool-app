@@ -3,5 +3,6 @@ dist
 .env
 .env.local
 .vercel
+.supashield
 test-results
 playwright-report
