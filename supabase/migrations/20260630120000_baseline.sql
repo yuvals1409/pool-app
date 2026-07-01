@@ -140,6 +140,7 @@ CREATE POLICY "approved read recurring lessons"
     )
   );
 
+DROP POLICY IF EXISTS "instructor manage own recurring lessons" ON recurring_lessons;
 CREATE POLICY "instructor manage own recurring lessons"
   ON recurring_lessons FOR ALL
   USING (
@@ -3519,6 +3520,7 @@ CREATE TABLE IF NOT EXISTS recurring_lessons (
 
 ALTER TABLE recurring_lessons ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "approved read recurring lessons" ON recurring_lessons;
 CREATE POLICY "approved read recurring lessons"
   ON recurring_lessons FOR SELECT
   USING (
@@ -3528,6 +3530,7 @@ CREATE POLICY "approved read recurring lessons"
     )
   );
 
+DROP POLICY IF EXISTS "instructor manage own recurring lessons" ON recurring_lessons;
 CREATE POLICY "instructor manage own recurring lessons"
   ON recurring_lessons FOR ALL
   USING (
