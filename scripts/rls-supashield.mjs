@@ -40,8 +40,8 @@ if (!databaseUrl) {
       "Local Supabase:",
       "  supabase start",
       "  supabase db reset",
-      "  eval \"$(supabase status -o env)\"   # exports POSTGRES_URL",
-      "  export DATABASE_URL=\"$POSTGRES_URL\"",
+      "  eval \"$(supabase status -o env)\"   # exports DB_URL",
+      "  export DATABASE_URL=\"$DB_URL\"",
       "",
       "Then seed demo users:",
       "  npm run seed:demo",
@@ -60,7 +60,7 @@ if (!process.env.CI && databaseUrl.includes("127.0.0.1")) {
 const supashieldBin = resolve(ROOT, "node_modules/supashield/dist/cli.js");
 
 if (auditMode) {
-  runSupashield(["audit", ...(jsonMode ? ["--json"] : [])]);
+  runSupashield(["audit"]);
   process.exit(0);
 }
 
