@@ -42,13 +42,16 @@ jobs:
 
       - name: Export local Supabase env
         run: |
+          eval "$(supabase status -o env)"
           supabase status -o env >> "$GITHUB_ENV"
-          echo "DATABASE_URL=${POSTGRES_URL}" >> "$GITHUB_ENV"
-          echo "SUPASHIELD_DATABASE_URL=${POSTGRES_URL}" >> "$GITHUB_ENV"
-          echo "SUPABASE_URL=${API_URL}" >> "$GITHUB_ENV"
-          echo "VITE_SUPABASE_URL=${API_URL}" >> "$GITHUB_ENV"
-          echo "SUPABASE_SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}" >> "$GITHUB_ENV"
-          echo "CI=true" >> "$GITHUB_ENV"
+          {
+            echo "DATABASE_URL=${POSTGRES_URL}"
+            echo "SUPASHIELD_DATABASE_URL=${POSTGRES_URL}"
+            echo "SUPABASE_URL=${API_URL}"
+            echo "VITE_SUPABASE_URL=${API_URL}"
+            echo "SUPABASE_SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}"
+            echo "CI=true"
+          } >> "$GITHUB_ENV"
 
       - name: Seed demo users
         run: npm run seed:demo
