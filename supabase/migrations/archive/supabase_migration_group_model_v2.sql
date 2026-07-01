@@ -6,6 +6,7 @@
 -- ── 1. products columns ─────────────────────────────────────
 ALTER TABLE products
   ADD COLUMN IF NOT EXISTS level INTEGER CHECK (level IS NULL OR level BETWEEN 1 AND 10),
+  ADD COLUMN IF NOT EXISTS level_label TEXT,
   ADD COLUMN IF NOT EXISTS target_audience TEXT,
   ADD COLUMN IF NOT EXISTS gender TEXT CHECK (gender IS NULL OR gender IN ('male', 'female', 'mixed'));
 
