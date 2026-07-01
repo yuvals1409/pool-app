@@ -31,7 +31,7 @@
     "@sentry/react": "^10.62.0",
     "@supabase/supabase-js": "^2.43.0",
     "@vercel/analytics": "^2.0.1",
-    "framer-motion": "^12.40.0",
+    "framer-motion": "^12.42.2",
     "jsqr": "^1.4.0",
     "lucide-react": "^1.18.0",
     "qrcode": "^1.5.3",
