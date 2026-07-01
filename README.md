@@ -104,9 +104,9 @@ gh variable set SNYK_CODE_ENABLED --body true
 
 [`.github/dependabot.yml`](.github/dependabot.yml) פותח PRs שבועיים לעדכוני npm ו-GitHub Actions.
 
-ב-CI רצים `seed:demo` ו-`seed:e2e` לפני `test:e2e` (כש-`SUPABASE_SERVICE_ROLE_KEY` מוגדר).
+ב-CI רצים `seed:demo` ו-`seed:e2e` לפני `test:e2e` כש-`SUPABASE_SERVICE_ROLE_KEY` מוגדר.
 
-בלי Supabase אמיתי — smoke ו-health-declaration עדיין רצים; בדיקות DB מדולגות.
+בלי Supabase secrets (למשל PR של Dependabot) — lint, typecheck, unit tests, build ו-PWA smoke עדיין רצים; E2E מדולג.
 
 ## Vercel (פרודקשן)
 
