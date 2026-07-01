@@ -39,6 +39,9 @@ jobs:
 
       - run: npm run build
 
+      - name: Verify PWA build artifacts
+        run: test -f dist/sw.js && test -f dist/manifest.webmanifest
+
       - run: npx playwright install --with-deps chromium
 
       - name: Prepare E2E database

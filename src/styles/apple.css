@@ -72,6 +72,21 @@
   margin-top: var(--space-4);
 }
 
+.offline-banner {
+  position: fixed;
+  top: 0;
+  inset-inline: 0;
+  z-index: var(--z-toast);
+  padding: 10px 16px;
+  padding-top: max(10px, env(safe-area-inset-top));
+  text-align: center;
+  font-size: var(--text-footnote);
+  font-weight: 600;
+  color: #7a4a00;
+  background: #fff3cd;
+  border-bottom: 1px solid #f0d78c;
+}
+
 .guard-log-sheet .schedule-panel {
   max-height: 70vh;
 }

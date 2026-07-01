@@ -11,10 +11,13 @@ import App from './App.jsx'
 import { LanguageProvider } from './i18n.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import BootError from './components/BootError.jsx'
+import OfflineBanner from './components/OfflineBanner.jsx'
 import { isSupabaseConfigured } from './lib/config.js'
 import { initSentry } from './lib/sentry.js'
+import { registerSW } from 'virtual:pwa-register'
 
 initSentry()
+registerSW({ immediate: true })
 
 const root = ReactDOM.createRoot(document.getElementById('root'))
 
@@ -31,6 +34,7 @@ if (!isSupabaseConfigured()) {
     <React.StrictMode>
       <ErrorBoundary>
         <LanguageProvider>
+          <OfflineBanner />
           <App />
         </LanguageProvider>
       </ErrorBoundary>

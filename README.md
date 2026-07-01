@@ -76,6 +76,17 @@ npm run test:e2e
 | `E2E_GROUP_SESSION_ID` | `e2e00005-0000-4000-8000-000000000005` |
 | `SUPABASE_ACCESS_TOKEN` | ל-workflow DB Advisors — Access Token מ-Supabase |
 | `SUPABASE_PROJECT_REF` | ref מתוך `VITE_SUPABASE_URL` (למשל `abcdefghijklmnop`) |
+| `SNYK_TOKEN` | ל-workflow Snyk — API token מ-[snyk.io](https://snyk.io) (Account Settings → General) |
+
+### Snyk (workflow נפרד)
+
+קובץ [`.github/workflows/snyk.yml`](.github/workflows/snyk.yml) רץ על PR/push ל-`main` (ובשבועיות) וסורק תלויות (`snyk test`) וקוד (`snyk code test`) עם סף חומרה `high`.
+
+```bash
+gh secret set SNYK_TOKEN --body "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+```
+
+בלי `SNYK_TOKEN` — ה-workflow ייכשל.
 
 ### DB Advisors (workflow נפרד)
 

@@ -207,13 +207,47 @@ Sentry פעיל **רק בפרודקשן** (`import.meta.env.PROD`) ורק כשי
 
 ---
 
+## PWA — התקנה על מובייל
+
+האפליקציה נבנית כ-PWA עם `vite-plugin-pwa`: service worker מטמון את מעטפת האפליקציה (HTML, JS, CSS, אייקונים). בקשות ל-Supabase (`*.supabase.co`) תמיד עוברות ברשת — **לא** נשמרות במטמון.
+
+### מה עובד offline
+
+- פתיחת האפליקיה המותקנת וממשק בסיסי (מעטפת)
+- באנר קבוע: «אין חיבור לאינטרנט — חלק מהפעולות לא זמינות»
+
+### מה דורש אינטרנט
+
+- כניסה (Google / אימייל)
+- סריקת QR (שומר)
+- כל קריאות DB, הרשמות, לו"ז חי
+
+### התקנה
+
+**Android (Chrome):** פתח את האתר → תפריט → «הוסף למסך הבית» / «Install app».
+
+**iPhone (Safari):** פתח את האתר → כפתור שיתוף → «הוסף למסך הבית».
+
+### בדיקה מקומית
+
+```bash
+npm run build
+npm run preview
+```
+
+ב-Chrome DevTools → **Application** → **Service Workers** — וודא ש-`sw.js` רשום. ב-**Lighthouse** → קטגוריית PWA — installable + SW controls page.
+
+> ב-`npm run dev` ה-service worker כבוי (`devOptions.enabled: false`). לבדיקות PWA השתמש ב-preview אחרי build.
+
+---
+
 ## מבנה הפרויקט
 
 ```
 pool-app/
 ├── src/
 │   ├── App.jsx              # אפליקציה ראשית
-│   ├── main.jsx             # כניסה + Sentry + ErrorBoundary
+│   ├── main.jsx             # כניסה + PWA SW + Sentry + ErrorBoundary
 │   ├── components/          # קומפוננטות UI
 │   └── lib/                 # לוגיקה, config, Supabase client
 ├── supabase/
