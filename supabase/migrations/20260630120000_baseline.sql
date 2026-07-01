@@ -3177,7 +3177,8 @@ ALTER TABLE products
   ADD COLUMN IF NOT EXISTS level INTEGER CHECK (level IS NULL OR level BETWEEN 1 AND 10),
   ADD COLUMN IF NOT EXISTS level_label TEXT,
   ADD COLUMN IF NOT EXISTS target_audience TEXT,
-  ADD COLUMN IF NOT EXISTS gender TEXT CHECK (gender IS NULL OR gender IN ('male', 'female', 'mixed'));
+  ADD COLUMN IF NOT EXISTS gender TEXT CHECK (gender IS NULL OR gender IN ('male', 'female', 'mixed')),
+  ADD COLUMN IF NOT EXISTS price NUMERIC(10,2) DEFAULT NULL;
 
 -- ── 2. target_audience_options ──────────────────────────────
 CREATE TABLE IF NOT EXISTS target_audience_options (
@@ -3657,6 +3658,8 @@ ALTER TABLE lessons ADD COLUMN IF NOT EXISTS parent_phone  TEXT;
 ALTER TABLE lessons ADD COLUMN IF NOT EXISTS cancelled      BOOLEAN DEFAULT FALSE;
 ALTER TABLE lessons ADD COLUMN IF NOT EXISTS cancelled_at   TIMESTAMPTZ;
 ALTER TABLE lessons ADD COLUMN IF NOT EXISTS qr_token       UUID;
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS price NUMERIC(10,2);
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS payment_status TEXT DEFAULT 'unpaid';
 
 -- qr_token ייחודי — הברקוד מקודד את הטוקן (מתחדש בעריכה)
 UPDATE lessons SET qr_token = id WHERE qr_token IS NULL;
