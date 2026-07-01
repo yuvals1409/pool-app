@@ -17,7 +17,7 @@ jobs:
         if: ${{ env.SUPABASE_ACCESS_TOKEN == '' || env.SUPABASE_PROJECT_REF == '' }}
         run: echo "::notice::SUPABASE_ACCESS_TOKEN or SUPABASE_PROJECT_REF is not configured; skipping DB advisors."
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: ${{ env.SUPABASE_ACCESS_TOKEN != '' && env.SUPABASE_PROJECT_REF != '' }}
 
       - uses: supabase/setup-cli@v2
