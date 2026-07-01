@@ -98,7 +98,7 @@ gh variable set SNYK_CODE_ENABLED --body true
 
 קובץ [`.github/workflows/db-advisors.yml`](.github/workflows/db-advisors.yml) רץ על כל PR/push ל-`main` ובודק אבטחת DB בפרויקט המקושר (`supabase db advisors --linked --type security`).
 
-בלי `SUPABASE_ACCESS_TOKEN` ו-`SUPABASE_PROJECT_REF` — ה-workflow ייכשל.
+בלי `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF` ו-`SUPABASE_DB_PASSWORD` — ה-workflow ידלג על בדיקת ה-DB advisors.
 
 ### Dependabot
 
