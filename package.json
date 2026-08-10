@@ -31,7 +31,7 @@
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.2.7",
     "@fontsource/ibm-plex-sans-hebrew": "^5.2.8",
-    "@sentry/react": "^10.62.0",
+    "@sentry/react": "^10.69.0",
     "@supabase/supabase-js": "^2.110.0",
     "@vercel/analytics": "^2.0.1",
     "framer-motion": "^12.42.2",
